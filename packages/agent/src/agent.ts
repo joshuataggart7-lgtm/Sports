@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { uid, type AgentStatus, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
+import { uid, type AgentStatus, type GameStats, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
 import { SimulatedProvider } from "@room/sports";
 import { DeviceManager } from "./devices";
 import { DisplayManager } from "./displays";
@@ -33,9 +33,16 @@ export class Agent extends EventEmitter {
     this.watcher.on("game", (g: Game) => this.emit("game", g));
     this.watcher.on("games", () => { this.autoWatch(); this.changed(); });
     this.watcher.on("event", (e: SportsEvent) => this.emit("event", e));
+    this.watcher.on("stats", (st: GameStats) => this.emit("stats", st));
+    this.displays.on("change", () => this.syncExtraStats());
   }
 
   get room() { return this.data.room; }
+
+  /** Second-game displays name a game; keep its stats fresh as well. */
+  private syncExtraStats(): void {
+    this.watcher.extraStatIds = new Set(this.data.displays.map((d) => String(d.roleOptions?.gameId ?? "")).filter(Boolean));
+  }
   get delayProfiles() { return this.data.delayProfiles; }
 
   async start(): Promise<void> {
@@ -113,7 +120,7 @@ export class Agent extends EventEmitter {
   snapshot(): RoomSnapshot {
     return {
       room: this.room, agent: this.status(), devices: this.data.devices, displays: this.data.displays, presets: this.data.presets, scenes: this.data.scenes,
-      automations: this.data.automations, delayProfiles: this.data.delayProfiles, games: [...this.watcher.games.values()], leagues: this.leagues,
+      automations: this.data.automations, delayProfiles: this.data.delayProfiles, games: [...this.watcher.games.values()], stats: Object.fromEntries(this.watcher.stats), leagues: this.leagues,
       pendingEvents: this.watcher.scheduler.pendingEvents(), recentEvents: this.watcher.recentEvents.slice(0, 40), recentRuns: this.data.runs.slice(-30).reverse(),
       timeline: this.data.timeline.slice(-120).reverse(), suggestions: this.watcher.suggestions(),
     };

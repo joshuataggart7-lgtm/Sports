@@ -3,7 +3,7 @@
  * an unofficial, unauthenticated endpoint: no SLA, no play-by-play here, no standings.
  * Keep it for development and personal use; swap in a licensed provider for anything more.
  */
-import type { Game, League, Play, Sport, SportsProvider, Standing, Team, Unsubscribe, IntegrationStatus } from "@room/core";
+import type { Game, GameStats, League, Leader, Play, ScoringPlay, Sport, SportsProvider, Standing, StatLine, Team, Unsubscribe, IntegrationStatus } from "@room/core";
 
 const LEAGUE_PATHS: Record<string, { path: string; name: string; sport: Sport }> = {
   nfl: { path: "football/nfl", name: "NFL", sport: "football" },
@@ -16,6 +16,14 @@ const LEAGUE_PATHS: Record<string, { path: string; name: string; sport: Sport }>
   mls: { path: "soccer/usa.1", name: "MLS", sport: "soccer" },
   epl: { path: "soccer/eng.1", name: "Premier League", sport: "soccer" },
 };
+
+interface EspnSummary {
+  boxscore?: { teams?: Array<{ team: { id: string; abbreviation: string }; homeAway?: "home" | "away"; statistics: Array<{ name: string; label?: string; displayValue: string }> }> };
+  leaders?: Array<{ team?: { id: string; abbreviation: string }; leaders?: Array<{ name: string; leaders?: Array<{ displayValue?: string; value?: number; athlete?: { displayName?: string; jersey?: string; position?: { abbreviation?: string }; headshot?: { href?: string } } }> }> }>;
+  scoringPlays?: Array<{ period?: { number: number }; clock?: { displayValue: string }; team?: { id: string; abbreviation: string }; text?: string; homeScore?: number; awayScore?: number; type?: { text?: string } }>;
+  winprobability?: Array<{ homeWinPercentage: number }>;
+  drives?: { previous?: Array<{ team?: { abbreviation: string }; description?: string; displayResult?: string }> };
+}
 
 interface EspnCompetitor { id: string; homeAway: "home" | "away"; score?: string; records?: Array<{ summary: string }>; team: { id: string; abbreviation: string; displayName: string; shortDisplayName: string; color?: string; alternateColor?: string; logo?: string } }
 interface EspnEvent {
@@ -72,6 +80,57 @@ export class EspnProvider implements SportsProvider {
   }
 
   async getStandings(): Promise<Standing[]> { return []; }      // not available on this endpoint
+
+  /** Box score, leaders, scoring plays, win probability and drives from ESPN's game summary. */
+  async getGameStats(gameId: string): Promise<GameStats | undefined> {
+    const [, leagueId, eventId] = gameId.split(":");
+    const league = LEAGUE_PATHS[leagueId];
+    const game = this.cache.get(gameId);
+    if (!league || !eventId || !game) return undefined;
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${league.path}/summary?event=${eventId}`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const j = (await res.json()) as EspnSummary;
+    const sideOf = (teamId?: string, abbr?: string): "home" | "away" | undefined => {
+      if (teamId && j.boxscore?.teams) { const t = j.boxscore.teams.find((x) => x.team.id === teamId); if (t?.homeAway) return t.homeAway; }
+      if (abbr) return abbr === game.home.abbreviation ? "home" : abbr === game.away.abbreviation ? "away" : undefined;
+      return undefined;
+    };
+    const teams = j.boxscore?.teams ?? [];
+    const home = teams.find((t) => t.homeAway === "home"), away = teams.find((t) => t.homeAway === "away");
+    const num = (v: string) => { const m = /^(\d+)(?:[\/-](\d+))?/.exec(v ?? ""); if (!m) return Number(v) || 0; return m[2] ? Number(m[1]) / Math.max(1, Number(m[2])) : Number(m[1]); };
+    const secs = (v: string) => { const m = /^(\d+):(\d+)$/.exec(v ?? ""); return m ? Number(m[1]) * 60 + Number(m[2]) : num(v); };
+    const PREFERRED = ["totalYards", "netPassingYards", "rushingYards", "firstDowns", "thirdDownEff", "turnovers", "totalPenaltiesYards", "possessionTime", "fieldGoalsMade-fieldGoalsAttempted", "threePointFieldGoalsMade-threePointFieldGoalsAttempted", "totalRebounds", "assists", "turnovers", "pointsInPaint"];
+    const INVERT = new Set(["turnovers", "totalPenaltiesYards"]);
+    const team: StatLine[] = [];
+    if (home && away) {
+      const names = home.statistics.map((x) => x.name);
+      const order = [...PREFERRED.filter((n) => names.includes(n)), ...names.filter((n) => !PREFERRED.includes(n))].slice(0, 8);
+      for (const n of order) {
+        const hs = home.statistics.find((x) => x.name === n), as = away.statistics.find((x) => x.name === n);
+        if (!hs || !as) continue;
+        const hv = n === "possessionTime" ? secs(hs.displayValue) : num(hs.displayValue), av = n === "possessionTime" ? secs(as.displayValue) : num(as.displayValue);
+        const tot = hv + av || 1;
+        const [hp, ap] = INVERT.has(n) ? [av / tot, hv / tot] : [hv / tot, av / tot];
+        team.push({ label: hs.label ?? n, home: hs.displayValue, away: as.displayValue, homePct: hp, awayPct: ap });
+      }
+    }
+    const CAT: Record<string, Leader["category"]> = { passingYards: "passing", rushingYards: "rushing", receivingYards: "receiving", sacks: "defense", tackles: "defense", points: "points", rebounds: "rebounds", assists: "assists" };
+    const leaders = { home: [] as Leader[], away: [] as Leader[] };
+    for (const tl of j.leaders ?? []) {
+      const side = sideOf(tl.team?.id, tl.team?.abbreviation);
+      if (!side) continue;
+      for (const c of tl.leaders ?? []) {
+        const top = c.leaders?.[0];
+        const cat = CAT[c.name];
+        if (!top || !cat) continue;
+        leaders[side].push({ category: cat, name: top.athlete?.displayName ?? "", position: top.athlete?.position?.abbreviation, number: top.athlete?.jersey, line: top.displayValue ?? "", value: Number(top.value ?? 0), headshotUrl: top.athlete?.headshot?.href });
+      }
+    }
+    const scoringPlays: ScoringPlay[] = (j.scoringPlays ?? []).slice(-8).reverse().map((p) => ({ period: p.period?.number ?? 0, clock: p.clock?.displayValue ?? "", side: sideOf(p.team?.id, p.team?.abbreviation) ?? "home", text: p.text ?? "", homeScore: p.homeScore ?? 0, awayScore: p.awayScore ?? 0, type: p.type?.text }));
+    const wpLast = j.winprobability?.[j.winprobability.length - 1];
+    const drives = (j.drives?.previous ?? []).slice(-5).reverse().map((d) => `${d.team?.abbreviation ?? ""} · ${d.description ?? ""}${d.displayResult ? ` · ${d.displayResult}` : ""}`);
+    return { gameId, updatedAt: Date.now(), team, leaders, scoringPlays, winProbabilityHome: wpLast ? Number(wpLast.homeWinPercentage) : undefined, drives };
+  }
   async getPlayByPlay(): Promise<Play[]> { return []; }          // not available on this endpoint
 
   subscribeToGame(gameId: string, onUpdate: (game: Game, plays: Play[]) => void): Unsubscribe {

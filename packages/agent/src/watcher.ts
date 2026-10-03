@@ -4,11 +4,14 @@
  * events to the orchestrator. Reversals cancel whatever has not reached the room yet.
  */
 import { EventEmitter } from "node:events";
-import type { BroadcastDelayProfile, Game, Play, Room, SportsEvent, SportsProvider, TimelineEntry, Unsubscribe } from "@room/core";
+import type { BroadcastDelayProfile, Game, GameStats, Play, Room, SportsEvent, SportsProvider, TimelineEntry, Unsubscribe } from "@room/core";
 import { DelayScheduler, EventEngine, rankGames, type GameInterest } from "@room/engine";
 
 export class GameWatcher extends EventEmitter {
   games = new Map<string, Game>();
+  stats = new Map<string, GameStats>();
+  /** Extra game ids displays are showing (second-game screens), so their stats stay fresh too. */
+  extraStatIds = new Set<string>();
   readonly engine: EventEngine;
   readonly scheduler = new DelayScheduler();
   recentEvents: SportsEvent[] = [];
@@ -32,7 +35,8 @@ export class GameWatcher extends EventEmitter {
   start(): void {
     this.timers.push(setInterval(() => this.scheduler.pump(), 200));
     this.timers.push(setInterval(() => void this.refreshGames(), 30_000));
-    void this.refreshGames().then(() => this.syncSubscriptions());
+    this.timers.push(setInterval(() => void this.refreshStats(), 15_000));
+    void this.refreshGames().then(() => { this.syncSubscriptions(); void this.refreshStats(); });
   }
 
   stop(): void { for (const t of this.timers) clearInterval(t); for (const u of this.subs.values()) u(); }
@@ -50,6 +54,17 @@ export class GameWatcher extends EventEmitter {
     } catch (e) { this.log({ kind: "system", text: `Sports feed unavailable: ${(e as Error).message}` }); }
   }
 
+  async refreshStats(): Promise<void> {
+    if (!this.provider.getGameStats) return;
+    const ids = new Set([...this.room.watchedGameIds, ...this.extraStatIds]);
+    for (const id of ids) {
+      try {
+        const st = await this.provider.getGameStats(id);
+        if (st) { this.stats.set(id, st); this.emit("stats", st); }
+      } catch (e) { this.log({ kind: "system", text: `Stats unavailable for ${id}: ${(e as Error).message}` }); }
+    }
+  }
+
   setWatched(ids: string[]): void {
     this.room.watchedGameIds = ids;
     this.engine.setFavorites(this.room.favoriteTeams);
@@ -63,6 +78,7 @@ export class GameWatcher extends EventEmitter {
       this.subs.set(id, this.provider.subscribeToGame(id, (game, plays) => this.onUpdate(game, plays)));
       this.log({ kind: "system", text: `Watching ${id}` });
     }
+    void this.refreshStats();
   }
 
   private onUpdate(game: Game, plays: Play[]): void {

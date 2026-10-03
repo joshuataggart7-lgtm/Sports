@@ -37,7 +37,31 @@ here is a specific brand requirement.
 | WLED LED strip kit (controller + 5 m addressable strip, 12 V supply) | 2 | $35–50 each | One behind the Sony as bias light, one along the top of the TV wall as the accent strip. Pre-flashed WLED controllers from Athom or Gledopto plug straight in; Room OS drives them directly |
 | HDMI cables, 6 ft | 3–4 | $8 each | Pi to each aux TV, Apple TV to receiver, receiver to Sony if you do not have them |
 
-## Do you need the Raspberry Pis? Maybe not yet
+## Which device drives which screen, using what you own
+
+You listed iPads, Apple TVs, Chromecasts, Fire Sticks and an old computer. That covers every
+screen with nothing new to buy. No Raspberry Pi.
+
+| Screen | Shows | Driven by | Why this one |
+|---|---|---|---|
+| Sony 70" | The game (video) | Apple TV via the Onkyo | The broadcast itself; Room OS switches the TV and receiver to it |
+| Left Roku TV | Stats & Leaders board, or a second game | **Old computer** on HDMI 1, Chrome full screen on the display URL | A real computer is the most reliable kiosk there is; better than a Pi |
+| Right Roku TV | League scores / second game | **Fire TV Stick** on HDMI 1, Silk browser full screen | Fire OS is Android; Room OS opens the page on it with the same ADB driver as the projectors |
+| MoGo 2 Plus (ribbon) | The projected ribbon | **Mac** over HDMI from the desk, or the MoGo's own browser via ADB | The Mac is already running the agent |
+| Desk ultrawide | Scoreboard / fantasy | The Mac, second window | Already there |
+| iPad on the wall or console | The control app (Home, Live, Room) | Itself, as a home-screen web app | Your "one button" panel |
+| Spare iPad | A small stats board on the console or a player card by the couch | Itself, Safari full screen | Any display role works on it; the room treats it as another screen |
+| Chromecasts, spare Apple TVs | Second-game video on an aux TV later | Their own apps | Keep them for video, not web pages: Apple TV has no browser |
+
+Fire Stick setup is three minutes: Settings → My Fire TV → Developer options → ADB debugging
+On, note the IP under Settings → My Fire TV → About → Network, and turn off the screensaver
+under Settings → Display & Sounds → Screensaver → Start time → Never. Room OS then opens the page
+in Silk on Game Day and wakes the stick when the room wakes.
+
+The old computer: install Chrome, set it to open the display URL at login in kiosk mode (one
+command, in the setup guide), turn off sleep. Done.
+
+## Do you need the Raspberry Pis? Not with the gear above
 
 A Pi's only job here is to be a tiny computer that opens a web page full screen on a TV that has
 no browser of its own. Roku TVs have no browser, which is the only reason they were on the list.

@@ -5,7 +5,7 @@ export const DISPLAY_ROLES = [
 export type DisplayRole = (typeof DISPLAY_ROLES)[number];
 
 export const ROLE_LABELS: Record<DisplayRole, string> = {
-  MAIN_GAME: "Primary Game", SECOND_GAME: "Second Game", SCOREBOARD: "Scoreboard", PLAYER_STATS: "Player Stats",
+  MAIN_GAME: "Primary Game", SECOND_GAME: "Second Game", SCOREBOARD: "Scoreboard", PLAYER_STATS: "Stats & Leaders",
   FANTASY: "Fantasy", LEAGUE_SCORES: "League Scores", BRACKET: "Bracket", SOCIAL: "Social", ROOM_STATUS: "Room Status",
   MOVIE_INFO: "Movie Info", PROJECTED_TICKER: "Projected Ribbon", AMBIENT: "Ambient Art", CUSTOM: "Custom URL", OFF: "Off",
 };

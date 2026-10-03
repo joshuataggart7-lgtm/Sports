@@ -11,6 +11,7 @@ import { api } from "../app/api";
 import { connect, useRoom } from "../app/store";
 import { MainGame, SecondGame, Scoreboard, LeagueScores, RoomStatus, Ambient, MovieInfo, Placeholder, CustomUrl } from "./roles";
 import { ProjectedTicker } from "./ProjectedTicker";
+import { GameStatsBoard } from "./GameStats";
 
 export function DisplayPage() {
   const { id = "" } = useParams();
@@ -58,6 +59,7 @@ export function DisplayPage() {
       case "MAIN_GAME": return <MainGame s={s} />;
       case "SECOND_GAME": return <SecondGame s={s} display={display} />;
       case "SCOREBOARD": return <Scoreboard s={s} />;
+      case "PLAYER_STATS": return <GameStatsBoard s={s} gameId={display.roleOptions?.gameId ? String(display.roleOptions.gameId) : undefined} />;
       case "LEAGUE_SCORES": return <LeagueScores s={s} />;
       case "ROOM_STATUS": return <RoomStatus s={s} connected={connected} />;
       case "PROJECTED_TICKER": return <ProjectedTicker s={s} display={display} overlay={overlay} />;

@@ -4,7 +4,7 @@ import type { DisplayDevice, DisplayPreset } from "./displays";
 import type { SportsEvent } from "./events";
 import type { Scene } from "./modes";
 import type { AgentStatus, BroadcastDelayProfile, Room, TimelineEntry } from "./room";
-import type { Game, League } from "./sports";
+import type { Game, GameStats, League } from "./sports";
 
 /** Everything a client needs to render, pushed whole on connect and patched afterwards. */
 export interface RoomSnapshot {
@@ -17,6 +17,8 @@ export interface RoomSnapshot {
   automations: Automation[];
   delayProfiles: BroadcastDelayProfile[];
   games: Game[];            // today's games from the provider
+  /** Stats for watched and displayed games, by game id. */
+  stats: Record<string, GameStats>;
   leagues: League[];
   pendingEvents: SportsEvent[];
   recentEvents: SportsEvent[];
@@ -38,6 +40,7 @@ export type ServerMessage =
   | { type: "snapshot"; snapshot: RoomSnapshot }
   | { type: "patch"; patch: Partial<RoomSnapshot> }
   | { type: "game"; game: Game }
+  | { type: "stats"; stats: GameStats }
   | { type: "event"; event: SportsEvent }
   | { type: "timeline"; entry: TimelineEntry }
   | { type: "overlay"; displayIds: string[] | "all"; overlay: DisplayOverlay }

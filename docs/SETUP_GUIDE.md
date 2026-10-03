@@ -58,6 +58,22 @@ Roku TV cannot be powered on over the network. Then Settings → System → Adva
 Control by mobile apps → Network access → **Default**. Note each TV's IP under Settings → Network →
 About and send them.
 
+## Step 4c. Fire TV Stick for a stats screen (5 min)
+
+1. Settings → My Fire TV → About → press the center button on "Build" seven times until it says you are a developer (newer Fire OS already shows Developer options).
+2. Settings → My Fire TV → Developer options → **ADB debugging** → On.
+3. Settings → Display & Sounds → Screensaver → Start time → **Never**.
+4. Settings → My Fire TV → About → Network: note the IP. Send it.
+5. In the app → Settings → Devices, that TV's "browser box" gets driver `androidtv`, host = the stick's IP, and `browser` = `org.mozilla.tv.firefox` is not needed; leave browser empty and Silk opens the URL.
+
+## Step 4d. Old computer as a kiosk (10 min)
+
+Windows or Mac, either works. Install Chrome. Then make it open the display page full screen at
+login:
+
+- **Windows**: create a shortcut with target `"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --noerrdialogs --disable-infobars http://<agent-ip>:8790/display/<code>` and drop it in `shell:startup`. Power options: never sleep, never turn off the display.
+- **Mac**: System Settings → General → Login Items → add Chrome; then in Chrome open the display URL and press Control-Command-F for full screen. Energy: prevent sleeping.
+
 ## Step 5. The room agent computer (30 min)
 
 Any always-on machine works: a Mac mini, an Intel NUC, an old laptop, or a Raspberry Pi 4/5.

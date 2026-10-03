@@ -89,6 +89,34 @@ export interface Standing {
   rank?: number;
 }
 
+/** One comparison row on a stats board; pct values (0..1) drive the mirrored bars. */
+export interface StatLine { label: string; home: string | number; away: string | number; homePct?: number; awayPct?: number }
+
+export interface Leader {
+  category: "passing" | "rushing" | "receiving" | "points" | "rebounds" | "assists" | "defense";
+  name: string;
+  position?: string;
+  number?: string;
+  /** The stat line as a broadcast would show it: "24/31, 312 YDS, 3 TD". */
+  line: string;
+  value: number;
+  headshotUrl?: string;
+}
+
+export interface ScoringPlay { period: number; clock: string; side: "home" | "away"; text: string; homeScore: number; awayScore: number; type?: string }
+
+export interface GameStats {
+  gameId: string;
+  updatedAt: number;
+  team: StatLine[];
+  leaders: { home: Leader[]; away: Leader[] };
+  scoringPlays: ScoringPlay[];
+  /** 0..1 for the home team. */
+  winProbabilityHome?: number;
+  /** Most recent drives, newest first, e.g. "MISS · 8 plays, 75 yds, 3:42 · Touchdown". */
+  drives?: string[];
+}
+
 export type Unsubscribe = () => void;
 
 /** Never design around one feed. Mock first, licensed feeds later, identical surface. */
@@ -102,4 +130,6 @@ export interface SportsProvider {
   getStandings(leagueId: string): Promise<Standing[]>;
   getPlayByPlay(gameId: string): Promise<Play[]>;
   subscribeToGame(gameId: string, onUpdate: (game: Game, plays: Play[]) => void): Unsubscribe;
+  /** Box score, leaders, scoring summary, win probability. Optional; providers without it return undefined. */
+  getGameStats?(gameId: string): Promise<GameStats | undefined>;
 }

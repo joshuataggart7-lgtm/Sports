@@ -58,6 +58,7 @@ a choreographed automation runner, a React PWA, and a database schema.
 | Design language | Apple TV + ESPN + control room | Admin page | Charcoal palette, large score typography, restrained motion, Tailwind tokens in `web/src/index.css` | — |
 | Hardware: projector, screen, receiver, lights, TVs | MVP 2 | None | SIMULATED devices with the right capabilities so scenes are complete. Network drivers written for PJLink projectors, Sony Bravia TVs and WLED strips, plus Home Assistant; each device is probed individually and shows CONNECTED only when it answers. Settings has a device editor to assign drivers and hosts. See `docs/ROOM_PLAN.md` | SIMULATED / UNVERIFIED |
 | Real sports API, live subscriptions | MVP 3 | ESPN reads | Provider interface ready; `subscribeToGame` is polling-based for both providers | partial |
+| Stats & Leaders role | MVP 4 | None | Broadcast stats board: team comparison bars, leaders with headshots, win probability, scoring summary, drives. Simulated provider synthesizes a box score; ESPN provider reads the real one from the game summary endpoint (verified on a completed NFL game) | SIMULATED / CONNECTED |
 | Fantasy, bracket, social roles | MVP 4 | None | Roles exist with placeholder renderers labeled as such | NOT STARTED (content) |
 
 ## Order of implementation in this pass

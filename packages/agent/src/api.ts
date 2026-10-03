@@ -92,6 +92,7 @@ export function createApi(agent: Agent, opts: { staticDir?: string; pin?: string
   let snapshotTimer: NodeJS.Timeout | null = null;
   agent.on("change", () => { if (snapshotTimer) return; snapshotTimer = setTimeout(() => { snapshotTimer = null; const s: RoomSnapshot = agent.snapshot(); broadcast({ type: "snapshot", snapshot: s }); }, 150); });
   agent.on("game", (game) => broadcast({ type: "game", game }));
+  agent.on("stats", (stats) => broadcast({ type: "stats", stats }));
   agent.on("event", (event) => broadcast({ type: "event", event }));
   agent.on("timeline", (entry) => broadcast({ type: "timeline", entry }));
   agent.on("overlay", (ids, overlay) => broadcast({ type: "overlay", displayIds: ids, overlay }));

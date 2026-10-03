@@ -6,7 +6,7 @@
  * the whole room (events, delay sync, automations, displays) can be proven without a
  * paid feed or a game on TV. Deterministic given a seed; speed is adjustable.
  */
-import type { Game, League, Play, SportsProvider, Standing, Team, Unsubscribe } from "@room/core";
+import type { Game, GameStats, League, Leader, Play, ScoringPlay, SportsProvider, Standing, Team, Unsubscribe } from "@room/core";
 
 const LEAGUES: League[] = [
   { id: "ncaaf", name: "College Football", sport: "football" },
@@ -59,7 +59,25 @@ interface SimState {
   halftimeTicks?: number;
   finalTicks?: number;
   driveId: number;
+  acc: Record<"home" | "away", SideAcc>;
+  roster: Record<"home" | "away", Roster>;
+  drives: string[];
+  driveLog: { side: "home" | "away"; plays: number; yards: number; startClock: number; period: number };
 }
+
+interface SideAcc { plays: number; passYds: number; rushYds: number; passAtt: number; passComp: number; firstDowns: number; turnovers: number; thirdAtt: number; thirdConv: number; possession: number; penalties: number; pts: number; reb: number; ast: number; fgm: number; fga: number; tpm: number }
+interface Roster { qb: Player; rb: Player; wr1: Player; wr2: Player; def: Player; g1: Player; g2: Player; c: Player }
+interface Player { name: string; number: string; position: string; passYds: number; passTd: number; comp: number; att: number; rushYds: number; rushTd: number; carries: number; recYds: number; recTd: number; rec: number; tackles: number; sacks: number; pts: number; reb: number; ast: number }
+
+const FIRST = ["J.", "M.", "D.", "T.", "K.", "A.", "C.", "R.", "B.", "E."];
+const LAST = ["Carter", "Hayes", "Brooks", "Reed", "Walker", "Bennett", "Cole", "Foster", "Grant", "Hughes", "Parker", "Quinn", "Sutton", "Turner", "Vance", "Wells"];
+function roster(seed: number): Roster {
+  let i = seed;
+  const mk = (position: string, num: number): Player => ({ name: `${FIRST[(i += 3) % FIRST.length]} ${LAST[(i += 7) % LAST.length]}`, number: String(num), position, passYds: 0, passTd: 0, comp: 0, att: 0, rushYds: 0, rushTd: 0, carries: 0, recYds: 0, recTd: 0, rec: 0, tackles: 0, sacks: 0, pts: 0, reb: 0, ast: 0 });
+  return { qb: mk("QB", 10 + (seed % 7)), rb: mk("RB", 20 + (seed % 9)), wr1: mk("WR", 1 + (seed % 9)), wr2: mk("WR", 11 + (seed % 8)), def: mk("LB", 40 + (seed % 15)), g1: mk("G", 1 + (seed % 20)), g2: mk("G", 1 + ((seed * 3) % 20)), c: mk("C", 30 + (seed % 10)) };
+}
+const emptyAcc = (): SideAcc => ({ plays: 0, passYds: 0, rushYds: 0, passAtt: 0, passComp: 0, firstDowns: 0, turnovers: 0, thirdAtt: 0, thirdConv: 0, possession: 0, penalties: 0, pts: 0, reb: 0, ast: 0, fgm: 0, fga: 0, tpm: 0 });
+function hashSeed(str: string): number { let h = 7; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
 
 export interface SimulatedOptions {
   seed?: number;
@@ -104,7 +122,25 @@ export class SimulatedProvider implements SportsProvider {
       situation: league.sport === "football" ? { possession: "home", down: 1, distance: 10, yardLine: 38, yardLineText: `${homeAbbr} 38`, redZone: false } : {},
       venue, broadcast, seq: 1, updatedAt: Date.now(),
     };
-    this.games.set(id, { game, clockSeconds: s.clock, yardLine: 38, down: 1, distance: 10, plays: [], seq: 1, driveId: 1 });
+    const st: SimState = { game, clockSeconds: s.clock, yardLine: 38, down: 1, distance: 10, plays: [], seq: 1, driveId: 1, acc: { home: emptyAcc(), away: emptyAcc() }, roster: { home: roster(hashSeed(homeAbbr)), away: roster(hashSeed(awayAbbr)) }, drives: [], driveLog: { side: "home", plays: 0, yards: 0, startClock: s.clock, period: s.period } };
+    // Pre-game stats so a game joined in progress looks like one: roughly proportional to the score.
+    for (const side of ["home", "away"] as const) {
+      const pts = side === "home" ? s.home : s.away;
+      const a = st.acc[side], r = st.roster[side];
+      if (league.sport === "football") {
+        a.passYds = Math.round(pts * 6.5 + 40); a.rushYds = Math.round(pts * 3.2 + 30); a.passAtt = Math.round(pts * 0.9 + 8); a.passComp = Math.round(a.passAtt * 0.64);
+        a.firstDowns = Math.round(pts * 0.55 + 4); a.thirdAtt = Math.round(pts * 0.35 + 3); a.thirdConv = Math.round(a.thirdAtt * 0.42); a.possession = 60 * (12 + Math.round(pts * 0.3)); a.turnovers = pts < 20 ? 1 : 0; a.penalties = 3;
+        r.qb.passYds = a.passYds; r.qb.att = a.passAtt; r.qb.comp = a.passComp; r.qb.passTd = Math.floor(pts / 10);
+        r.rb.rushYds = Math.round(a.rushYds * 0.7); r.rb.carries = Math.round(a.rushYds / 5); r.rb.rushTd = Math.max(0, Math.floor(pts / 14) - 1);
+        r.wr1.recYds = Math.round(a.passYds * 0.45); r.wr1.rec = Math.round(a.passComp * 0.4); r.wr1.recTd = Math.floor(pts / 17);
+        r.wr2.recYds = Math.round(a.passYds * 0.3); r.wr2.rec = Math.round(a.passComp * 0.3);
+        r.def.tackles = 5 + Math.round(pts / 8); r.def.sacks = pts > 20 ? 1 : 0;
+      } else {
+        a.pts = pts; a.fga = Math.round(pts * 0.85); a.fgm = Math.round(pts * 0.38); a.tpm = Math.round(pts * 0.12); a.reb = Math.round(pts * 0.4); a.ast = Math.round(pts * 0.22);
+        r.g1.pts = Math.round(pts * 0.28); r.g1.ast = Math.round(a.ast * 0.4); r.g2.pts = Math.round(pts * 0.2); r.c.pts = Math.round(pts * 0.18); r.c.reb = Math.round(a.reb * 0.35);
+      }
+    }
+    this.games.set(id, st);
   }
 
   // ------------------------------------------------------------------ provider surface
@@ -292,17 +328,94 @@ export class SimulatedProvider implements SportsProvider {
     const g = s.game;
     g.status = "live"; g.period = 1; g.periodLabel = periodLabel(g.sport, 1); g.homeScore = 0; g.awayScore = 0; g.startTime = Date.now();
     s.clockSeconds = g.sport === "football" ? 900 : 720; s.yardLine = 25; s.down = 1; s.distance = 10; s.plays = []; s.finalTicks = 0; s.driveId += 1; s.pendingOverturn = undefined;
+    s.acc = { home: emptyAcc(), away: emptyAcc() }; s.roster = { home: roster(hashSeed(g.home.abbreviation)), away: roster(hashSeed(g.away.abbreviation)) }; s.drives = []; s.driveLog = { side: "away", plays: 0, yards: 0, startClock: s.clockSeconds, period: 1 };
     g.situation = g.sport === "football" ? { possession: "away", down: 1, distance: 10, yardLine: 25, yardLineText: `${g.away.abbreviation} 25`, redZone: false } : {};
     this.record(s, undefined, "kickoff", "New game (simulated replay)", 0, false);
   }
 
   private record(s: SimState, team: "home" | "away" | undefined, type: string, text: string, yards: number, scoring: boolean): Play {
     s.seq += 1;
+    if (team) this.accumulate(s, team, type, yards);
     const p: Play = { id: `${s.game.id}:${s.seq}`, gameId: s.game.id, seq: s.seq, ts: Date.now(), period: s.game.period, clock: fmtClock(s.clockSeconds), team, type, text, yards, scoring, homeScore: s.game.homeScore, awayScore: s.game.awayScore };
     s.plays.push(p);
     if (s.plays.length > 400) s.plays.shift();
     s.game.situation.lastPlay = text;
     return p;
+  }
+
+  private accumulate(s: SimState, side: "home" | "away", type: string, yards: number): void {
+    const a = s.acc[side], r = s.roster[side], other = s.acc[side === "home" ? "away" : "home"];
+    const dl = s.driveLog;
+    if (dl.side !== side && ["pass", "rush", "punt", "field_goal", "touchdown"].includes(type)) {
+      if (dl.plays > 0) s.drives.unshift(`${abbr(s, dl.side)} · ${dl.plays} plays, ${dl.yards} yds`);
+      s.drives.length = Math.min(s.drives.length, 6);
+      Object.assign(dl, { side, plays: 0, yards: 0, startClock: s.clockSeconds, period: s.game.period });
+    }
+    if (s.game.sport === "football") {
+      if (["pass", "rush", "touchdown", "interception", "fumble"].includes(type)) { a.plays++; dl.plays++; a.possession += 25; }
+      if (s.down === 3 && (type === "pass" || type === "rush")) a.thirdAtt++;
+      if (type === "pass") { a.passAtt++; r.qb.att++; if (yards > 0) { a.passComp++; r.qb.comp++; a.passYds += yards; r.qb.passYds += yards; dl.yards += yards; const wr = Math.random() < 0.6 ? r.wr1 : r.wr2; wr.rec++; wr.recYds += yards; } }
+      if (type === "rush") { a.rushYds += yards; r.rb.rushYds += yards; r.rb.carries++; dl.yards += yards; }
+      if ((type === "pass" || type === "rush") && yards >= s.distance) { a.firstDowns++; if (s.down === 3) a.thirdConv++; }
+      if (type === "touchdown") { if (/pass/.test(s.game.situation.lastPlay ?? "")) { r.qb.passTd++; r.wr1.recTd++; } else r.rb.rushTd++; dl.yards += yards; s.drives.unshift(`${abbr(s, side)} · ${dl.plays + 1} plays, ${dl.yards} yds · Touchdown`); dl.plays = 0; dl.yards = 0; }
+      if (type === "field_goal") { s.drives.unshift(`${abbr(s, side)} · ${dl.plays} plays, ${dl.yards} yds · Field goal`); dl.plays = 0; dl.yards = 0; }
+      if (type === "interception" || type === "fumble") { a.turnovers++; const d = s.roster[side === "home" ? "away" : "home"].def; d.tackles++; }
+      if (type === "pass" && yards === 0 && Math.random() < 0.08) { const d = s.roster[side === "home" ? "away" : "home"].def; d.sacks++; }
+      if (Math.random() < 0.04) a.penalties++;
+      void other;
+    } else {
+      const pts = type === "three_pointer" ? 3 : type === "dunk" || type === "field_goal_2" ? 2 : type === "free_throw" ? 1 : 0;
+      if (type !== "free_throw" && type !== "miss") { a.fga++; a.fgm++; if (pts === 3) a.tpm++; } else if (type === "miss") { a.fga++; if (Math.random() < 0.5) { const reb = Math.random() < 0.7 ? other : a; reb.reb++; if (reb === a) r.c.reb++; } }
+      if (pts) { a.pts += pts; const who = [r.g1, r.g1, r.g2, r.c][Math.floor(Math.random() * 4)]; who.pts += pts; if (Math.random() < 0.55) { a.ast++; (who === r.g1 ? r.g2 : r.g1).ast++; } }
+    }
+  }
+
+  async getGameStats(gameId: string): Promise<GameStats | undefined> {
+    const s = this.games.get(gameId);
+    if (!s) return undefined;
+    const g = s.game, h = s.acc.home, a = s.acc.away;
+    const pct = (x: number, y: number) => (x + y > 0 ? [x / (x + y), y / (x + y)] : [0.5, 0.5]);
+    const row = (label: string, hv: string | number, av: string | number, hn: number, an: number): import("@room/core").StatLine => { const [hp, ap] = pct(hn, an); return { label, home: hv, away: av, homePct: hp, awayPct: ap }; };
+    const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
+    const team = g.sport === "football" ? [
+      row("Total yards", h.passYds + h.rushYds, a.passYds + a.rushYds, h.passYds + h.rushYds, a.passYds + a.rushYds),
+      row("Passing", h.passYds, a.passYds, h.passYds, a.passYds),
+      row("Rushing", h.rushYds, a.rushYds, h.rushYds, a.rushYds),
+      row("First downs", h.firstDowns, a.firstDowns, h.firstDowns, a.firstDowns),
+      row("3rd down", `${h.thirdConv}/${h.thirdAtt}`, `${a.thirdConv}/${a.thirdAtt}`, h.thirdAtt ? h.thirdConv / h.thirdAtt : 0, a.thirdAtt ? a.thirdConv / a.thirdAtt : 0),
+      row("Turnovers", h.turnovers, a.turnovers, a.turnovers, h.turnovers),
+      row("Penalties", h.penalties, a.penalties, a.penalties, h.penalties),
+      row("Possession", mmss(h.possession), mmss(a.possession), h.possession, a.possession),
+    ] : [
+      row("Field goals", `${h.fgm}/${h.fga}`, `${a.fgm}/${a.fga}`, h.fga ? h.fgm / h.fga : 0, a.fga ? a.fgm / a.fga : 0),
+      row("3-pointers", h.tpm, a.tpm, h.tpm, a.tpm),
+      row("Rebounds", h.reb, a.reb, h.reb, a.reb),
+      row("Assists", h.ast, a.ast, h.ast, a.ast),
+    ];
+    const leaders = (side: "home" | "away"): Leader[] => {
+      const r = s.roster[side];
+      if (g.sport === "football") return [
+        { category: "passing", name: r.qb.name, position: "QB", number: r.qb.number, line: `${r.qb.comp}/${r.qb.att}, ${r.qb.passYds} YDS, ${r.qb.passTd} TD`, value: r.qb.passYds },
+        { category: "rushing", name: r.rb.name, position: "RB", number: r.rb.number, line: `${r.rb.carries} CAR, ${r.rb.rushYds} YDS, ${r.rb.rushTd} TD`, value: r.rb.rushYds },
+        { category: "receiving", name: r.wr1.name, position: "WR", number: r.wr1.number, line: `${r.wr1.rec} REC, ${r.wr1.recYds} YDS, ${r.wr1.recTd} TD`, value: r.wr1.recYds },
+        { category: "defense", name: r.def.name, position: "LB", number: r.def.number, line: `${r.def.tackles} TKL, ${r.def.sacks} SACK`, value: r.def.tackles },
+      ];
+      return [
+        { category: "points", name: r.g1.name, position: "G", number: r.g1.number, line: `${r.g1.pts} PTS, ${r.g1.ast} AST`, value: r.g1.pts },
+        { category: "rebounds", name: r.c.name, position: "C", number: r.c.number, line: `${r.c.pts} PTS, ${r.c.reb} REB`, value: r.c.reb },
+        { category: "assists", name: r.g2.name, position: "G", number: r.g2.number, line: `${r.g2.pts} PTS, ${r.g2.ast} AST`, value: r.g2.ast },
+      ];
+    };
+    const scoringPlays: ScoringPlay[] = s.plays.filter((p) => p.scoring && !p.reversed && p.team && p.type !== "extra_point" && p.type !== "free_throw").slice(-8).reverse().map((p) => ({ period: p.period, clock: p.clock, side: p.team!, text: p.text, homeScore: p.homeScore, awayScore: p.awayScore, type: p.type }));
+    // Win probability: score margin against time left, squashed. Good enough for a demo board.
+    const regulation = g.sport === "football" ? 4 * 900 : 4 * 720;
+    const elapsed = Math.min(regulation, (g.period - 1) * (regulation / 4) + ((regulation / 4) - (s.clockSeconds || 0)));
+    const left = Math.max(1, regulation - elapsed);
+    const margin = g.homeScore - g.awayScore;
+    const k = g.sport === "football" ? 6.5 : 4.5;
+    const z = margin / (k * Math.sqrt(left / regulation) + 0.6);
+    const wp = g.status === "final" ? (margin > 0 ? 1 : margin < 0 ? 0 : 0.5) : 1 / (1 + Math.exp(-z));
+    return { gameId, updatedAt: Date.now(), team, leaders: { home: leaders("home"), away: leaders("away") }, scoringPlays, winProbabilityHome: Math.round(wp * 1000) / 1000, drives: s.drives.slice(0, 5) };
   }
 
   private publish(s: SimState, plays: Play[]): void {

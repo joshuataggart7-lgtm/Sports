@@ -45,6 +45,7 @@ function handle(msg: ServerMessage): void {
   switch (msg.type) {
     case "snapshot": set({ snapshot: msg.snapshot }); break;
     case "game": if (s) set({ snapshot: { ...s, games: s.games.some((g) => g.id === msg.game.id) ? s.games.map((g) => (g.id === msg.game.id ? msg.game : g)) : [...s.games, msg.game] } }); break;
+    case "stats": if (s) set({ snapshot: { ...s, stats: { ...(s.stats ?? {}), [msg.stats.gameId]: msg.stats } } }); break;
     case "event": if (s) { const rest = s.recentEvents.filter((e) => e.id !== msg.event.id); set({ snapshot: { ...s, recentEvents: [msg.event, ...rest].slice(0, 40), pendingEvents: msg.event.state === "pending" ? [msg.event, ...s.pendingEvents.filter((e) => e.id !== msg.event.id)] : s.pendingEvents.filter((e) => e.id !== msg.event.id) }, lastEvent: msg.event }); } break;
     case "timeline": if (s) set({ snapshot: { ...s, timeline: [msg.entry, ...s.timeline].slice(0, 120) } }); break;
     case "overlay": {
