@@ -15,6 +15,8 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
   --font-score: "SF Pro Display", -apple-system, "Inter", system-ui, sans-serif;
   --radius-xl2: 1.25rem;
+  --font-broadcast: "Barlow Condensed", "Arial Narrow", "Oswald", Impact, sans-serif;
+  --font-broadcast-body: "Barlow", "Barlow Condensed", system-ui, sans-serif;
 }
 
 :root { color-scheme: dark; }
@@ -35,3 +37,16 @@ body { background: var(--color-ink); color: var(--color-fog); font-family: var(-
 .rise { animation: rise .35s ease-out both; }
 .live-dot { animation: pulseGlow 1.6s ease-in-out infinite; }
 .score-flash { animation: scoreFlash 1.2s ease-out; }
+
+/* Broadcast graphics: condensed caps, tabular numerals, team-color edges, dark glass bars. */
+.bc { font-family: var(--font-broadcast); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.bc-body { font-family: var(--font-broadcast-body); }
+.bc-bar { background: linear-gradient(180deg, #1c2029 0%, #0f1218 100%); box-shadow: 0 2px 0 #000 inset, 0 8px 30px rgba(0,0,0,.6); }
+.bc-glass { background: linear-gradient(180deg, rgba(28,32,41,.92), rgba(12,14,19,.96)); }
+.bc-shine { background-image: linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 48%, rgba(0,0,0,.18) 100%); }
+@keyframes bcPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.bc-pulse { animation: bcPulse 1.1s ease-in-out infinite; }
+@keyframes bcSlide { from { transform: translateY(110%); opacity: 0; } to { transform: none; opacity: 1; } }
+.bc-slide { animation: bcSlide .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes bcWipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.bc-wipe { animation: bcWipe .5s cubic-bezier(.2,.8,.2,1) both; }

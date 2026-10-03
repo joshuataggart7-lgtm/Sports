@@ -73,7 +73,7 @@ export function DisplayPage() {
     <div className="relative h-screen w-screen overflow-hidden bg-black text-fog">
       {body}
       {role !== "PROJECTED_TICKER" && overlay && overlay.until > Date.now() && <OverlayLayer o={overlay} />}
-      {role !== "PROJECTED_TICKER" && <div className="absolute bottom-3 right-4 text-[11px] uppercase tracking-widest text-dim/70">{display.name} · {role?.replace(/_/g, " ")}{!connected ? " · reconnecting" : ""}</div>}
+      {role !== "PROJECTED_TICKER" && <div className="absolute bottom-1.5 right-3 text-[10px] uppercase tracking-widest text-white/20">{display.name} · {role?.replace(/_/g, " ")}{!connected ? " · reconnecting" : ""}</div>}
     </div>
   );
 }
@@ -86,11 +86,12 @@ export function OverlayLayer({ o }: { o: DisplayOverlay }) {
   if (o.until <= Date.now()) return null;
   const color = o.color ?? "#ffffff";
   if (o.kind === "celebration") return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ background: `radial-gradient(ellipse at center, ${color}cc 0%, ${color}22 55%, #000 100%)`, animation: `celebrate ${Math.max(1, (o.until - Date.now()) / 1000)}s ease-out forwards` }}>
-      <div className="text-[12vw] font-black leading-none tracking-tight text-white drop-shadow-[0_6px_30px_rgba(0,0,0,0.6)]">{o.text}</div>
-      {o.subtext && <div className="mt-4 text-[4vw] font-semibold text-white/85">{o.subtext}</div>}
+    <div className="bc absolute inset-0 flex flex-col items-center justify-center" style={{ background: `radial-gradient(ellipse at center, ${color}dd 0%, ${color}33 50%, #000 100%)`, animation: `celebrate ${Math.max(1, (o.until - Date.now()) / 1000)}s ease-out forwards` }}>
+      <div className="bc-shine absolute inset-0" />
+      <div className="relative text-[13vw] font-black uppercase leading-none tracking-[0.04em] text-white" style={{ textShadow: "0 10px 40px rgba(0,0,0,.6)" }}>{o.text}</div>
+      {o.subtext && <div className="relative mt-[1vh] rounded-[0.4em] bg-black/40 px-[1em] py-[0.2em] text-[3.6vw] font-bold uppercase tracking-[0.12em] text-white/90">{o.subtext}</div>}
     </div>
   );
-  if (o.kind === "alert") return <div className="absolute inset-x-0 top-0 flex items-center justify-center gap-6 border-b-4 py-4" style={{ borderColor: color, background: `${color}22` }}><span className="text-[3vw] font-black tracking-widest" style={{ color }}>{o.text}</span>{o.subtext && <span className="text-[2vw] text-fog/80">{o.subtext}</span>}</div>;
-  return <div className="absolute inset-x-0 bottom-0 flex items-center gap-6 px-10 py-5" style={{ background: "linear-gradient(to top, #000e, #0000)", borderBottom: `6px solid ${color}` }}><span className="text-[3.5vw] font-black tracking-wide" style={{ color }}>{o.text}</span>{o.subtext && <span className="text-[2vw] text-fog/80">{o.subtext}</span>}</div>;
+  if (o.kind === "alert") return <div className="bc bc-slide absolute inset-x-0 top-0 flex items-center justify-center gap-6 py-[1.2vh]" style={{ background: `linear-gradient(180deg, ${color}, ${color}bb)` }}><span className="bc-pulse text-[3vw] font-black uppercase tracking-[0.2em] text-white">{o.text}</span>{o.subtext && <span className="text-[2vw] font-bold text-white/85">{o.subtext}</span>}</div>;
+  return <div className="bc bc-slide absolute inset-x-[6vw] bottom-[5vh] flex items-center gap-[1.2vw] overflow-hidden rounded-[0.5vw] bc-bar px-[1.5vw] py-[1vh]" style={{ borderLeft: `0.9vw solid ${color}` }}><span className="text-[3.2vw] font-black uppercase tracking-[0.06em] text-white">{o.text}</span>{o.subtext && <span className="text-[2vw] font-bold text-white/70">{o.subtext}</span>}</div>;
 }

@@ -31,7 +31,7 @@ export interface TickerConfig {
 }
 
 export const DEFAULT_TICKER: TickerConfig = {
-  x: 0, y: 40, width: 1920, height: 120, fontPx: 64, mode: "static", scrollPxPerSec: 60, leagues: [],
+  x: 0, y: 30, width: 1920, height: 150, fontPx: 56, mode: "static", scrollPxPerSec: 60, leagues: [],
   showClock: true, showDownDistance: true, showPossession: true, redZoneAlert: true, scoreFlash: true,
   canvasWidth: 1920, canvasHeight: 1080,
 };

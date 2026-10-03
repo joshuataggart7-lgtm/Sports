@@ -14,8 +14,17 @@ const LEAGUES: League[] = [
   { id: "nba", name: "NBA", sport: "basketball" },
 ];
 
+/** Logos come from ESPN's public CDN (personal, in-home use). */
+const LOGOS: Record<string, string> = {
+  MISS: "https://a.espncdn.com/i/teamlogos/ncaa/500/145.png", LSU: "https://a.espncdn.com/i/teamlogos/ncaa/500/99.png",
+  ALA: "https://a.espncdn.com/i/teamlogos/ncaa/500/333.png", UGA: "https://a.espncdn.com/i/teamlogos/ncaa/500/61.png",
+  NO: "https://a.espncdn.com/i/teamlogos/nfl/500/no.png", ATL: "https://a.espncdn.com/i/teamlogos/nfl/500/atl.png",
+  DAL: "https://a.espncdn.com/i/teamlogos/nfl/500/dal.png", PHI: "https://a.espncdn.com/i/teamlogos/nfl/500/phi.png",
+  BOS: "https://a.espncdn.com/i/teamlogos/nba/500/bos.png", NYK: "https://a.espncdn.com/i/teamlogos/nba/500/nyk.png",
+};
+
 function team(leagueId: string, abbreviation: string, name: string, shortName: string, primary: string, secondary: string, celebration: Team["profile"]["celebration"] = "pulse"): Team {
-  return { id: `${leagueId}:${abbreviation}`, leagueId, abbreviation, name, shortName, profile: { primaryColor: primary, secondaryColor: secondary, celebration } };
+  return { id: `${leagueId}:${abbreviation}`, leagueId, abbreviation, name, shortName, logoUrl: LOGOS[abbreviation], record: "4-1", profile: { primaryColor: primary, secondaryColor: secondary, celebration } };
 }
 
 export const SIM_TEAMS: Team[] = [

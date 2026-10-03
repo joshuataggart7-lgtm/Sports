@@ -37,8 +37,10 @@ export function Displays() {
 
       <Card title="Room">
         <div className="relative aspect-[16/8] w-full overflow-hidden rounded-xl border border-line bg-ink" onDragOver={(e) => e.preventDefault()}>
-          <div className="absolute inset-x-[10%] bottom-[8%] rounded-t-3xl border border-line/60 px-3 py-1 text-center text-[10px] uppercase tracking-widest text-dim">couch</div>
-          <div className="absolute left-[38%] top-[48%] w-[24%] rounded-md border border-line/60 py-0.5 text-center text-[9px] uppercase tracking-widest text-dim">media console</div>
+          <div className="absolute left-[3%] right-[3%] top-[1%] text-center text-[9px] uppercase tracking-[0.3em] text-dim">TV wall · projector screen drops to here for the ribbon</div>
+          <div className="absolute left-[34%] top-[46%] w-[32%] rounded-md border border-line/60 py-0.5 text-center text-[9px] uppercase tracking-widest text-dim">console · receiver · apple tv</div>
+          <div className="absolute inset-x-[30%] bottom-[8%] rounded-t-3xl border border-line/60 px-3 py-1 text-center text-[10px] uppercase tracking-widest text-dim">loveseat (closet wall)</div>
+          <div className="absolute right-[3%] bottom-[10%] w-[22%] rounded-md border border-line/60 py-1 text-center text-[9px] uppercase tracking-widest text-dim">window · curtains</div>
           {s.displays.map((d) => <Screen key={d.id} d={d} selected={selected === d.id} onSelect={() => setSelected(selected === d.id ? null : d.id)} onDrop={(role) => assign(d.id, role)} />)}
         </div>
         <p className="mt-2 text-xs text-mute">Screens report ● when a browser is paired and showing their role. Open <code>/display/&lt;code&gt;</code> on any TV browser.</p>

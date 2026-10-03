@@ -1,12 +1,12 @@
 /**
- * The projected ribbon. The projector throws a full 16:9 image; we paint it true black
- * and light only a narrow viewport (x, y, width, height from the display's ticker
- * config). Sparse by design: the watched game, then one line of other scores.
+ * The projected ribbon, styled like a telecast's bottom line. The projector throws a full
+ * image; everything outside the configured viewport is true black. Sparse by design: the
+ * watched game as a score bug, then one line of other scores that cycles or scrolls.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { DEFAULT_TICKER, type DisplayDevice, type DisplayOverlay, type Game, type RoomSnapshot, type TickerConfig } from "@room/core";
 import { favoriteSide, primaryGame } from "../app/store";
-import { ordinal, useFlash } from "../components/Score";
+import { Logo, ScoreBug } from "./broadcast";
 
 export function ProjectedTicker({ s, display, overlay }: { s: RoomSnapshot; display: DisplayDevice; overlay?: DisplayOverlay }) {
   const cfg: TickerConfig = { ...DEFAULT_TICKER, ...((display.roleOptions?.ticker as Partial<TickerConfig>) ?? {}) };
@@ -15,80 +15,55 @@ export function ProjectedTicker({ s, display, overlay }: { s: RoomSnapshot; disp
   const [, tick] = useState(0);
   useEffect(() => { const t = setInterval(() => tick((x) => x + 1), 500); return () => clearInterval(t); }, []);
   const active = overlay && overlay.until > Date.now() && overlay.kind !== "clear" ? overlay : undefined;
-  // Scale the configured pixel viewport to the actual screen so a 1920-wide config fits any projector resolution.
   const scale = typeof window !== "undefined" ? window.innerWidth / cfg.canvasWidth : 1;
   const box = { left: cfg.x * scale, top: cfg.y * scale, width: cfg.width * scale, height: cfg.height * scale };
-  const font = cfg.fontPx * scale;
+  const twoRows = box.height >= 1.9 * cfg.fontPx * scale;
+  const mainH = twoRows ? Math.round(box.height * 0.58) : box.height;
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-black">
-      <div className="absolute overflow-hidden" style={{ ...box, fontSize: font, lineHeight: 1 }}>
-        {active ? <Takeover o={active} h={box.height} /> : g ? <Ribbon g={g} others={others} cfg={cfg} fav={favoriteSide(s, g)} h={box.height} /> : <div className="flex h-full items-center px-[1em] text-[0.6em] text-mute">ROOM OS</div>}
+      <div className="absolute flex flex-col overflow-hidden" style={box}>
+        {active ? <Takeover o={active} h={box.height} g={g} /> : g ? (
+          <>
+            <div className="flex items-center" style={{ height: mainH }}>
+              <ScoreBug game={g} h={Math.round(mainH * 0.86)} fav={favoriteSide(s, g)} showSituation={cfg.showDownDistance} />
+              {cfg.redZoneAlert && g.situation.redZone && g.status === "live" && <div className="bc bc-pulse ml-[1em] text-[0.7em] font-black tracking-[0.2em] text-alert" style={{ fontSize: mainH * 0.36 }}>RED ZONE</div>}
+            </div>
+            {twoRows && others.length > 0 && <OthersLine others={others} h={box.height - mainH} cfg={cfg} s={s} />}
+          </>
+        ) : <div className="bc flex h-full items-center px-[1em] text-[0.6em] text-white/40">ROOM OS</div>}
       </div>
     </div>
   );
 }
 
-function Ribbon({ g, others, cfg, fav, h }: { g: Game; others: Game[]; cfg: TickerConfig; fav?: "home" | "away"; h: number }) {
-  const s = g.situation;
-  const dd = cfg.showDownDistance && s.down ? `${ordinal(s.down)} & ${s.distance}` : "";
-  const red = cfg.redZoneAlert && s.redZone;
-  const main = (
-    <div className="flex h-full items-center gap-[0.8em] whitespace-nowrap px-[0.6em] font-bold tracking-wide">
-      <Team g={g} side="away" fav={fav === "away"} cfg={cfg} />
-      <Score g={g} side="away" cfg={cfg} />
-      <span className="text-[0.55em] text-mute">|</span>
-      <Team g={g} side="home" fav={fav === "home"} cfg={cfg} />
-      <Score g={g} side="home" cfg={cfg} />
-      {g.status === "live" && <><Sep /><span className="text-[0.75em] text-fog/85">{g.periodLabel}</span>{cfg.showClock && <span className="tnum text-[0.75em] text-fog/85">{g.clock}</span>}</>}
-      {g.status === "final" && <><Sep /><span className="text-[0.7em] text-mute">FINAL</span></>}
-      {g.status === "halftime" && <><Sep /><span className="text-[0.7em] text-mute">HALF</span></>}
-      {s.yardLineText && g.status === "live" && <><Sep /><span className="text-[0.6em] text-mute">BALL</span><span className="text-[0.7em] text-fog/85">{s.yardLineText}</span></>}
-      {dd && g.status === "live" && <span className="text-[0.7em] text-fog/85">{dd}</span>}
-      {red && <span className="rounded-[0.2em] bg-alert px-[0.35em] py-[0.1em] text-[0.5em] font-black tracking-widest text-white">RED ZONE</span>}
-    </div>
-  );
-  const second = others.length > 0 && (
-    <div className="flex h-full items-center gap-[1.2em] whitespace-nowrap px-[0.6em] text-[0.62em] font-semibold text-fog/75">
-      {others.map((o) => <span key={o.id} className="flex items-center gap-[0.5em]"><span className="text-[0.75em] uppercase tracking-widest text-mute">{o.leagueId}:</span><span>{o.away.abbreviation} <span className="tnum">{o.awayScore}</span></span><span>{o.home.abbreviation} <span className="tnum">{o.homeScore}</span></span>{o.status === "live" && <span className="text-[0.8em] text-mute">{o.periodLabel}</span>}</span>)}
-    </div>
-  );
-  const twoRows = h >= 2.2 * cfg.fontPx * (typeof window !== "undefined" ? window.innerWidth / cfg.canvasWidth : 1);
+function OthersLine({ others, h, cfg, s }: { others: Game[]; h: number; cfg: TickerConfig; s: RoomSnapshot }) {
+  const bugs = others.map((o) => <ScoreBug key={o.id} game={o} h={Math.round(h * 0.78)} showSituation={false} fav={favoriteSide(s, o)} />);
   if (cfg.mode === "scroll") {
-    return <div className="flex h-full items-center"><div className="flex whitespace-nowrap" style={{ animation: `ticker ${Math.max(10, 40000 / cfg.scrollPxPerSec)}s linear infinite` }}>{main}{second}</div></div>;
+    return <div className="flex items-center overflow-hidden" style={{ height: h }}><div className="flex gap-[1.2em] whitespace-nowrap pl-[100%]" style={{ fontSize: h * 0.4, animation: `ticker ${Math.max(12, (others.length * 600) / cfg.scrollPxPerSec * 10)}s linear infinite` }}>{bugs}</div></div>;
   }
-  if (twoRows) return <div className="grid h-full grid-rows-[1.5fr_1fr]"><div className="min-h-0">{main}</div><div className="min-h-0 border-t border-line/60">{second}</div></div>;
-  return <Cycle a={main} b={second || null} />;
+  return <Cycle items={bugs} h={h} />;
 }
 
-function Cycle({ a, b }: { a: React.ReactNode; b: React.ReactNode }) {
-  const [showB, setShowB] = useState(false);
-  useEffect(() => { if (!b) return; const t = setInterval(() => setShowB((x) => !x), 8000); return () => clearInterval(t); }, [b]);
-  return <div className="h-full" key={showB ? "b" : "a"} style={{ animation: "rise .4s ease-out" }}>{showB && b ? b : a}</div>;
+function Cycle({ items, h }: { items: React.ReactNode[]; h: number }) {
+  const [i, setI] = useState(0);
+  const perPage = 3;
+  const pages = Math.max(1, Math.ceil(items.length / perPage));
+  useEffect(() => { if (pages <= 1) return; const t = setInterval(() => setI((x) => (x + 1) % pages), 8000); return () => clearInterval(t); }, [pages]);
+  return <div key={i} className="bc-slide flex items-center gap-[0.6em]" style={{ height: h, fontSize: h * 0.4 }}>{items.slice(i * perPage, i * perPage + perPage)}</div>;
 }
 
-function Team({ g, side, fav, cfg }: { g: Game; side: "home" | "away"; fav: boolean; cfg: TickerConfig }) {
-  const t = g[side];
-  const poss = cfg.showPossession && g.situation.possession === side && g.status === "live";
-  return <span className={`flex items-center gap-[0.35em] uppercase ${fav ? "text-white" : "text-fog/85"}`}><span className="inline-block h-[0.55em] w-[0.18em] rounded-sm" style={{ background: t.profile.primaryColor }} />{t.shortName}{poss && <span className="text-[0.45em]" style={{ color: t.profile.primaryColor }}>●</span>}</span>;
-}
-
-function Score({ g, side, cfg }: { g: Game; side: "home" | "away"; cfg: TickerConfig }) {
-  const v = side === "home" ? g.homeScore : g.awayScore;
-  const flash = useFlash(v);
-  const ref = useRef<HTMLSpanElement>(null);
-  if (g.status === "scheduled") return null;
-  return <span ref={ref} className={`tnum rounded-[0.15em] px-[0.15em] ${cfg.scoreFlash && flash ? "score-flash" : ""}`} style={{ ["--flash" as string]: g[side].profile.primaryColor }}>{v}</span>;
-}
-
-function Sep() { return <span className="text-[0.55em] text-mute">|</span>; }
-
-function Takeover({ o, h }: { o: DisplayOverlay; h: number }) {
+/** Takeover: a full-width team-color bar with the logo, the way a network cuts to a scoring graphic. */
+function Takeover({ o, h, g }: { o: DisplayOverlay; h: number; g?: Game }) {
   const color = o.color ?? "#fff";
+  const side = g && o.text ? (o.text.includes(g.home.abbreviation) ? "home" : o.text.includes(g.away.abbreviation) ? "away" : undefined) : undefined;
+  const celebrate = o.kind === "celebration";
   return (
-    <div className="flex h-full items-center gap-[0.8em] whitespace-nowrap px-[0.6em]" style={{ background: o.kind === "celebration" ? `linear-gradient(90deg, ${color} 0%, ${color}cc 60%, #000 100%)` : "#000", borderLeft: o.kind === "celebration" ? "none" : `0.25em solid ${color}`, animation: "rise .35s ease-out" }}>
-      <span className="font-black tracking-wider" style={{ color: o.kind === "celebration" ? "#fff" : color, fontSize: h > 0 ? undefined : undefined }}>{o.text}</span>
-      {o.subtext && <span className="text-[0.65em] font-semibold text-fog/85">{o.subtext}</span>}
+    <div className="bc bc-wipe relative flex h-full items-center gap-[0.5em] overflow-hidden whitespace-nowrap px-[0.5em]" style={{ fontSize: h * 0.52, background: celebrate ? `linear-gradient(90deg, ${color} 0%, ${color} 55%, #0a0c10 100%)` : "linear-gradient(90deg,#1c2029,#0f1218)", borderLeft: celebrate ? "none" : `0.25em solid ${color}` }}>
+      {celebrate && <div className="bc-shine absolute inset-0" />}
+      {g && side && <Logo game={g} side={side} size={h * 0.8} />}
+      <span className="relative font-black uppercase tracking-[0.06em]" style={{ color: celebrate ? "#fff" : color, textShadow: celebrate ? "0 3px 12px rgba(0,0,0,.5)" : "none" }}>{o.text}</span>
+      {o.subtext && <span className="relative text-[0.62em] font-bold text-white/85">{o.subtext}</span>}
     </div>
   );
 }

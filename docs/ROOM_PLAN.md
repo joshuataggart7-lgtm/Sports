@@ -4,6 +4,124 @@ This is the working plan for turning the simulated room into the real one. It ha
 an inventory you fill in, the projected-ribbon geometry, and the bring-up order. Fill in the
 inventory first; almost every later decision depends on it.
 
+
+## 0. The room as photographed, and the layout that makes the design work
+
+From the photos: a rectangular bedroom with a window on one short wall (curtains, blinds, the
+motorized screen housing mounted above the window), a double-door closet on the wall to the right
+of the window, the entry door in the opposite short wall near the corner, a ceiling fan with a
+light in the center of the room, and one long blank wall with an articulating wall mount and two
+speaker brackets already in it. Wood floor, white walls, roughly 9 to 10 ft ceilings. Satellite
+speakers are already on wall brackets high in two corners.
+
+Plan view (not to scale):
+
+```
+                      WINDOW WALL (A): desk + ultrawide under the window
+   ┌─────────────────────────────────────────────────────────────┐
+   │  [desk · 49" ultrawide]                       (curtains)    │
+   │                                                             │
+ C │                        ● fan → replace with a flush light   │ L
+ L │                                                             │ O
+ O │                                                             │ N
+ S │   [loveseat]                                                │ G
+ E │   facing →                                        [aux TV]  │
+ T │                                             [SONY 65"+]     │ W
+   │                                                   [aux TV]  │ A
+ W │                                   ribbon: screen drops 10"  │ L
+ A │                                      ━━━━━━━━━━━━━━━━━━━━   │ L
+ L │                                                             │
+ L │  projector mounts high here, above the loveseat ▶           │ (D)
+ (B)│                                                            │
+   └──────────────────────────┬──────────────────────────────────┘
+                      entry door (wall C, near the D corner)
+```
+
+Walls, named for the rest of this document:
+
+- **A, window wall**: the desk and the 49-inch ultrawide go here. Daylight behind a monitor is fine; daylight behind a TV is not, which is why the TV leaves this wall.
+- **B, closet wall**: the loveseat, centered, facing wall D. The closet doors still open; a loveseat is shallow enough. The projector mounts high on this wall or on the ceiling just in front of it, throwing across the room at wall D.
+- **C, entry wall**: nothing load-bearing for the system. Leave it for the door swing, a floor lamp, and later the room map's "guest" view. The existing articulating mount on this wall can be reused for a surround speaker.
+- **D, the long blank wall**: the sports wall. Sony in the center at seated eye height (center of screen about 42 in off the floor), the two aux TVs flanking it, the motorized screen re-mounted above the array.
+
+### Aux TVs: horizontal
+
+Mount them horizontal (landscape), not vertical. Every game feed, RedZone and the second-game
+display are 16:9; a vertical TV would letterbox them to a third of the panel. The one role that
+suits a vertical screen is stats or fantasy, and the ultrawide at the desk already covers that.
+Keep the aux TVs the same height as the Sony's center line so the three read as one wall. If the
+aux TVs are much smaller than the Sony, raise them slightly so their top edges align with the Sony's
+top edge; the eye forgives mismatched bottoms more than mismatched tops.
+
+### The screen as the ribbon surface (your idea, and it is the right one)
+
+Mount the motorized screen on wall D so its housing sits just below the ceiling, with its bottom
+edge, when fully retracted, right above the TV array. Two positions:
+
+- **Sports and Game Day**: the screen drops about 10 to 14 inches. The projector paints the ribbon
+  on that strip of white screen. Everything else in the projector's image is black and falls on
+  the TVs and wall below, where it is invisible at normal TV brightness. A white screen strip gives
+  the ribbon a brightness and crispness a painted wall never will.
+- **Movie**: the screen drops fully in front of the TV array; the Sony and aux TVs are off behind
+  it; the projector switches input to the Apple TV. This matches the brief exactly.
+
+For the partial drop you need a screen controller with a **stop** command or a preset position.
+Elite, Da-Lite, Draper and most RF-controlled screens have stop; Bond Bridge learns RF remotes and
+exposes open/close/stop to Home Assistant. If yours is 12 V trigger only, a Shelly 2PM relay can
+time a partial drop (measure once, then "down for 2.3 seconds"). We read the model number off the
+housing end cap first.
+
+### Projector placement and the ceiling fan
+
+The fan sits in the center of the ceiling, directly in the throw path from wall B to wall D. A
+projector mounted behind it will clip the blades. Options, best first:
+
+1. Replace the fan with a flush-mount smart light. You want dimmable, color-capable room light for
+   the modes anyway (a Hue or WiZ flush fixture), and a fan is the wrong thing to have above a
+   projector throw.
+2. Keep the fan, mount the projector on wall B just below the ceiling, use lens shift to push the
+   image up, and aim the ribbon as high on wall D as the screen allows. The beam then passes above
+   the blade sweep. Works only if the fan's blade tips are at least 8 in below the lens.
+3. Short-throw projector on a shelf or mount at wall D, above the screen housing, throwing down
+   onto the dropped strip. No fan interaction, but ultra-short-throw units at the top of a wall
+   are awkward, and this leaves Movie Mode needing the second projector you mentioned.
+
+Measure: floor to ceiling, wall B to the fan center, and the width of wall D. With those three
+numbers and the projector's throw ratio, I will give you the exact mount point and the viewport
+settings. The throw distance across this room (about 11 to 13 ft from the look of the photos)
+suits a standard 1.3 to 1.6 throw ratio at a 100 to 110 inch image width, which is wider than the
+three TVs together, so the ribbon can span the whole array.
+
+### Speakers and the receiver
+
+The two satellites on corner brackets become the rear surrounds. Front left and right go on
+either side of the Sony, center under it on the console, and the subwoofer in the corner by the
+desk. The receiver and the Apple TV live in the console under the Sony with the HDMI runs: Apple
+TV → receiver → Sony (eARC back). The aux TVs each get a cheap HDMI source for their browser
+display (a Raspberry Pi or a Chromecast with Google TV), and the ribbon gets the same from the
+projector's HDMI.
+
+### Lighting
+
+- Bias light strip behind the Sony (WLED or Hue Play gradient).
+- One LED strip along the top of wall D behind the screen housing, which doubles as the
+  "stadium" accent in team colors.
+- Flush ceiling light (replacing the fan) for the Work and Ambient modes.
+- A lamp by the loveseat on a smart plug or smart bulb.
+
+Four lights is enough for every mode in the brief; more becomes clutter.
+
+### Order of operations for the move
+
+1. Clear the room (done, per your note).
+2. Decide fan vs. flush light; if replacing, do it first while the room is empty.
+3. Mount the Sony on wall D at eye height, then the aux TVs, then the screen housing above.
+4. Run power and HDMI to the three TV positions and to the projector position on wall B.
+5. Mount the projector; project a test pattern; set lens shift and zoom; measure where the dropped
+   screen strip lands in the image; enter the viewport numbers in the app.
+6. Loveseat against wall B, desk under the window, lamp by the entry.
+7. Then the hardware bring-up order in section 3.
+
 ## 1. Inventory (fill this in)
 
 Copy the model numbers off the back of each unit. "How it is controlled" is the key column: it
