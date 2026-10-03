@@ -13,27 +13,34 @@ function dev(id: string, type: RoomDevice["type"], name: string, caps: RoomDevic
 }
 
 export function seedRoom(): RoomData {
+  // Josh's room, from the labels: Sony KD-70X690E (Bravia IP control), TCL 43S431 and an
+  // Element Roku TV (Roku ECP), XGIMI Horizon Pro (movies) and XGIMI MoGo 2 Plus (ribbon),
+  // both Android TV over ADB, an Onkyo receiver (eISCP). Hosts are filled in from Settings.
   const devices: RoomDevice[] = [
-    dev("tv_sony", "television", "Sony TV", ["power", "input", "volume"], { inputs: { appletv: "HDMI1", cable: "HDMI2", browser: "HDMI3" }, groups: ["sports_wall"], position: { x: 0.5, y: 0.22, w: 0.3, h: 0.17 } }),
-    dev("tv_left", "television", "Left TV", ["power", "input"], { inputs: { browser: "HDMI1", cable: "HDMI2" }, groups: ["sports_wall", "aux"], position: { x: 0.17, y: 0.25, w: 0.2, h: 0.12 } }),
-    dev("tv_right", "television", "Right TV", ["power", "input"], { inputs: { browser: "HDMI1", cable: "HDMI2" }, groups: ["sports_wall", "aux"], position: { x: 0.83, y: 0.25, w: 0.2, h: 0.12 } }),
-    dev("desk_ultrawide", "monitor", "Desk Ultrawide", ["power", "input", "url"], { groups: ["desk"], position: { x: 0.22, y: 0.85, w: 0.3, h: 0.08 } }),
-    dev("projector", "projector", "Ceiling Projector", ["power", "input", "url"], { inputs: { ribbon: "HDMI1", appletv: "HDMI2" }, position: { x: 0.5, y: 0.55, w: 0.08, h: 0.05 } }),
+    dev("tv_sony", "television", "Sony 70\" (KD-70X690E)", ["power", "input", "volume"], { driver: "bravia", driverConfig: { host: "", psk: "" }, inputs: { appletv: "1", receiver: "1", browser: "3" }, groups: ["sports_wall"], position: { x: 0.5, y: 0.22, w: 0.3, h: 0.17 } }),
+    dev("tv_left", "television", "Left TV (TCL 43S431 Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "" }, inputs: { browser: "tvinput.hdmi1", cable: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.17, y: 0.25, w: 0.2, h: 0.12 } }),
+    dev("tv_right", "television", "Right TV (Element Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "" }, inputs: { browser: "tvinput.hdmi1", cable: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.83, y: 0.25, w: 0.2, h: 0.12 } }),
+    dev("desk_ultrawide", "monitor", "Desk Ultrawide 49\"", ["power", "input", "url"], { groups: ["desk"], position: { x: 0.22, y: 0.85, w: 0.3, h: 0.08 } }),
+    dev("projector_ribbon", "projector", "Ribbon Projector (XGIMI MoGo 2 Plus)", ["power", "input", "url"], { driver: "androidtv", driverConfig: { host: "" }, inputs: { ribbon: "hdmi1" }, position: { x: 0.5, y: 0.58, w: 0.06, h: 0.04 } }),
+    dev("projector", "projector", "Movie Projector (XGIMI Horizon Pro)", ["power", "input", "url"], { driver: "androidtv", driverConfig: { host: "" }, inputs: { appletv: "hdmi1", receiver: "hdmi1", ribbon: "hdmi2" }, position: { x: 0.5, y: 0.5, w: 0.08, h: 0.05 } }),
     dev("screen", "projector_screen", "Motorized Screen", ["screen_position"], { position: { x: 0.5, y: 0.12, w: 0.5, h: 0.03 } }),
-    dev("avr", "av_receiver", "AV Receiver", ["power", "input", "volume", "audio_playback"], { inputs: { appletv: "HDMI1", game: "HDMI2", tv_arc: "ARC", music: "NET" }, position: { x: 0.5, y: 0.42, w: 0.16, h: 0.05 } }),
-    dev("bias_lights", "light", "TV Bias Lights", ["power", "brightness", "color", "effect"], { groups: ["tv_bias", "accent"], position: { x: 0.5, y: 0.3, w: 0.32, h: 0.02 } }),
-    dev("room_leds", "light", "Room LED Strip", ["power", "brightness", "color", "effect"], { groups: ["room_leds", "accent"], position: { x: 0.5, y: 0.05, w: 0.9, h: 0.02 } }),
-    dev("lamps", "light", "Lamps", ["power", "brightness", "color"], { groups: ["ambient"], position: { x: 0.9, y: 0.7, w: 0.05, h: 0.05 } }),
+    dev("avr", "av_receiver", "Onkyo Receiver", ["power", "input", "volume", "audio_playback"], { driver: "onkyo", driverConfig: { host: "" }, inputs: { appletv: "10", game: "02", tv_arc: "12", music: "2B" }, position: { x: 0.5, y: 0.42, w: 0.16, h: 0.05 } }),
+    dev("bias_lights", "light", "TV Bias Lights (WLED)", ["power", "brightness", "color", "effect"], { driver: "wled", driverConfig: { host: "" }, groups: ["tv_bias", "accent"], position: { x: 0.5, y: 0.3, w: 0.32, h: 0.02 } }),
+    dev("room_leds", "light", "Wall LED Strip (WLED)", ["power", "brightness", "color", "effect"], { driver: "wled", driverConfig: { host: "" }, groups: ["room_leds", "accent"], position: { x: 0.5, y: 0.05, w: 0.9, h: 0.02 } }),
+    dev("lamps", "light", "Ceiling Light", ["power", "brightness", "color"], { groups: ["ambient"], position: { x: 0.5, y: 0.7, w: 0.05, h: 0.05 } }),
     dev("desk_lamp", "light", "Desk Lamp", ["power", "brightness"], { groups: ["desk"], position: { x: 0.1, y: 0.8, w: 0.04, h: 0.04 } }),
     dev("appletv", "computer", "Apple TV", ["power"], { position: { x: 0.42, y: 0.42, w: 0.05, h: 0.03 } }),
   ];
+  // Devices without a host yet run on the mock driver so every scene still completes; the
+  // real driver takes over the moment a host is entered in Settings.
+  for (const d of devices) if (d.driver !== "mock" && !d.driverConfig?.host) { d.driverConfig = { ...d.driverConfig, intendedDriver: d.driver }; d.driver = "mock"; }
 
   const displays: DisplayDevice[] = [
     { id: "disp_sony", roomId: ROOM, name: "Sony TV", deviceId: "tv_sony", role: "MAIN_GAME", pairingCode: pairingCode(), paired: false, position: { x: 34, y: 22, w: 32, h: 20 }, kind: "tv" },
     { id: "disp_left", roomId: ROOM, name: "Left TV", deviceId: "tv_left", role: "SECOND_GAME", pairingCode: pairingCode(), paired: false, position: { x: 8, y: 24, w: 22, h: 13 }, kind: "tv" },
     { id: "disp_right", roomId: ROOM, name: "Right TV", deviceId: "tv_right", role: "LEAGUE_SCORES", pairingCode: pairingCode(), paired: false, position: { x: 70, y: 24, w: 22, h: 13 }, kind: "tv" },
     { id: "disp_desk", roomId: ROOM, name: "Desk Ultrawide", deviceId: "desk_ultrawide", role: "ROOM_STATUS", pairingCode: pairingCode(), paired: false, position: { x: 4, y: 72, w: 26, h: 9 }, kind: "ultrawide" },
-    { id: "disp_projector", roomId: ROOM, name: "Projector", deviceId: "projector", role: "PROJECTED_TICKER", roleOptions: { ticker: { ...DEFAULT_TICKER } }, pairingCode: pairingCode(), paired: false, position: { x: 8, y: 8, w: 84, h: 7 }, kind: "projector" },
+    { id: "disp_projector", roomId: ROOM, name: "Projector", deviceId: "projector_ribbon", role: "PROJECTED_TICKER", roleOptions: { ticker: { ...DEFAULT_TICKER } }, pairingCode: pairingCode(), paired: false, position: { x: 8, y: 8, w: 84, h: 7 }, kind: "projector" },
   ];
 
   const presets: DisplayPreset[] = [
@@ -53,8 +60,9 @@ export function seedRoom(): RoomData {
       { delayMs: 300, action: { target: d("tv_sony"), command: { type: "set_input", input: "appletv" } } },
       { delayMs: 400, action: { target: g("aux"), command: { type: "power_on" } } },
       { delayMs: 900, action: { target: g("aux"), command: { type: "set_input", input: "browser" } } },
-      { delayMs: 1000, label: "Projector shows ribbon only", action: { target: d("projector"), command: { type: "power_on" } } },
-      { delayMs: 1500, action: { target: d("projector"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 1000, label: "Ribbon projector on, movie projector off", action: { target: d("projector_ribbon"), command: { type: "power_on" } } },
+      { delayMs: 1500, action: { target: d("projector_ribbon"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 1000, action: { target: d("projector"), command: { type: "power_off" } } },
       { delayMs: 500, action: { target: d("avr"), command: { type: "power_on" } } },
       { delayMs: 800, action: { target: d("avr"), command: { type: "set_input", input: "appletv" } } },
       { delayMs: 800, action: { target: d("avr"), command: { type: "set_volume", volume: 38 } } },
@@ -69,8 +77,9 @@ export function seedRoom(): RoomData {
       { delayMs: 300, action: { target: d("tv_sony"), command: { type: "set_input", input: "appletv" } } },
       { delayMs: 400, action: { target: g("aux"), command: { type: "power_on" } } },
       { delayMs: 900, action: { target: g("aux"), command: { type: "set_input", input: "browser" } } },
-      { delayMs: 1000, action: { target: d("projector"), command: { type: "power_on" } } },
-      { delayMs: 1500, action: { target: d("projector"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 1000, action: { target: d("projector_ribbon"), command: { type: "power_on" } } },
+      { delayMs: 1500, action: { target: d("projector_ribbon"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 1000, action: { target: d("projector"), command: { type: "power_off" } } },
       { delayMs: 500, action: { target: d("avr"), command: { type: "power_on" } } },
       { delayMs: 800, action: { target: d("avr"), command: { type: "set_input", input: "appletv" } } },
       { delayMs: 800, action: { target: d("avr"), command: { type: "set_volume", volume: 40 } } },
@@ -87,8 +96,9 @@ export function seedRoom(): RoomData {
       { delayMs: 200, action: { target: d("screen"), command: { type: "screen_down" } } },
       { delayMs: 300, action: { target: g("aux"), command: { type: "power_off" } } },
       { delayMs: 300, action: { target: d("tv_sony"), command: { type: "power_off" } } },
-      { delayMs: 500, action: { target: d("projector"), command: { type: "power_on" } } },
-      { delayMs: 1000, action: { target: d("projector"), command: { type: "set_input", input: "appletv" } } },
+      { delayMs: 300, action: { target: d("projector_ribbon"), command: { type: "power_off" } } },
+      { delayMs: 500, label: "Movie projector warms up while the screen drops", action: { target: d("projector"), command: { type: "power_on" } } },
+      { delayMs: 1000, action: { target: d("projector"), command: { type: "set_input", input: "receiver" } } },
       { delayMs: 500, action: { target: d("avr"), command: { type: "power_on" } } },
       { delayMs: 800, action: { target: d("avr"), command: { type: "set_input", input: "appletv" } } },
       { delayMs: 800, action: { target: d("avr"), command: { type: "set_volume", volume: 45 } } },
@@ -100,8 +110,9 @@ export function seedRoom(): RoomData {
       { delayMs: 0, action: { target: g("sports_wall"), command: { type: "power_on" } } },
       { delayMs: 500, action: { target: g("aux"), command: { type: "set_input", input: "browser" } } },
       { delayMs: 500, action: { target: d("tv_sony"), command: { type: "set_input", input: "appletv" } } },
-      { delayMs: 800, action: { target: d("projector"), command: { type: "power_on" } } },
-      { delayMs: 1300, action: { target: d("projector"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 800, action: { target: d("projector_ribbon"), command: { type: "power_on" } } },
+      { delayMs: 1300, action: { target: d("projector_ribbon"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 800, action: { target: d("projector"), command: { type: "power_off" } } },
       { delayMs: 600, action: { target: d("avr"), command: { type: "power_on" } } },
       { delayMs: 1200, action: { target: g("accent"), command: { type: "set_brightness", brightness: 40 } } },
       { delayMs: 1500, action: { preset: "preset_nfl" } },
@@ -109,6 +120,7 @@ export function seedRoom(): RoomData {
     { id: "scene_work", roomId: ROOM, name: "Work", mode: "WORK", actions: [
       { delayMs: 0, action: { target: g("sports_wall"), command: { type: "power_off" } } },
       { delayMs: 0, action: { target: d("projector"), command: { type: "power_off" } } },
+      { delayMs: 0, action: { target: d("projector_ribbon"), command: { type: "power_off" } } },
       { delayMs: 0, action: { target: d("avr"), command: { type: "power_off" } } },
       { delayMs: 200, action: { target: d("desk_ultrawide"), command: { type: "power_on" } } },
       { delayMs: 200, action: { target: g("desk"), command: { type: "power_on" } } },
@@ -132,8 +144,9 @@ export function seedRoom(): RoomData {
     { id: "scene_ambient", roomId: ROOM, name: "Ambient", mode: "AMBIENT", actions: [
       { delayMs: 0, action: { target: g("sports_wall"), command: { type: "power_off" } } },
       { delayMs: 0, action: { target: d("avr"), command: { type: "power_off" } } },
-      { delayMs: 200, action: { target: d("projector"), command: { type: "power_on" } } },
-      { delayMs: 700, action: { target: d("projector"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 200, action: { target: d("projector_ribbon"), command: { type: "power_on" } } },
+      { delayMs: 700, action: { target: d("projector_ribbon"), command: { type: "set_input", input: "ribbon" } } },
+      { delayMs: 200, action: { target: d("projector"), command: { type: "power_off" } } },
       { delayMs: 300, action: { target: g("ambient"), command: { type: "set_brightness", brightness: 35 } } },
       { delayMs: 300, action: { target: g("accent"), command: { type: "set_brightness", brightness: 15 } } },
       { delayMs: 800, action: { roleAssignment: { displayId: "disp_projector", role: "AMBIENT" } } },
@@ -144,7 +157,8 @@ export function seedRoom(): RoomData {
       { delayMs: 500, action: { target: g("sports_wall"), command: { type: "power_off" } } },
       { delayMs: 500, action: { target: d("desk_ultrawide"), command: { type: "power_off" } } },
       { delayMs: 800, action: { target: d("projector"), command: { type: "power_off" } } },
-      { delayMs: 3000, label: "Projector cools before the screen moves", action: { target: d("screen"), command: { type: "screen_up" } } },
+      { delayMs: 800, action: { target: d("projector_ribbon"), command: { type: "power_off" } } },
+      { delayMs: 3000, label: "Projectors cool before the screen moves", action: { target: d("screen"), command: { type: "screen_up" } } },
       { delayMs: 1200, action: { target: g("accent"), command: { type: "power_off" } } },
       { delayMs: 1500, action: { target: g("ambient"), command: { type: "power_off" } } },
       { delayMs: 1500, action: { target: g("desk"), command: { type: "power_off" } } },

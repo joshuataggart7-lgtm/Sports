@@ -42,7 +42,8 @@ export function Home() {
         <Card title="Room">
           <ul className="space-y-2.5 text-sm">
             <Row label="Main TV" on={on("tv_sony")} />
-            <Row label="Projector" on={on("projector")} note={dev("projector")?.state.input === "ribbon" ? "ribbon" : dev("projector")?.state.input} />
+            <Row label="Ribbon projector" on={on("projector_ribbon")} note={dev("projector_ribbon")?.state.input} />
+            <Row label="Movie projector" on={on("projector")} note={dev("projector")?.state.input} />
             <Row label="Aux screens" on={anyOn(["tv_left", "tv_right"])} />
             <Row label="Audio" on={on("avr")} note={dev("avr")?.state.input} />
             <Row label="Lights" on={anyOn(["bias_lights", "room_leds", "lamps"])} />

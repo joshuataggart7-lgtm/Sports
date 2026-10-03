@@ -27,7 +27,9 @@ test("Game Day mode runs the scene: screen up, TV on, projector on ribbon, light
   assert.equal(agent.room.mode, "GAME_DAY");
   assert.equal(d("screen").screenPosition, "up");
   assert.equal(d("tv_sony").power, "on");
-  assert.equal(d("projector").input, "ribbon");
+  assert.equal(d("projector_ribbon").power, "on");
+  assert.equal(d("projector_ribbon").input, "ribbon");
+  assert.equal(d("projector").power, "off", "movie projector stays off in Game Day");
   assert.equal(d("bias_lights").color, "#CE1126", "Ole Miss red on the bias lights");
   assert.equal(agent.displays.get("disp_projector")!.role, "PROJECTED_TICKER");
 });
@@ -55,7 +57,7 @@ test("manual touchdown runs the choreographed celebration and restores the light
   const run = data.runs.find((r) => r.automationName === "Touchdown celebration")!;
   assert.equal(run.status, "done");
   assert.equal(agent.devices.get("bias_lights")!.state.color, "#123456", "restored after the celebration");
-  assert.ok(data.timeline.some((t) => t.text.includes("TV Bias Lights: flash")));
+  assert.ok(data.timeline.some((t) => t.text.includes("Bias Lights (WLED): flash")));
 });
 
 test("a manual device change holds off automations on that device", async () => {

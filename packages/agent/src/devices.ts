@@ -37,6 +37,9 @@ export class DeviceManager extends EventEmitter {
     if (!d) return undefined;
     if (patch.driver && !this.drivers.has(patch.driver)) throw new Error(`unknown driver ${patch.driver}`);
     Object.assign(d, patch);
+    // A seeded device remembers the driver it is meant to use; entering a host switches it over.
+    const intended = d.driverConfig?.intendedDriver;
+    if (d.driver === "mock" && typeof intended === "string" && d.driverConfig?.host && this.drivers.has(intended)) d.driver = intended;
     const driver = this.drivers.get(d.driver);
     if (driver) d.status = driver.probe ? await driver.probe(d) : await driver.connect([d]);
     this.log({ kind: "device", text: `${d.name}: driver ${d.driver} → ${d.status}`, detail: { deviceId: id } });

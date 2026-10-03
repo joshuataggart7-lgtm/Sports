@@ -15,7 +15,10 @@ here is a specific brand requirement.
 | Two spare TVs/monitors | Aux screens | Each needs a browser box (below) |
 | 49" ultrawide | Desk dashboard | The Mac at the desk drives it directly |
 | Onkyo receiver | Surround sound, source switching | Networked Onkyos speak eISCP; Room OS talks to it directly, no hub needed |
-| Two projectors | One for the ribbon and movies; the second is spare or a dedicated ribbon unit | Model numbers decide which does what |
+| XGIMI Horizon Pro | Movie projector (screen fully down) | 2200 ANSI lumens, 4K, Android TV. Controlled over ADB; Apple TV switches it on with HDMI-CEC |
+| XGIMI MoGo 2 Plus | Dedicated ribbon projector | 1080p, Android TV, HDMI in. Shows only the ribbon, so it never needs an input switch |
+| Sony KD-70X690E | Main game | Supports Bravia IP control with a pre-shared key |
+| TCL 43S431 and Element Roku TV | Aux screens | Roku ECP network control, on by default. Each needs a Raspberry Pi for the browser |
 | Motorized screen | Ribbon surface (partial drop) and movie screen | Its control type decides one small purchase below |
 | Satellite speakers on wall brackets | Rear surrounds | Reuse as is |
 | iPad / iPhones | Controllers | The app is a web app; nothing to install |
@@ -28,7 +31,9 @@ here is a specific brand requirement.
 | TV wall mount for the Sony | 1 | $40–90 | Fixed or tilting is fine; full-motion only if you want to angle it toward the desk |
 | TV wall mounts for the aux TVs | 2 | $20–30 each | Fixed mounts; keep them horizontal |
 | Projector ceiling/wall mount | 1 | $30–60 | The existing articulating arm on the entry wall may fit; check its weight rating against the projector |
-| In-wall-rated HDMI cable, 25–35 ft | 1 | $25–35 | Mac at the desk to the projector on the closet wall. Active or fiber HDMI if over 25 ft at 4K |
+| In-wall-rated HDMI cable, 25–35 ft | 1 | $25–35 | Mac at the desk to the MoGo 2 Plus (ribbon) on the closet wall. 1080p, so a plain certified cable is fine |
+| HDMI 1×2 splitter (4K, HDCP 2.2) | 1 | $20–30 | Receiver HDMI out to both the Sony and the Horizon Pro, so Movie Mode needs no cable swap. Skip if the Onkyo has two HDMI outputs (Main + Sub) |
+| HDMI cable, 25–35 ft, 4K rated (active) | 1 | $30–45 | Splitter to the Horizon Pro on the ceiling |
 | WLED LED strip kit (controller + 5 m addressable strip, 12 V supply) | 2 | $35–50 each | One behind the Sony as bias light, one along the top of the TV wall as the accent strip. Pre-flashed WLED controllers from Athom or Gledopto plug straight in; Room OS drives them directly |
 | HDMI cables, 6 ft | 3–4 | $8 each | Pi to each aux TV, Apple TV to receiver, receiver to Sony if you do not have them |
 
@@ -63,7 +68,8 @@ through Home Assistant.
 
 ## What you do not need
 
-- A Home Assistant box, for now. Sony, Onkyo, PJLink projectors, WLED, Bond and Shelly all have local network protocols that Room OS speaks directly.
+- A Home Assistant box, for now. Sony (IP control), Onkyo (eISCP), Roku TVs (ECP), XGIMI projectors (ADB), WLED, Bond and Shelly all have local network protocols that Room OS speaks directly.
+- A projector mount for the ribbon unit beyond a $15 tripod-thread wall bracket: the MoGo 2 Plus has a 1/4" tripod mount and weighs about 2.5 lb.
 - An LED matrix or stretched bar display. The projector plus the dropped screen strip does the job; the LED path stays in the repo if you ever want it.
 - Any cloud subscription. The simulated and ESPN providers are free; Supabase has a free tier if you want login.
 - New speakers. The Onkyo plus what is on the walls is a full surround set.

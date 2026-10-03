@@ -71,14 +71,43 @@ exposes open/close/stop to Home Assistant. If yours is 12 V trigger only, a Shel
 time a partial drop (measure once, then "down for 2.3 seconds"). We read the model number off the
 housing end cap first.
 
+### Two projectors, two jobs
+
+You have an XGIMI Horizon Pro and an XGIMI MoGo 2 Plus. That settles the "does the main projector
+also do movies" question: it does not have to.
+
+- **Horizon Pro = movie projector.** 2200 ANSI lumens, 4K, throw ratio 1.2:1 with no optical
+  zoom. It only ever shows the receiver's output (Apple TV), with the screen fully down.
+- **MoGo 2 Plus = ribbon projector.** 1080p, about 400 ISO lumens, throw ratio about 1.2:1,
+  Android TV. It only ever shows the ribbon (the Mac's HDMI, or its own browser). Permanently
+  aimed at the dropped strip of screen. Because it never changes input, nothing can go wrong with
+  it mid-game, and 400 lumens on a white screen strip in a TV-lit room is plenty.
+
+Neither has lens shift, and digital keystone costs resolution, so mount each one square to the
+wall at the height of the image it is making.
+
+Throw math at 1.2:1 (image width = throw distance ÷ 1.2):
+
+| Throw distance | Image width | Image height (16:9) |
+|---|---|---|
+| 8 ft | 80 in | 45 in |
+| 10 ft | 100 in | 56 in |
+| 12 ft | 120 in | 68 in |
+
+So the Horizon Pro sits about 10 ft from the wall for a 100-inch-wide screen, which is close to the
+room's center line and the fan. The MoGo sits as far back as the room allows (12 ft gives a 120-inch
+ribbon), mounted high on the closet wall on a tripod-thread bracket, aimed level at the strip. The
+ribbon strip is the top 10 to 14 inches of its image; the rest lands on the TVs below and stays
+black.
+
 ### Projector placement and the ceiling fan
 
 The fan sits in the center of the ceiling, directly in the throw path from wall B to wall D. A
 projector mounted behind it will clip the blades. Options, best first:
 
-1. Replace the fan with a flush-mount smart light. You want dimmable, color-capable room light for
-   the modes anyway (a Hue or WiZ flush fixture), and a fan is the wrong thing to have above a
-   projector throw.
+1. Replace the fan with a flush-mount smart light. With the Horizon Pro needing to sit about 10 ft
+   from the wall, it lands next to the fan, so this is close to mandatory. You want dimmable,
+   color-capable room light for the modes anyway (a Hue or WiZ flush fixture).
 2. Keep the fan, mount the projector on wall B just below the ceiling, use lens shift to push the
    image up, and aim the ribbon as high on wall D as the screen allows. The beam then passes above
    the blade sweep. Works only if the fan's blade tips are at least 8 in below the lens.

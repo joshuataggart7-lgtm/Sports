@@ -28,7 +28,7 @@ If your router is an ISP box with no reservation option, say so and we will use 
 
 ## Step 3. Sony TV IP control (5 min)
 
-On the TV: Settings → Network & Internet → Home network setup (or "Home network") → **IP control**:
+Your TV is a KD-70X690E (2017 Android TV). On the TV: Settings → Network → Home network setup → **IP control**:
 
 - Authentication: **Normal and Pre-Shared Key**
 - Pre-Shared Key: pick a 4 to 8 character key and write it down
@@ -37,15 +37,26 @@ On the TV: Settings → Network & Internet → Home network setup (or "Home netw
 
 Send me the key and the TV's IP. The `bravia` driver needs only those two things.
 
-## Step 4. Projector network (10 min)
+## Step 4. XGIMI projectors: turn on network debugging (10 min each)
 
-If the projector has a LAN port: plug it into the router (or a switch), then in the projector's menu
-find Network → Wired LAN → turn on DHCP, note the IP, and look for a **PJLink** item (often under
-Network → Control or Advanced). Enable it. If it asks for a PJLink password, set one and send it.
-If the only network is Wi-Fi via a dongle, tell me the model and I will check.
+Both projectors (Horizon Pro and MoGo 2 Plus) run Android TV, and Room OS controls them with
+ADB over Wi-Fi. On each projector, with the remote:
 
-If it has no network port, we control it through the 12 V trigger / IR via Home Assistant instead;
-the `pjlink` driver is then not used.
+1. Settings → Device Preferences → About → scroll to **Build** → press OK on it seven times until it says "You are now a developer".
+2. Back in Device Preferences → **Developer options** → turn on **USB debugging** and **Network debugging** (on some firmware it is called "ADB debugging (Wi-Fi)").
+3. Note the projector's IP under Settings → Network & Internet → your Wi-Fi network.
+4. On the Mac that runs the agent, install the ADB tool once: `brew install android-platform-tools`.
+5. The first time the agent connects, the projector shows an "Allow USB debugging?" prompt. Tick "Always allow" and accept.
+
+Send me both IPs. Also, on the Horizon Pro: Settings → Device Preferences → HDMI → **CEC** on, so
+the Apple TV can wake it and switch it to its input for Movie Mode.
+
+## Step 4b. Roku TVs (5 min each)
+
+On the TCL and the Element: Settings → System → Power → **Fast TV Start** → On. Without this a
+Roku TV cannot be powered on over the network. Then Settings → System → Advanced system settings →
+Control by mobile apps → Network access → **Default**. Note each TV's IP under Settings → Network →
+About and send them.
 
 ## Step 5. The room agent computer (30 min)
 
