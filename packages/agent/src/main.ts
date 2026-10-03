@@ -20,6 +20,8 @@ import { WledDriver } from "./drivers/wled";
 import { OnkyoDriver } from "./drivers/onkyo";
 import { RokuDriver } from "./drivers/roku";
 import { AndroidTvDriver } from "./drivers/androidtv";
+import { ShellyDriver } from "./drivers/shelly";
+import { LocalAudioDriver } from "./drivers/localaudio";
 import { seedRoom } from "./seed";
 import { JsonFileStore } from "./store";
 
@@ -43,6 +45,8 @@ agent.devices.register(new WledDriver());
 agent.devices.register(new OnkyoDriver());
 agent.devices.register(new RokuDriver());
 agent.devices.register(new AndroidTvDriver());
+agent.devices.register(new ShellyDriver());
+agent.devices.register(new LocalAudioDriver());
 if (process.env.HA_URL && process.env.HA_TOKEN) {
   agent.devices.register(new HomeAssistantDriver(process.env.HA_URL, process.env.HA_TOKEN));
 } else if (data.devices.some((d) => d.driver === "homeassistant")) {

@@ -23,6 +23,7 @@ export class MockDriver implements DeviceDriver {
       case "screen_down": return { screenPosition: "down" };
       case "play_audio": return { playing: command.clip, power: "on" };
       case "run_scene": return {};
+      case "pulse": return { playing: `pulse ${command.durationMs ?? 1000}ms` };
     }
   }
 }

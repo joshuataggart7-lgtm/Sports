@@ -58,6 +58,7 @@ export class HomeAssistantDriver implements DeviceDriver {
       case "screen_down": await this.service("cover", "close_cover", { entity_id: entityId }); return { screenPosition: "down" };
       case "play_audio": await this.service("media_player", "play_media", { entity_id: entityId, media_content_type: "music", media_content_id: command.clip }); return { playing: command.clip };
       case "run_scene": await this.service("scene", "turn_on", { entity_id: command.scene }); return {};
+      case "pulse": { await call("turn_on"); setTimeout(() => void call("turn_off").catch(() => undefined), command.durationMs ?? 1000); return { power: "on" }; }
       case "open_url": case "display_layout": return {}; // browser displays are driven by the display manager, not HA
     }
   }

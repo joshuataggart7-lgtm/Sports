@@ -86,6 +86,7 @@ export function describe(c: DeviceCommand): string {
     case "open_url": return `open ${c.url}`;
     case "play_audio": return `play ${c.clip}`;
     case "run_scene": return `scene ${c.scene}`;
+    case "pulse": return `fire for ${((c.durationMs ?? 1000) / 1000).toFixed(1)}s`;
     default: return c.type.replace(/_/g, " ");
   }
 }

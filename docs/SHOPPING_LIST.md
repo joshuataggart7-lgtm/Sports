@@ -27,7 +27,7 @@ here is a specific brand requirement.
 
 | Item | Qty | ~Price | Why |
 |---|---|---|---|
-| Raspberry Pi 4 (2 GB) kit with case, power supply and micro-HDMI cable | 2 | $75 each | One per aux TV. Boots straight into a full-screen browser showing that screen's role. Most reliable kiosk option, and the agent can restart or re-point it. (A Fire TV Stick 4K at $50 with the Silk browser also works, but it cannot be controlled by the system and drifts out of full screen.) |
+| Raspberry Pi 4 (2 GB) kit with case, power supply and micro-HDMI cable | 0 to 2 | $75 each | Only if you want scoreboard web pages on the Roku TVs. See "Do you need the Raspberry Pis?" below; the no-cost option is to use those TVs for a second live game instead |
 | TV wall mount for the Sony | 1 | $40–90 | Fixed or tilting is fine; full-motion only if you want to angle it toward the desk |
 | TV wall mounts for the aux TVs | 2 | $20–30 each | Fixed mounts; keep them horizontal |
 | Projector ceiling/wall mount | 1 | $30–60 | The existing articulating arm on the entry wall may fit; check its weight rating against the projector |
@@ -36,6 +36,46 @@ here is a specific brand requirement.
 | HDMI cable, 25–35 ft, 4K rated (active) | 1 | $30–45 | Splitter to the Horizon Pro on the ceiling |
 | WLED LED strip kit (controller + 5 m addressable strip, 12 V supply) | 2 | $35–50 each | One behind the Sony as bias light, one along the top of the TV wall as the accent strip. Pre-flashed WLED controllers from Athom or Gledopto plug straight in; Room OS drives them directly |
 | HDMI cables, 6 ft | 3–4 | $8 each | Pi to each aux TV, Apple TV to receiver, receiver to Sony if you do not have them |
+
+## Do you need the Raspberry Pis? Maybe not yet
+
+A Pi's only job here is to be a tiny computer that opens a web page full screen on a TV that has
+no browser of its own. Roku TVs have no browser, which is the only reason they were on the list.
+You have three ways around it, and the first costs nothing:
+
+1. **Use the Roku TVs as second-game screens, not scoreboard screens.** Room OS can power them
+   on and launch YouTube TV (or any Roku app) through Roku's network control. You pick the game
+   with the Roku remote once; the TV stays on it. The scoreboard, league scores and fantasy pages
+   then live on the ultrawide and the ribbon, which already have a computer behind them. On a
+   real game day a second live broadcast is usually what you want on those screens anyway.
+2. **Something you already own.** Any old laptop, Chromebook, or an old iPad with a Lightning or
+   USB-C to HDMI adapter ($20 to $40) can sit behind a TV and show the page. Less tidy than a Pi
+   but free.
+3. **A Chromecast with Google TV or Google TV Streamer** ($40 to $100). It is Android TV, so the
+   same driver that runs your XGIMI projectors can open the page in a sideloaded browser. Slightly
+   less reliable than a Pi as a 24/7 kiosk; a Pi never shows a screensaver or an update prompt.
+
+My suggestion: start with option 1, zero cost, and add Pis later only if you find yourself wanting
+a stats screen on a wall TV. If you do buy Pis, I will give you a one-line setup script; there is
+nothing to learn.
+
+## Celebration effects: sounds, fog, goal light (about $0 to $200)
+
+Yes, the touchdown choreography can fire real things. The automation already does: ribbon
+takeover, bias lights flash, LED strip pulse, sound, goal light, fog, then everything restores.
+
+| Effect | What to buy | ~Price | How it is wired |
+|---|---|---|---|
+| **Sound** (air horn, fight song, crowd) | Nothing to start: the Mac plays the clip through whatever its sound output is. For a louder, better-placed speaker: any USB or Bluetooth speaker by the TV, or an AirPlay speaker/HomePod mini the Mac targets | $0, or $30 to $100 | Clips go in `packages/agent/sounds/`. Placeholder horn and fanfare are included; add your own `touchdown.mp3`, `miss_celebration.mp3`. The receiver keeps playing the game; the celebration comes from its own speaker so it layers over the broadcast |
+| **Goal light** (the hockey-style red strobe) | A goal light or a cheap red beacon light ($25 to $60) plus a Shelly Plus Plug US ($25) | $50 to $85 | The plug is pulsed for 8 seconds; the relay times itself off |
+| **Fog** | A 400 to 700 W fog machine with a wired remote ($40 to $90) plus a Shelly Plus 1 relay ($20) wired across the remote's button contacts, plus a Shelly plug to keep the heater powered only during Game Day | $85 to $140 | Pulsed for 1.5 seconds on a touchdown. The relay has a built-in off timer so a dropped packet can never leave it running |
+
+Honest notes on fog in a bedroom-sized room: a 1.5-second burst from a small machine is a fun
+puff; anything longer fills the room in a minute. Fog sets off photoelectric smoke alarms, and the
+machine needs 3 to 5 minutes to heat before it can fire (that is why it gets its own plug that
+Game Day turns on). The Chauvet Hurricane 700 and similar have a wired remote with a simple
+momentary button; a DMX model is overkill. If the alarm is in that room, the goal light and horn
+give most of the effect with none of the risk.
 
 ## Buy once you send me the screen model (about $25 to $100)
 

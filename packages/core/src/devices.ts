@@ -6,7 +6,7 @@ export type DeviceType =
 
 export type DeviceCapability =
   | "power" | "input" | "volume" | "brightness" | "color" | "url" | "layout"
-  | "screen_position" | "audio_playback" | "scene" | "effect";
+  | "screen_position" | "audio_playback" | "scene" | "effect" | "momentary";
 
 /** Commands are a closed union so drivers, scenes and automations all agree on the vocabulary. */
 export type DeviceCommand =
@@ -22,7 +22,9 @@ export type DeviceCommand =
   | { type: "screen_up" }
   | { type: "screen_down" }
   | { type: "play_audio"; clip: string; volume?: number }
-  | { type: "run_scene"; scene: string };
+  | { type: "run_scene"; scene: string }
+  /** Close a contact for a moment: fog machine trigger, confetti cannon, goal light, air horn relay. */
+  | { type: "pulse"; durationMs?: number };
 
 export type DeviceCommandType = DeviceCommand["type"];
 
@@ -73,5 +75,5 @@ export interface DeviceDriver {
 export const CAPABILITY_FOR_COMMAND: Record<DeviceCommandType, DeviceCapability> = {
   power_on: "power", power_off: "power", set_input: "input", set_volume: "volume", set_brightness: "brightness",
   set_color: "color", effect: "effect", open_url: "url", display_layout: "layout", screen_up: "screen_position",
-  screen_down: "screen_position", play_audio: "audio_playback", run_scene: "scene",
+  screen_down: "screen_position", play_audio: "audio_playback", run_scene: "scene", pulse: "momentary",
 };

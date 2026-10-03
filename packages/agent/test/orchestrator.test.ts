@@ -53,7 +53,7 @@ test("manual touchdown runs the choreographed celebration and restores the light
   await agent.orchestrator.setMode("SPORTS");
   await agent.devices.execute("bias_lights", { type: "set_color", color: "#123456" }, "scene");
   agent.watcher.manual("TOUCHDOWN", "home");
-  await new Promise((r) => setTimeout(r, 1500));
+  await new Promise((r) => setTimeout(r, 4000)); // the choreography staggers sound and effects over ~3 s
   const run = data.runs.find((r) => r.automationName === "Touchdown celebration")!;
   assert.equal(run.status, "done");
   assert.equal(agent.devices.get("bias_lights")!.state.color, "#123456", "restored after the celebration");

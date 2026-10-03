@@ -30,10 +30,16 @@ export function seedRoom(): RoomData {
     dev("lamps", "light", "Ceiling Light", ["power", "brightness", "color"], { groups: ["ambient"], position: { x: 0.5, y: 0.7, w: 0.05, h: 0.05 } }),
     dev("desk_lamp", "light", "Desk Lamp", ["power", "brightness"], { groups: ["desk"], position: { x: 0.1, y: 0.8, w: 0.04, h: 0.04 } }),
     dev("appletv", "computer", "Apple TV", ["power"], { position: { x: 0.42, y: 0.42, w: 0.05, h: 0.03 } }),
+    // Celebration effects. The speaker is the Mac's own audio output (free). The fog machine
+    // and goal light are optional: a Shelly relay fires them for a moment, and the relay times
+    // itself off so nothing can be left running.
+    dev("fx_speaker", "speaker", "Celebration Speaker (Mac audio)", ["power", "audio_playback"], { driver: "localaudio", driverConfig: { volume: 80, host: "local" }, groups: ["fx"], position: { x: 0.3, y: 0.42, w: 0.04, h: 0.03 } }),
+    dev("fx_fog", "smart_plug", "Fog Machine Trigger (Shelly)", ["power", "momentary"], { driver: "shelly", driverConfig: { host: "" }, groups: ["fx", "fog"], position: { x: 0.9, y: 0.35, w: 0.04, h: 0.03 } }),
+    dev("fx_goal_light", "smart_plug", "Goal Light (Shelly plug)", ["power", "momentary"], { driver: "shelly", driverConfig: { host: "" }, groups: ["fx", "goal_light"], position: { x: 0.1, y: 0.35, w: 0.04, h: 0.03 } }),
   ];
   // Devices without a host yet run on the mock driver so every scene still completes; the
   // real driver takes over the moment a host is entered in Settings.
-  for (const d of devices) if (d.driver !== "mock" && !d.driverConfig?.host) { d.driverConfig = { ...d.driverConfig, intendedDriver: d.driver }; d.driver = "mock"; }
+  for (const d of devices) if (d.driver !== "mock" && d.driver !== "localaudio" && !d.driverConfig?.host) { d.driverConfig = { ...d.driverConfig, intendedDriver: d.driver }; d.driver = "mock"; }
 
   const displays: DisplayDevice[] = [
     { id: "disp_sony", roomId: ROOM, name: "Sony TV", deviceId: "tv_sony", role: "MAIN_GAME", pairingCode: pairingCode(), paired: false, position: { x: 34, y: 22, w: 32, h: 20 }, kind: "tv" },
@@ -174,7 +180,10 @@ export function seedRoom(): RoomData {
           { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "TOUCHDOWN {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 8000 }, delayMs: 0 },
           { target: { group: "tv_bias" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 3000 }, delayMs: 200 },
           { target: { group: "room_leds" }, command: { type: "effect", effect: "pulse", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 5000 }, delayMs: 500 },
-          { target: { device: "avr" }, command: { type: "play_audio", clip: "{{team.audio}}", volume: 55 }, delayMs: 800 },
+          { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "touchdown", volume: 85 }, delayMs: 300 },
+          { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "{{team.audio}}", volume: 80 }, delayMs: 2600 },
+          { target: { group: "goal_light" }, command: { type: "pulse", durationMs: 8000 }, delayMs: 400 },
+          { target: { group: "fog" }, command: { type: "pulse", durationMs: 1500 }, delayMs: 800 },
           { target: { displayRole: "SECOND_GAME" }, overlay: { kind: "celebration", text: "TOUCHDOWN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 5000 }, delayMs: 200 },
           { target: { displayRole: "LEAGUE_SCORES" }, overlay: { kind: "celebration", text: "TOUCHDOWN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 5000 }, delayMs: 200 },
         ] },
@@ -188,6 +197,7 @@ export function seedRoom(): RoomData {
         { kind: "do", actions: [
           { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "banner", text: "FIELD GOAL {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 5000 } },
           { target: { group: "tv_bias" }, command: { type: "effect", effect: "pulse", colors: ["{{team.primary}}"], durationMs: 2500 }, delayMs: 200 },
+          { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "field_goal", volume: 75 }, delayMs: 300 },
         ] },
         { kind: "wait", ms: 4000 },
         { kind: "restore", what: "lights" },
@@ -241,7 +251,8 @@ export function seedRoom(): RoomData {
         { kind: "do", actions: [
           { target: { all: true }, overlay: { kind: "celebration", text: "LET'S GO", color: "{{team.primary}}", durationMs: 6000 } },
           { target: { group: "accent" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 4000 }, delayMs: 200 },
-          { target: { device: "avr" }, command: { type: "play_audio", clip: "celebration", volume: 50 }, delayMs: 600 },
+          { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "celebration", volume: 80 }, delayMs: 300 },
+          { target: { group: "goal_light" }, command: { type: "pulse", durationMs: 6000 }, delayMs: 300 },
         ] },
         { kind: "wait", ms: 6000 },
         { kind: "restore", what: "lights" },
