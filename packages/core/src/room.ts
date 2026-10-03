@@ -45,4 +45,6 @@ export interface AgentStatus {
   provider: { id: string; status: IntegrationStatus };
   drivers: Record<string, IntegrationStatus>;
   auth: "LOCAL_PIN" | "SUPABASE" | "NONE";
+  /** Driver ids a device can be pointed at from the app. */
+  availableDrivers?: string[];
 }

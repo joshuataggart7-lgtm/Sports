@@ -107,7 +107,7 @@ export class Agent extends EventEmitter {
   }
 
   status(): AgentStatus {
-    return { online: true, version: VERSION, startedAt: this.startedAt, provider: { id: this.provider.id, status: this.provider.status }, drivers: this.driverStatus, auth: this.authMode };
+    return { online: true, version: VERSION, startedAt: this.startedAt, provider: { id: this.provider.id, status: this.provider.status }, drivers: this.driverStatus, auth: this.authMode, availableDrivers: this.devices.driverIds() };
   }
 
   snapshot(): RoomSnapshot {

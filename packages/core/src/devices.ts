@@ -61,8 +61,10 @@ export interface RoomDevice {
 
 export interface DeviceDriver {
   id: string;
-  /** Called once; return the status the driver can honestly report. */
+  /** Called once; return the status the driver can honestly report. Multi-device drivers set each device's status themselves. */
   connect(devices: RoomDevice[]): Promise<IntegrationStatus>;
+  /** Optional per-device reachability check; when present, the device's status is whatever this says. */
+  probe?(device: RoomDevice): Promise<IntegrationStatus>;
   execute(device: RoomDevice, command: DeviceCommand): Promise<Partial<DeviceState>>;
   /** Optional polling of real state. */
   refresh?(device: RoomDevice): Promise<Partial<DeviceState>>;

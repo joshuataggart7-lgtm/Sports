@@ -20,8 +20,8 @@ export class DeviceManager extends EventEmitter {
       const mine = this.devices.filter((d) => d.driver === id);
       const status = await driver.connect(mine);
       out[id] = status;
-      for (const d of mine) d.status = status;
-      if (driver.refresh && status === "CONNECTED") for (const d of mine) { try { Object.assign(d.state, await driver.refresh(d), { updatedAt: Date.now() }); } catch { /* keep last state */ } }
+      for (const d of mine) if (!driver.probe) d.status = status;
+      if (driver.refresh) for (const d of mine) if (d.status === "CONNECTED") { try { Object.assign(d.state, await driver.refresh(d), { updatedAt: Date.now() }); } catch { /* keep last state */ } }
     }
     for (const d of this.devices) if (!this.drivers.has(d.driver)) d.status = "OFFLINE";
     this.emit("change");
@@ -29,6 +29,20 @@ export class DeviceManager extends EventEmitter {
   }
 
   get(id: string): RoomDevice | undefined { return this.devices.find((d) => d.id === id); }
+  driverIds(): string[] { return [...this.drivers.keys()]; }
+
+  /** Re-point a device at real hardware: driver + config. Status is re-probed afterwards. */
+  async update(id: string, patch: Partial<Pick<RoomDevice, "name" | "driver" | "driverConfig" | "inputs" | "groups" | "position">>): Promise<RoomDevice | undefined> {
+    const d = this.get(id);
+    if (!d) return undefined;
+    if (patch.driver && !this.drivers.has(patch.driver)) throw new Error(`unknown driver ${patch.driver}`);
+    Object.assign(d, patch);
+    const driver = this.drivers.get(d.driver);
+    if (driver) d.status = driver.probe ? await driver.probe(d) : await driver.connect([d]);
+    this.log({ kind: "device", text: `${d.name}: driver ${d.driver} → ${d.status}`, detail: { deviceId: id } });
+    this.emit("change", d);
+    return d;
+  }
   byGroup(group: string): RoomDevice[] { return this.devices.filter((d) => d.groups?.includes(group)); }
   byType(type: string): RoomDevice[] { return this.devices.filter((d) => d.type === type); }
 

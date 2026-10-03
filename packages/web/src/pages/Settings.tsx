@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, pin as getPin, setPin } from "../app/api";
 import { reconnectNow, useRoom } from "../app/store";
 import { Button, Card, StatusTag } from "../components/ui";
+import type { RoomDevice } from "@room/core";
 import { Connecting } from "./Home";
 
 export function Settings() {
@@ -38,6 +39,13 @@ export function Settings() {
         </div>
       </Card>
 
+      <Card title="Devices" right={<Button onClick={() => api("/api/devices/reconnect", {})}>Re-probe all</Button>}>
+        <p className="mb-3 text-xs text-mute">Point each device at real hardware. A device shows CONNECTED only after its driver reaches it. Drivers: <b>mock</b> (SIMULATED), <b>homeassistant</b> {"{ entityId }"}, <b>pjlink</b> {"{ host, password? }"} for projectors, <b>bravia</b> {"{ host, psk }"} for Sony TVs, <b>wled</b> {"{ host }"} for LED strips.</p>
+        <ul className="divide-y divide-line">
+          {s.devices.map((d) => <DeviceRow key={d.id} d={d} drivers={s.agent.availableDrivers ?? ["mock"]} />)}
+        </ul>
+      </Card>
+
       <Card title="Room Agent">
         <ul className="space-y-2 text-sm">
           <li className="flex justify-between"><span>Version</span><span className="text-mute">{s.agent.version}</span></li>
@@ -52,5 +60,29 @@ export function Settings() {
         </div>
       </Card>
     </div>
+  );
+}
+
+function DeviceRow({ d, drivers }: { d: RoomDevice; drivers: string[] }) {
+  const [open, setOpen] = useState(false);
+  const [cfg, setCfg] = useState(JSON.stringify(d.driverConfig ?? {}));
+  const [inputs, setInputs] = useState(JSON.stringify(d.inputs ?? {}));
+  const [err, setErr] = useState<string | null>(null);
+  const save = async (patch: Record<string, unknown>) => { try { setErr(null); await api(`/api/devices/${d.id}`, patch, "PUT"); } catch (e) { setErr((e as Error).message); } };
+  const parse = (v: string) => { try { return JSON.parse(v || "{}"); } catch { setErr("not valid JSON"); return undefined; } };
+  return (
+    <li className="py-2 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <button type="button" className="text-left font-medium" onClick={() => setOpen(!open)}>{d.name} <span className="text-xs text-mute">· {d.type.replace("_", " ")} · {d.driver}</span></button>
+        <div className="flex items-center gap-2"><StatusTag status={d.status} /><select className="rounded-lg border border-line bg-panel2 p-1 text-xs" value={d.driver} onChange={(e) => save({ driver: e.target.value })}>{drivers.map((x) => <option key={x} value={x}>{x}</option>)}</select></div>
+      </div>
+      {open && (
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <label className="text-xs text-mute">Driver config (JSON)<input className="mt-1 w-full rounded-lg border border-line bg-panel2 p-1.5 font-mono text-xs text-fog" value={cfg} onChange={(e) => setCfg(e.target.value)} onBlur={() => { const v = parse(cfg); if (v) save({ driverConfig: v }); }} /></label>
+          <label className="text-xs text-mute">Inputs (logical → device input, JSON)<input className="mt-1 w-full rounded-lg border border-line bg-panel2 p-1.5 font-mono text-xs text-fog" value={inputs} onChange={(e) => setInputs(e.target.value)} onBlur={() => { const v = parse(inputs); if (v) save({ inputs: v }); }} /></label>
+          {err && <div className="text-xs text-alert sm:col-span-2">{err}</div>}
+        </div>
+      )}
+    </li>
   );
 }

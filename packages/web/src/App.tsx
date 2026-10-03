@@ -9,6 +9,7 @@ import { Automations } from "./pages/Automations";
 import { Timeline } from "./pages/Timeline";
 import { Settings } from "./pages/Settings";
 import { Guest } from "./pages/Guest";
+import { Kids } from "./pages/Kids";
 import { DisplayPage } from "./display/DisplayPage";
 import { Dot } from "./components/ui";
 
@@ -25,10 +26,10 @@ const NAV = [
 export function App() {
   const loc = useLocation();
   const isDisplay = loc.pathname.startsWith("/display/");
-  const isGuest = loc.pathname.startsWith("/guest");
+  const isGuest = loc.pathname.startsWith("/guest") || loc.pathname.startsWith("/kids");
   useEffect(() => { if (!isDisplay) connect({ role: "app" }); }, [isDisplay]);
   if (isDisplay) return <Routes><Route path="/display/:id" element={<DisplayPage />} /></Routes>;
-  if (isGuest) return <Routes><Route path="/guest" element={<Guest />} /></Routes>;
+  if (isGuest) return <Routes><Route path="/guest" element={<Guest />} /><Route path="/kids" element={<Kids />} /></Routes>;
   return (
     <div className="flex min-h-full flex-col md:flex-row">
       <Sidebar />
@@ -68,7 +69,8 @@ function Sidebar() {
         ))}
       </nav>
       <div className="mt-8 border-t border-line pt-4 text-xs text-mute">
-        <NavLink to="/guest" className="hover:text-fog">Guest mode →</NavLink>
+        <NavLink to="/guest" className="block hover:text-fog">Guest mode →</NavLink>
+        <NavLink to="/kids" className="mt-1 block hover:text-fog">Kids mode →</NavLink>
       </div>
     </aside>
   );

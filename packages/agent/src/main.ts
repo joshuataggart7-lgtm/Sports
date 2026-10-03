@@ -14,6 +14,9 @@ import { Agent } from "./agent";
 import { createApi } from "./api";
 import { HomeAssistantDriver } from "./drivers/homeassistant";
 import { MockDriver } from "./drivers/mock";
+import { PjLinkDriver } from "./drivers/pjlink";
+import { BraviaDriver } from "./drivers/bravia";
+import { WledDriver } from "./drivers/wled";
 import { seedRoom } from "./seed";
 import { JsonFileStore } from "./store";
 
@@ -29,6 +32,11 @@ const data = await store.load();
 const agent = new Agent(data, provider, store, pin ? "LOCAL_PIN" : "NONE");
 
 agent.devices.register(new MockDriver());
+// Network drivers for common room hardware. UNVERIFIED until a device answers; each device
+// gets its own status from a probe, so one offline strip does not hide a working projector.
+agent.devices.register(new PjLinkDriver());
+agent.devices.register(new BraviaDriver());
+agent.devices.register(new WledDriver());
 if (process.env.HA_URL && process.env.HA_TOKEN) {
   agent.devices.register(new HomeAssistantDriver(process.env.HA_URL, process.env.HA_TOKEN));
 } else if (data.devices.some((d) => d.driver === "homeassistant")) {
