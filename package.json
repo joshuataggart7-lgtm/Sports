@@ -1,0 +1,34 @@
+{
+  "name": "lanes",
+  "version": "0.1.0",
+  "description": "An ambient event ticker for everything that matters to you. Lanes of live info, moments that take over when something happens, rules written in plain English. Sports is one source among many.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "demo": "tsx src/server.ts --demo",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --import tsx test/*.test.ts",
+    "font:preview": "tsx scripts/font-preview.ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "esbuild": "^0.28.2",
+    "ws": "^8.22.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/ws": "^8.18.2",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

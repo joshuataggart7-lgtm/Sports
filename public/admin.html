@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%23000%27/%3E%3Crect x=%272%27 y=%273%27 width=%2712%27 height=%274%27 fill=%27%23ffd166%27/%3E%3Crect x=%272%27 y=%279%27 width=%2712%27 height=%274%27 fill=%27%236fb7ff%27/%3E%3C/svg%3E">
+<title>Lanes admin</title>
+<style>
+  :root { --bg: #0f1115; --panel: #171a21; --line: #262b36; --text: #e6e8ee; --muted: #8a93a6; --accent: #ffd166; --ok: #5ee37a; --bad: #ff6b6b; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .04em; }
+  header .meter { margin-left: auto; color: var(--muted); font-size: 13px; }
+  main { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; }
+  iframe { width: 100%; aspect-ratio: 4 / 1; border: 0; background: #000; border-radius: 6px; }
+  textarea, input, button { font: inherit; }
+  textarea { width: 100%; min-height: 70px; background: #0b0d11; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 8px; resize: vertical; }
+  textarea.json { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; min-height: 180px; }
+  button { background: #222733; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+  .hint { color: var(--muted); font-size: 12px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: baseline; }
+  li:last-child { border-bottom: 0; }
+  .id { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--accent); white-space: nowrap; }
+  .desc { color: var(--muted); flex: 1; }
+  .x { color: var(--muted); background: none; border: 0; padding: 0 4px; }
+  .feed { max-height: 320px; overflow: auto; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+  .feed div { padding: 3px 0; border-bottom: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .feed .t { color: var(--muted); margin-right: 8px; }
+  .feed .k { color: var(--accent); margin-right: 8px; }
+  .feed .f { color: var(--ok); }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; background: #222733; color: var(--muted); font-size: 11px; margin-left: 6px; }
+  .wide { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LANES</h1>
+  <span id="name" class="hint"></span>
+  <span class="meter">attention <b id="spent">0</b>/<span id="budget">0</span> this hour <span id="quiet" class="tag" hidden>quiet hours</span></span>
+</header>
+<main>
+  <section class="wide">
+    <h2>Display</h2>
+    <iframe src="/?style=led" title="display"></iframe>
+    <div class="row">
+      <span class="hint">Open <code>/</code> full screen on any TV, tablet or old phone. Click the canvas to go full screen.</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Write a rule in plain English</h2>
+    <textarea id="compose" placeholder="When the Astros score, show orange confetti with the new score. When Bitcoin moves more than 3%, pulse green or red. When someone rings the doorbell, flash DOOR."></textarea>
+    <div class="row">
+      <button id="composeBtn" class="primary">Compose</button>
+      <span id="composeStatus" class="hint"></span>
+    </div>
+    <div class="row"><span class="hint">Result (edit before saving):</span></div>
+    <textarea id="ruleJson" class="json" placeholder='{ "id": "my-rule", "when": { "source": "sports", "kind": "score", "tags": "HOU" }, "then": { "moment": { "kind": "confetti", "title": "{{team}} SCORE!", "color": "{{teamColor}}", "duration": 6000, "priority": 80 } } }'></textarea>
+    <div class="row">
+      <button id="saveBtn">Save rule</button>
+      <span id="saveStatus" class="hint"></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Try it</h2>
+    <div class="row">
+      <button data-fire='{"kind":"score","title":"HOU scores","text":"NYY 1 - HOU 4","tags":["mlb","HOU","NYY"],"data":{"team":"HOU","teamName":"Houston Astros","teamColor":"#eb6e1f","points":2,"summary":"NYY 1 - HOU 4"}}' data-as="sports">Fake score</button>
+      <button data-fire='{"kind":"doorbell","title":"Front door","importance":0.9}'>Doorbell</button>
+      <button data-fire='{"kind":"package","title":"Package delivered","card":{"text":"Package at the door","color":"#5ee37a","icon":"check","ttl":120000}}'>Package</button>
+      <button data-fire='{"kind":"laundry_done","title":"Laundry is done","importance":0.4}'>Laundry</button>
+    </div>
+    <div class="row">
+      <button data-moment='{"kind":"confetti","title":"CONFETTI","subtitle":"moment kind","color":"#eb6e1f","color2":"#ffffff"}'>confetti</button>
+      <button data-moment='{"kind":"flash","title":"FLASH","subtitle":"moment kind","color":"#ff6b6b"}'>flash</button>
+      <button data-moment='{"kind":"pulse","title":"PULSE","subtitle":"moment kind","color":"#5ee37a","color2":"#ffffff"}'>pulse</button>
+      <button data-moment='{"kind":"rain","title":"RAIN","subtitle":"moment kind","color":"#6fb7ff"}'>rain</button>
+      <button data-moment='{"kind":"wipe","title":"WIPE","subtitle":"moment kind","color":"#c3b1ff"}'>wipe</button>
+    </div>
+    <p class="hint">Webhook buttons POST to <code>/api/events</code>, the same endpoint Home Assistant, IFTTT or a shell script would call. Moment buttons go straight to the display and still count against the attention budget.</p>
+    <h2 style="margin-top:14px">Rules</h2>
+    <ul id="rules"></ul>
+  </section>
+
+  <section>
+    <h2>Events</h2>
+    <div id="events" class="feed"></div>
+  </section>
+  <section>
+    <h2>Rule activity</h2>
+    <div id="fired" class="feed"></div>
+  </section>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const fmtT = (ts) => new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+let composerOn = false;
+
+async function api(path, opts) {
+  const r = await fetch(path, { headers: { "content-type": "application/json" }, ...opts });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+function renderRules(rules) {
+  const ul = $("#rules"); ul.innerHTML = "";
+  for (const r of rules) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="id">${r.id}</span><span class="desc">${r.description || summarize(r)}${r.enabled === false ? '<span class="tag">off</span>' : ""}</span>`;
+    const x = document.createElement("button"); x.className = "x"; x.textContent = "✕"; x.title = "delete";
+    x.onclick = async () => { await api(`/api/rules/${encodeURIComponent(r.id)}`, { method: "DELETE" }); };
+    li.appendChild(x); ul.appendChild(li);
+  }
+}
+function summarize(r) {
+  const w = Object.entries(r.when || {}).map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`).join(" ");
+  const t = Object.keys(r.then || {}).join("+");
+  return `when ${w} → ${t}`;
+}
+function addFeed(el, html) {
+  const d = document.createElement("div"); d.innerHTML = html; el.prepend(d);
+  while (el.children.length > 120) el.lastChild.remove();
+}
+function setAttention(a) { $("#spent").textContent = a.spent; $("#budget").textContent = a.budget; $("#quiet").hidden = !a.quiet; }
+
+function connect() {
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  ws.onmessage = (m) => {
+    const msg = JSON.parse(m.data);
+    if (msg.type === "state") setAttention(msg.state.attention);
+    if (msg.type === "rules") renderRules(msg.rules);
+    if (msg.type === "event") { const e = msg.event; addFeed($("#events"), `<span class="t">${fmtT(e.ts)}</span><span class="k">${e.source}/${e.kind}</span>${e.title}${e.text ? " · " + e.text : ""} <span class="tag">${e.tags.join(" ")}</span>`); }
+    if (msg.type === "fired") { const f = msg.fired; addFeed($("#fired"), `<span class="t">${fmtT(f.ts)}</span><span class="k">${f.ruleId}</span><span class="f">${f.action}</span> ${f.note || ""}`); }
+    if (msg.type === "log") addFeed($("#fired"), `<span class="t">${fmtT(Date.now())}</span>${msg.msg}`);
+  };
+  ws.onclose = () => setTimeout(connect, 1500);
+}
+
+$("#composeBtn").onclick = async () => {
+  const text = $("#compose").value.trim(); if (!text) return;
+  $("#composeBtn").disabled = true; $("#composeStatus").textContent = "thinking…";
+  try {
+    const out = await api("/api/compose", { method: "POST", body: JSON.stringify({ text }) });
+    $("#ruleJson").value = JSON.stringify(out.rule, null, 2);
+    $("#composeStatus").textContent = out.notes ? `note: ${out.notes}` : "done, review and save";
+  } catch (e) { $("#composeStatus").textContent = e.message; }
+  $("#composeBtn").disabled = false;
+};
+$("#saveBtn").onclick = async () => {
+  try {
+    const rule = JSON.parse($("#ruleJson").value);
+    await api("/api/rules", { method: "POST", body: JSON.stringify(rule) });
+    $("#saveStatus").textContent = `saved ${rule.id}`;
+  } catch (e) { $("#saveStatus").textContent = e.message; }
+};
+for (const b of document.querySelectorAll("[data-fire]")) b.onclick = async () => {
+  const body = JSON.parse(b.dataset.fire);
+  // Buttons marked data-as pretend to be another source for testing rules against it.
+  const path = b.dataset.as ? `/api/events?as=${b.dataset.as}` : "/api/events";
+  try { await api(path, { method: "POST", body: JSON.stringify(body) }); } catch (e) { alert(e.message); }
+};
+for (const b of document.querySelectorAll("[data-moment]")) b.onclick = async () => {
+  const r = await api("/api/moment", { method: "POST", body: JSON.stringify(JSON.parse(b.dataset.moment)) });
+  addFeed($("#fired"), `<span class="t">${fmtT(Date.now())}</span><span class="k">manual</span><span class="f">moment</span> ${r.outcome}`);
+};
+
+api("/api/config").then((c) => {
+  $("#name").textContent = `${c.name || ""}${c.demo ? " · demo mode" : ""}`;
+  composerOn = c.composer;
+  if (!composerOn) { $("#composeStatus").textContent = "composer off: set ANTHROPIC_API_KEY to write rules in plain English. JSON works without it."; }
+});
+api("/api/log").then((l) => { for (const e of l.events) addFeed($("#events"), `<span class="t">${fmtT(e.ts)}</span><span class="k">${e.source}/${e.kind}</span>${e.title} <span class="tag">${e.tags.join(" ")}</span>`); });
+connect();
+</script>
+</body>
+</html>

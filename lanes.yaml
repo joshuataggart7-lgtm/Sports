@@ -1,0 +1,119 @@
+# Lanes configuration. Everything here is optional; delete what you don't use.
+# Run `npm run demo` to see it with a synthetic game, `npm start` for live data.
+
+name: Living room
+timezone: America/Chicago
+
+# Virtual pixel matrix. The browser scales it to any screen; a real LED panel uses it 1:1.
+matrix: { width: 256, height: 64 }
+
+# Lanes are stacked top to bottom. Each shows cards from the sources it lists,
+# plus anything a rule pushes into it. Heights (plus 1px gaps) must fit the matrix.
+lanes:
+  - id: top
+    height: 31
+    scale: 2
+    speed: 36
+    mode: scroll
+    show:
+      - { source: sports }
+      - { source: markets }
+  - id: bottom
+    height: 32
+    scale: 2
+    speed: 26
+    mode: auto          # static when it fits, scrolls when it doesn't
+    show:
+      - { source: clock }
+      - { source: weather }
+      - { source: countdown }
+      - { source: calendar }
+      - { source: host }
+
+# Sources. Set one to `false` to turn it off.
+sources:
+  clock: { format: "12" }
+  weather: { lat: 29.76, lon: -95.37, units: f, label: Houston }
+  markets: { coins: [bitcoin, ethereum], currency: usd, movePct: 2 }
+  sports: { leagues: [mlb, nfl], teams: [HOU, DAL] }
+  countdown:
+    items:
+      - { name: Launch, at: "2026-12-01T09:00:00-06:00", color: "#ffd166" }
+  calendar: { url: ./examples/sample.ics, remindMinutes: [10] }
+  host: { cpuHigh: 85 }
+
+# Attention budget. Moments cost points; the display can spend this many per rolling hour.
+# Over budget or during quiet hours, moments below `alwaysPriority` become quiet lane items.
+attention:
+  budgetPerHour: 20
+  alwaysPriority: 85
+  quietHours: { start: "23:00", end: "07:00" }
+
+# Rules: when an event matches, do something. Templates use {{field}} from the event.
+rules:
+  - id: astros-score
+    description: Astros score -> orange confetti with the new score
+    when: { source: sports, kind: score, tags: HOU }
+    then:
+      moment: { kind: confetti, title: "{{team}} SCORE!", subtitle: "{{summary}}", color: "{{teamColor}}", color2: "#ffffff", duration: 7000, priority: 80 }
+    cooldown: 15000
+    stop: true          # don't also run the generic any-score rule for this event
+
+  - id: any-score
+    description: Any other followed team scoring gets a quick flash
+    when: { source: sports, kind: score }
+    then:
+      moment: { kind: flash, title: "{{team}} +{{points}}", subtitle: "{{summary}}", color: "{{teamColor}}", duration: 4000, priority: 50 }
+    cooldown: 15000
+
+  - id: final
+    when: { source: sports, kind: game_end }
+    then:
+      moment: { kind: wipe, title: "FINAL", subtitle: "{{title}}", color: "#ffffff", duration: 5000, priority: 60 }
+
+  - id: rain
+    description: Rain starting at home is worth a takeover; it changes what you do next
+    when: { source: weather, kind: rain_start }
+    then:
+      moment: { kind: rain, title: "RAIN STARTING", subtitle: "{{text}}", color: "#6fb7ff", color2: "#ffffff", duration: 6000, priority: 70 }
+
+  - id: storm
+    when: { source: weather, kind: storm_start }
+    then:
+      moment: { kind: flash, title: "STORM", subtitle: "{{text}}", color: "#ff8c42", duration: 6000, priority: 90 }
+
+  - id: btc-move
+    when: { source: markets, kind: price_move, symbol: BTC }
+    then:
+      moment: { kind: pulse, title: "BTC {{direction}} {{pct}}%", subtitle: "{{text}}", color: "#5ee37a", duration: 5000, priority: 55 }
+      lane: { id: top, text: "BTC moved {{pct}}% to {{text}}", color: "#5ee37a", ttl: 600000 }
+
+  - id: countdown-milestone
+    when: { source: countdown, kind: milestone }
+    then:
+      moment: { kind: pulse, title: "{{name}}", subtitle: "in {{remaining}}", color: "#ffd166", duration: 5000, priority: 40 }
+
+  - id: countdown-zero
+    when: { source: countdown, kind: zero }
+    then:
+      moment: { kind: confetti, title: "{{name}}!", subtitle: "It's time", color: "#ffd166", color2: "#ff6b6b", duration: 10000, priority: 95 }
+
+  - id: calendar-soon
+    when: { source: calendar, kind: event_soon }
+    then:
+      moment: { kind: wipe, title: "{{summary}}", subtitle: "in {{minutes}} min", color: "#c3b1ff", duration: 5000, priority: 65 }
+
+  - id: doorbell
+    description: A webhook from Home Assistant when someone rings the bell
+    when: { source: webhook, kind: doorbell }
+    then:
+      moment: { kind: flash, title: "DOOR", subtitle: "{{title}}", color: "#ffffff", duration: 4000, priority: 90 }
+
+  - id: lights-on-score
+    description: Tell Home Assistant to flash the lights in the team color when the Astros score
+    enabled: false
+    when: { source: sports, kind: score, tags: HOU }
+    then:
+      webhook:
+        url: http://homeassistant.local:8123/api/webhook/lanes-score
+        body: { color: "{{teamColor}}", team: "{{team}}" }
