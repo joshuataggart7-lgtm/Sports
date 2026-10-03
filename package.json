@@ -1,34 +1,20 @@
 {
-  "name": "lanes",
+  "name": "room-os",
   "version": "0.1.0",
-  "description": "An ambient event ticker for everything that matters to you. Lanes of live info, moments that take over when something happens, rules written in plain English. Sports is one source among many.",
-  "type": "module",
   "private": true,
-  "engines": {
-    "node": ">=20"
-  },
+  "description": "Room OS: one button turns the entire room into the perfect environment for whatever you are about to do.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "start": "tsx src/server.ts",
-    "demo": "tsx src/server.ts --demo",
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test --import tsx test/*.test.ts",
-    "font:preview": "tsx scripts/font-preview.ts"
+    "agent": "npm run dev -w @room/agent",
+    "web": "npm run dev -w @room/web",
+    "dev": "npm run agent & npm run web & wait",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "lanes": "npm run demo -w lanes"
   },
-  "license": "MIT",
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.131.0",
-    "esbuild": "^0.28.2",
-    "ws": "^8.22.0",
-    "yaml": "^2.9.1",
-    "zod": "^4.6.5"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.4",
-    "@types/ws": "^8.18.2",
-    "playwright": "^1.63.0",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
-  }
+  "license": "MIT"
 }
