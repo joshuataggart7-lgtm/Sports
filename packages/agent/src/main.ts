@@ -17,6 +17,7 @@ import { MockDriver } from "./drivers/mock";
 import { PjLinkDriver } from "./drivers/pjlink";
 import { BraviaDriver } from "./drivers/bravia";
 import { WledDriver } from "./drivers/wled";
+import { OnkyoDriver } from "./drivers/onkyo";
 import { seedRoom } from "./seed";
 import { JsonFileStore } from "./store";
 
@@ -37,6 +38,7 @@ agent.devices.register(new MockDriver());
 agent.devices.register(new PjLinkDriver());
 agent.devices.register(new BraviaDriver());
 agent.devices.register(new WledDriver());
+agent.devices.register(new OnkyoDriver());
 if (process.env.HA_URL && process.env.HA_TOKEN) {
   agent.devices.register(new HomeAssistantDriver(process.env.HA_URL, process.env.HA_TOKEN));
 } else if (data.devices.some((d) => d.driver === "homeassistant")) {

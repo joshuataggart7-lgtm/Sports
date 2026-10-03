@@ -40,7 +40,7 @@ export function Settings() {
       </Card>
 
       <Card title="Devices" right={<Button onClick={() => api("/api/devices/reconnect", {})}>Re-probe all</Button>}>
-        <p className="mb-3 text-xs text-mute">Point each device at real hardware. A device shows CONNECTED only after its driver reaches it. Drivers: <b>mock</b> (SIMULATED), <b>homeassistant</b> {"{ entityId }"}, <b>pjlink</b> {"{ host, password? }"} for projectors, <b>bravia</b> {"{ host, psk }"} for Sony TVs, <b>wled</b> {"{ host }"} for LED strips.</p>
+        <p className="mb-3 text-xs text-mute">Point each device at real hardware. A device shows CONNECTED only after its driver reaches it. Drivers: <b>mock</b> (SIMULATED), <b>homeassistant</b> {"{ entityId }"}, <b>pjlink</b> {"{ host, password? }"} for projectors, <b>bravia</b> {"{ host, psk }"} for Sony TVs, <b>wled</b> {"{ host }"} for LED strips, <b>onkyo</b> {"{ host }"} for Onkyo/Integra/Pioneer receivers.</p>
         <ul className="divide-y divide-line">
           {s.devices.map((d) => <DeviceRow key={d.id} d={d} drivers={s.agent.availableDrivers ?? ["mock"]} />)}
         </ul>
