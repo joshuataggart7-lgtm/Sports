@@ -14,7 +14,7 @@ iPads. See `TOMORROW.md` for the steps.
 
 | Item | Where | ~Price | Why |
 |---|---|---|---|
-| Fire TV Stick 4K, two of them | Walmart or Amazon ($50 list, often $30–35 on sale) | $60–100 | One behind each Roku TV. The 4K has 2 GB of RAM and keeps the animated takeovers smooth; the HD model (1 GB) works but can stutter. Two identical sticks means one setup, and the old computer goes back to being a spare. Power each from its wall adapter, not the TV's USB port, so the stick stays alive when the TV sleeps |
+| Fire TV Stick 4K **Plus**, two of them (not the 4K Select, not the HD) | Lowe's, Walmart or Amazon ($50 list, $38 on sale) | $76–100 | One behind each Roku TV. The 4K has 2 GB of RAM and keeps the animated takeovers smooth; the HD model (1 GB) works but can stutter. Two identical sticks means one setup, and the old computer goes back to being a spare. Power each from its wall adapter, not the TV's USB port, so the stick stays alive when the TV sleeps. The 4K Plus runs Fire OS (Android), which is what Room OS drives over ADB. The newer 4K Select and HD sticks run Amazon's Vega OS, which has no ADB, so Room OS could not open the page on them |
 | Shelly Plus Plug US, 2-pack | shelly.com ($45) or Amazon (~$29 each) | $45–58 | One pulses the goal light, one keeps the fog machine warm only during Game Day. Local control, no cloud, no hub |
 | HDMI cables, 6 ft, pack of 3 | Amazon or Walmart | $10–15 | Fire Stick extender, old computer to TV, spare |
 | Powered USB speaker for the Mac (or any Bluetooth speaker you own) | Walmart | $0–30 | The horn and fanfare come from the Mac, layered over the broadcast on the Onkyo |
