@@ -1,0 +1,82 @@
+# Buy list, by phase
+
+Prices checked October 2026 at Amazon, Walmart and the makers' own stores. Everything here is
+optional; the game, the two side TVs, the ribbon and the celebrations run on what you already own.
+Buy in the order below. Each phase works on its own and nothing in a later phase is needed for an
+earlier one to work.
+
+## Phase 0: tonight (nothing to buy)
+
+Mac, Apple TV, Sony, two Roku TVs, two XGIMIs, Onkyo, old computer, Fire Stick (if it turns up),
+iPads. See `TOMORROW.md` for the steps.
+
+## Phase 1: this week, about $70 to $140
+
+| Item | Where | ~Price | Why |
+|---|---|---|---|
+| Fire TV Stick HD | Amazon ($18 on sale, $35 list) or Walmart | $18–35 | Browser box for the right Roku TV if you cannot find yours. Any Fire TV Stick works; the HD one is enough for a web page |
+| Shelly Plus Plug US, 2-pack | shelly.com ($45) or Amazon (~$29 each) | $45–58 | One pulses the goal light, one keeps the fog machine warm only during Game Day. Local control, no cloud, no hub |
+| HDMI cables, 6 ft, pack of 3 | Amazon or Walmart | $10–15 | Fire Stick extender, old computer to TV, spare |
+| Powered USB speaker for the Mac (or any Bluetooth speaker you own) | Walmart | $0–30 | The horn and fanfare come from the Mac, layered over the broadcast on the Onkyo |
+
+## Phase 2: the celebration kit, about $150 to $230
+
+| Item | Where | ~Price | Why |
+|---|---|---|---|
+| Chauvet DJ Hurricane 700 fog machine | Walmart ($49–54) or Guitar Center ($50) | $49–54 | Comes with a wired momentary remote and a pint of fluid. 450 W heater, 3 to 4 minutes to warm up |
+| Shelly Plus 1 relay | shelly.com or Amazon | $20–25 | Wired across the remote's button so Room OS can "press" it for 1.5 s. Built-in off timer |
+| Goal light (Fan Fever red strobe, or any 120 V red rotating beacon) | Amazon | $40–85 | Plugged into a Shelly Plug and pulsed for 8 seconds. The Fan Fever has its own horn; a plain red beacon ($25–40) plus the Mac horn is cheaper |
+| Fog fluid, 1 gallon | Walmart | $15–20 | The included pint lasts about one season of 1.5 s bursts |
+
+Smoke alarm note: a photoelectric alarm in the same room will trip on fog. Test one burst with the
+door open before game day. If the alarm is in the room, skip fog and keep the goal light and horn.
+
+## Phase 3: lights, about $120 to $180
+
+| Item | Where | ~Price | Why |
+|---|---|---|---|
+| WLED LED kit (Athom ESP32-C3 controller + 5 m WS2812B + power supply) | athom.tech ($60 on sale, $85 list) | $60–85 | Bias light behind the Sony. Pre-flashed with WLED; Room OS drives it directly over the network |
+| Second WLED kit | same | $60–85 | Accent strip along the top of the TV wall. Team colors on Game Day, warm white in Movie and Work |
+| Any WS2812B strip + Gledopto or Athom WLED controller from Amazon | Amazon | $35–50 per set | Cheaper route if you do not mind matching the parts yourself; look for "pre-flashed WLED" in the listing |
+
+## Phase 4: the room remount, about $130 to $260
+
+| Item | Where | ~Price | Why |
+|---|---|---|---|
+| Fixed TV mount for the 70" Sony (rated 100+ lb, VESA 400x300) | Amazon or Walmart | $40–90 | The long wall |
+| Two fixed mounts for the 43" Roku TVs | Amazon or Walmart | $20–30 each | Either side of the Sony, horizontal |
+| Projector ceiling mount for the Horizon Pro | Amazon | $30–60 | Check the existing wall arm's rating first; the Horizon Pro is about 6.4 lb |
+| Tripod-thread wall bracket for the MoGo 2 Plus | Amazon | $15 | The MoGo has a 1/4" mount |
+| In-wall HDMI, 25–35 ft, plus a 4K active HDMI, 25–35 ft | Amazon | $55–80 | Mac to the ribbon projector; receiver to the Horizon Pro |
+| HDMI 1x2 splitter, 4K HDCP 2.2 | Amazon | $20–30 | Only if the Onkyo has a single HDMI out |
+
+## Phase 5: once you send me the screen housing label, $20 to $130
+
+| Screen control | Buy | ~Price |
+|---|---|---|
+| RF remote | Bond Bridge | $97–129 |
+| 12 V trigger jack | Shelly Plus 1 | $20–25 |
+| IR remote only | Broadlink RM4 mini | $25 |
+| Wall switch, no remote | Shelly Plus 2PM in the switch box | $30 |
+
+## Not worth buying for this
+
+- **AIPI Lite** ($22–27). It is a pocket chatbot: an ESP32 with a mic, speaker and tiny screen
+  that talks to ChatGPT over Wi-Fi. It cannot show a web page, drive a TV, or switch a relay.
+  Someone has written custom ESPHome firmware for it, so with a weekend of flashing it could
+  become a one-button "Game Day" remote, but a $20 Shelly button or the iPad on the wall already
+  does that with zero work.
+- **Raspberry Pi.** The old computer and a Fire Stick cover the two browser screens.
+- **Home Assistant box.** Every device here has a local protocol Room OS speaks directly.
+- **A second Onkyo output or new speakers.** The surround set you have is complete.
+
+## Running total
+
+| Phase | Low | High |
+|---|---|---|
+| 1. This week | $70 | $140 |
+| 2. Celebration kit | $150 | $230 |
+| 3. Lights | $120 | $180 |
+| 4. Remount | $130 | $260 |
+| 5. Screen control | $20 | $130 |
+| **All phases** | **$490** | **$940** |
