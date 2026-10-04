@@ -15,7 +15,8 @@ iPads. See `TOMORROW.md` for the steps.
 | Item | Where | ~Price | Why |
 |---|---|---|---|
 | Fire TV Stick 4K **Plus**, two of them (not the 4K Select, not the HD) | Lowe's, Walmart or Amazon ($50 list, $38 on sale) | $76–100 | One behind each Roku TV. The 4K has 2 GB of RAM and keeps the animated takeovers smooth; the HD model (1 GB) works but can stutter. Two identical sticks means one setup, and the old computer goes back to being a spare. Power each from its wall adapter, not the TV's USB port, so the stick stays alive when the TV sleeps. The 4K Plus runs Fire OS (Android), which is what Room OS drives over ADB. The newer 4K Select and HD sticks run Amazon's Vega OS, which has no ADB, so Room OS could not open the page on them |
-| Shelly Plus Plug US, 2-pack | shelly.com ($45) or Amazon (~$29 each) | $45–58 | One pulses the goal light, one keeps the fog machine warm only during Game Day. Local control, no cloud, no hub |
+| **TP-Link Kasa EP10 smart plug, 4-pack** (or Tapo P100/P105 4-pack) | Walmart, Lowe's, Amazon | $25–30 for four | The cheap route: one keeps the fog machine warm during Game Day, one pulses the goal light, two spares for lamps. Local control over Wi-Fi through python-kasa; newer plugs want your TP-Link account email + password typed into the device row once. The app does the off itself, so use these where a stuck-on is harmless |
+| Shelly Plus Plug US (optional upgrade) | shelly.com ($23) or Walmart | $23–29 each | Has its own auto-off timer inside the plug. Only worth it if you want hardware-level safety on something that heats |
 | HDMI cables, 6 ft, pack of 3 | Amazon or Walmart | $10–15 | Fire Stick extender, old computer to TV, spare |
 | Powered USB speaker for the Mac (or any Bluetooth speaker you own) | Walmart | $0–30 | The horn and fanfare come from the Mac, layered over the broadcast on the Onkyo |
 

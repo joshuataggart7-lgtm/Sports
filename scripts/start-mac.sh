@@ -12,6 +12,10 @@ if ! command -v adb >/dev/null 2>&1; then
   echo "adb (for the XGIMI projectors and Fire Stick) is not installed; installing with Homebrew..."
   command -v brew >/dev/null 2>&1 && brew install --quiet android-platform-tools || echo "skipped adb install"
 fi
+if ! command -v kasa >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/kasa" ]; then
+  echo "python-kasa (for TP-Link Kasa/Tapo plugs) is not installed; installing with pipx..."
+  command -v brew >/dev/null 2>&1 && { brew install --quiet pipx && pipx install python-kasa; } || echo "skipped python-kasa install"
+fi
 [ -d node_modules ] || npm install
 [ -f packages/web/dist/index.html ] || npm run build -w @room/web
 IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname)
