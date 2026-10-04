@@ -69,7 +69,7 @@ function TeamCell({ game, side, fav }: { game: Game; side: "home" | "away"; fav:
   const leading = (side === "home" ? game.homeScore > game.awayScore : game.awayScore > game.homeScore) && game.status !== "scheduled";
   return (
     <div className="bc-shine relative flex items-center gap-[0.45em] pl-[0.55em] pr-[0.6em]" style={{ background: `linear-gradient(90deg, ${t.profile.primaryColor} 0%, ${t.profile.primaryColor} 0.42em, #141821 0.42em, #141821 100%)`, borderLeft: "1px solid rgba(255,255,255,.08)" }}>
-      <Logo game={game} side={side} size={Math.round(0.9 * 16)} />
+      <span className="inline-flex h-[1.15em] w-[1.15em] shrink-0 items-center justify-center [&>img]:!h-full [&>img]:!w-full"><Logo game={game} side={side} size={16} /></span>
       <span className={`whitespace-nowrap text-[0.82em] font-extrabold uppercase ${leading || fav ? "text-white" : "text-white/70"}`} style={{ paddingLeft: "0.1em" }}>{t.abbreviation}</span>
       <PossessionMark side={side} active={poss} />
       {game.status !== "scheduled" && <span className={`min-w-[1.4em] text-right text-[1.05em] font-black tabular-nums ${flash ? "score-flash" : ""}`} style={{ ["--flash" as string]: "#fff" }}>{score}</span>}

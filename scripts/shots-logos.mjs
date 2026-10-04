@@ -1,0 +1,18 @@
+import { chromium } from "playwright";
+const base = "http://localhost:8790"; const out = process.argv[2];
+const post = (p, b) => fetch(base + p, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "localhost,127.0.0.1" } : undefined, args: ["--ignore-certificate-errors"] });
+const snap = await (await fetch(base + "/api/snapshot")).json();
+const code = (id) => snap.displays.find((d) => d.id === id).pairingCode;
+await post("/api/room", { watchedGameIds: ["sim:ncaaf:LSU@MISS"] });
+await post("/api/mode", { mode: "GAME_DAY" }); await new Promise((r) => setTimeout(r, 2500));
+await post("/api/displays/disp_left/role", { role: "PLAYER_STATS" });
+const left = await b.newPage({ viewport: { width: 1920, height: 1080 } }); await left.goto(`${base}/display/${code("disp_left")}`);
+const proj = await b.newPage({ viewport: { width: 1920, height: 1080 } }); await proj.goto(`${base}/display/projector?mode=ticker`);
+await new Promise((r) => setTimeout(r, 4000));
+await left.screenshot({ path: `${out}/logos-stats.png` });
+await proj.screenshot({ path: `${out}/logos-ribbon.png`, clip: { x: 0, y: 30, width: 1920, height: 150 } });
+await post("/api/events/manual", { type: "TOUCHDOWN", side: "home" });
+await new Promise((r) => setTimeout(r, 1500));
+await left.screenshot({ path: `${out}/logos-td.png` });
+await b.close();
