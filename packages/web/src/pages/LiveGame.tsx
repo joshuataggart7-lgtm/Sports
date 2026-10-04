@@ -42,9 +42,25 @@ export function LiveGame() {
 
         <Card title="Manual" right={<span className="text-xs text-mute">Always available, fires now</span>}>
           <div className="grid grid-cols-2 gap-2">
-            <Button big onClick={() => manual("TOUCHDOWN")} style={{ borderColor: game?.[fav ?? "home"].profile.primaryColor }}>TOUCHDOWN</Button>
-            <Button big onClick={() => manual("FIELD_GOAL")}>FIELD GOAL</Button>
-            <Button big onClick={() => manual("DEFENSE")}>DEFENSE</Button>
+            {game?.sport === "baseball" ? (
+              <>
+                <Button big onClick={() => manual("HOME_RUN")} style={{ borderColor: game?.[fav ?? "home"].profile.primaryColor }}>HOME RUN</Button>
+                <Button big onClick={() => manual("SCORE_CHANGE")}>RUN SCORES</Button>
+                <Button big onClick={() => manual("DEFENSE")}>BIG OUT</Button>
+              </>
+            ) : game?.sport === "basketball" ? (
+              <>
+                <Button big onClick={() => manual("THREE_POINTER")} style={{ borderColor: game?.[fav ?? "home"].profile.primaryColor }}>THREE</Button>
+                <Button big onClick={() => manual("DUNK")}>DUNK</Button>
+                <Button big onClick={() => manual("DEFENSE")}>DEFENSE</Button>
+              </>
+            ) : (
+              <>
+                <Button big onClick={() => manual("TOUCHDOWN")} style={{ borderColor: game?.[fav ?? "home"].profile.primaryColor }}>TOUCHDOWN</Button>
+                <Button big onClick={() => manual("FIELD_GOAL")}>FIELD GOAL</Button>
+                <Button big onClick={() => manual("DEFENSE")}>DEFENSE</Button>
+              </>
+            )}
             <Button big onClick={() => manual("CELEBRATION")}>CELEBRATION</Button>
             <Button className="col-span-2" variant="ghost" onClick={() => manual("RESET")}>RESET ROOM</Button>
           </div>
@@ -86,8 +102,8 @@ export function LiveGame() {
       {s.agent.provider.id === "simulated" && (
         <Card title="Simulation" right={<span className="rounded-md border border-warn/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-warn">SIMULATED</span>}>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => api("/api/sim", { action: "play", kind: "touchdown", side: fav ?? "home" })}>Feed: touchdown</Button>
-            <Button onClick={() => api("/api/sim", { action: "play", kind: "field_goal", side: fav ?? "home" })}>Feed: field goal</Button>
+            <Button onClick={() => api("/api/sim", { action: "play", kind: "touchdown", side: fav ?? "home" })}>Feed: {game?.sport === "baseball" ? "home run" : "touchdown"}</Button>
+            <Button onClick={() => api("/api/sim", { action: "play", kind: "field_goal", side: fav ?? "home" })}>Feed: {game?.sport === "baseball" ? "run scores" : "field goal"}</Button>
             <Button onClick={() => api("/api/sim", { action: "play", kind: "touchdown", side: fav === "home" ? "away" : "home" })}>Feed: opponent TD</Button>
             <Button onClick={() => api("/api/sim", { action: "play", kind: "turnover", side: fav === "home" ? "away" : "home" })}>Feed: turnover</Button>
             <Button variant="danger" onClick={() => api("/api/sim", { action: "overturn" })}>Overturn last score</Button>
