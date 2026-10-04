@@ -48,7 +48,17 @@ Two routes. Both flash on cue; the app drives either one directly on your Wi-Fi.
 | Second WLED kit | same | $60–85 | Accent strip along the top of the TV wall. Team colors on Game Day, warm white in Movie and Work |
 | Any WS2812B strip + Gledopto or Athom WLED controller from Amazon | Amazon | $35–50 per set | Cheaper route if you do not mind matching the parts yourself; look for "pre-flashed WLED" in the listing |
 
-## Phase 4: the room remount, about $130 to $260
+## Phase 4: the room, about $40 to $80 (no wall mounts)
+
+The Sony stays on its console, the two 43s sit on side tables, both ribbons are projected. Nothing goes on the wall.
+
+| Item | Where | ~Price | Why |
+|---|---|---|---|
+| Second side table, about 28" tall, 24–36" wide | Lowe's, Walmart, or any thrift store | $30–60 | Matches the nightstand you have; one 43" TV on each |
+| HDMI cables, 6 ft, 3-pack | Lowe's or Walmart | $10–15 | Fire Stick extenders, Apple TV to the Onkyo |
+| Tripod-thread shelf or bracket for the MoGo on the opposite wall | Amazon | $15 | Only if there is no shelf at the right height |
+
+### Phase 4 (later): the mounted version, about $130 to $260
 
 | Item | Where | ~Price | Why |
 |---|---|---|---|
