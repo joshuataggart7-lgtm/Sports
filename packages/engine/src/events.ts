@@ -128,7 +128,7 @@ export class EventEngine {
       id: hashId("manual", game?.id, type, side, ts), gameId: game?.id ?? "manual", ts, type, side,
       teamId: team?.id, teamAbbr: team?.abbreviation, data: { manual: true, points: type === "TOUCHDOWN" ? 6 : type === "FIELD_GOAL" ? 3 : type === "THREE_POINTER" ? 3 : type === "DUNK" ? 2 : type === "HOME_RUN" || type === "SCORE_CHANGE" ? 1 : 0, score: game ? `${game.away.abbreviation} ${game.awayScore} - ${game.home.abbreviation} ${game.homeScore}` : "" },
       confidence: 1, state: "pending", source: "manual",
-      text: text ?? `${type.replace(/_/g, " ")}${team ? " " + team.abbreviation : ""} (manual)`,
+      text: text ?? `${type.replace(/_/g, " ")}${team ? " " + team.abbreviation : ""}`,
     };
   }
 
