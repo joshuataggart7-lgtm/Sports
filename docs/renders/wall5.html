@@ -1,0 +1,114 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  * { box-sizing: border-box; }
+  body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0d0e11; font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif; color: #e8e8ea; }
+  #stage { position: absolute; left: 60px; top: 30px; }
+  .wall { position: absolute; background: linear-gradient(180deg, #e9e4d6 0%, #ddd7c7 100%); box-shadow: 0 30px 80px rgba(0,0,0,.6); overflow: hidden; }
+  .wall.td { background: linear-gradient(180deg, #d9c9c0 0%, #cbb6ad 100%); }
+  .base { position: absolute; left: 0; right: 0; bottom: 0; height: 5.5in; background: #f4f1ea; border-top: 2px solid #cfc9bb; }
+  .floor { position: absolute; left: 0; right: 0; bottom: -40px; height: 40px; background: #4a3222; }
+  .el { position: absolute; }
+  .tv { background: #000; border: 5px solid #0b0b0b; border-radius: 3px; box-shadow: 0 0 0 1px #333, 0 18px 40px rgba(0,0,0,.55); overflow: hidden; }
+  .tv img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tv .bc { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 70%, #2f6b36 0%, #1a4521 45%, #0b1e10 100%); }
+  .tv .bc::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 48px, rgba(255,255,255,.08) 48px 50px); opacity: .5; }
+  .tv .bc span { position: absolute; left: 14px; top: 10px; font-size: 16px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+  .ribbon { background: #000; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,.35); }
+  .ribbon img { width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block; }
+  .glow { background: var(--accent); filter: blur(40px); opacity: .5; border-radius: 30px; }
+  .ledtop { height: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent)); box-shadow: 0 0 24px 6px var(--accent); opacity: .9; }
+  .spk { background: linear-gradient(180deg, #2a2a2a, #121212); border-radius: 4px; box-shadow: 0 8px 18px rgba(0,0,0,.5); }
+  .bracket { background: #777; }
+  .console { background: linear-gradient(180deg, #1d1d1f, #0e0e10); border-radius: 3px; box-shadow: 0 10px 24px rgba(0,0,0,.6); }
+  .console i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #34c759; box-shadow: 0 0 6px #34c759; }
+  .projbeam { position: absolute; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.12)); clip-path: polygon(48% 0, 52% 0, 100% 100%, 0 100%); }
+  .tag { position: absolute; display: flex; align-items: center; gap: 8px; font-size: 20px; letter-spacing: .06em; color: #111; font-weight: 700; }
+  .tag b { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 50%; background: #111; color: #fff; font-size: 17px; }
+  .dim { position: absolute; color: #333; font-size: 17px; font-weight: 700; letter-spacing: .04em; }
+  .dim.h { border-top: 2px solid #333; }
+  .dim.h::before, .dim.h::after { content: ""; position: absolute; top: -8px; width: 2px; height: 14px; background: #333; }
+  .dim.h::before { left: 0; } .dim.h::after { right: 0; }
+  .dim.h span { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); background: rgba(233,228,214,.9); padding: 0 6px; }
+  .dim.v { border-left: 2px solid #333; }
+  .dim.v::before, .dim.v::after { content: ""; position: absolute; left: -8px; height: 2px; width: 14px; background: #333; }
+  .dim.v::before { top: 0; } .dim.v::after { bottom: 0; }
+  .dim.l span { left: auto !important; right: 10px; }
+  .dim.v span { position: absolute; left: 10px; background: rgba(233,228,214,.9); padding: 0 4px; top: 50%; transform: translateY(-50%); white-space: nowrap; }
+  .side { position: absolute; left: 1490px; top: 30px; width: 400px; }
+  .side h1 { margin: 0 0 6px; font-size: 40px; letter-spacing: .04em; text-transform: uppercase; }
+  .side h2 { margin: 0 0 18px; font-size: 20px; font-weight: 400; color: #9a9ca3; letter-spacing: .12em; text-transform: uppercase; }
+  .side ol { list-style: none; margin: 0; padding: 0; }
+  .side li { display: flex; gap: 12px; margin: 0 0 13px; font-size: 19px; line-height: 1.25; }
+  .side li b { flex: 0 0 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #e8e8ea; color: #111; font-size: 17px; }
+  .side li em { font-style: normal; color: #fff; font-weight: 700; display: block; }
+  .side .note { margin-top: 16px; padding-top: 14px; border-top: 1px solid #2a2c33; font-size: 17px; line-height: 1.35; color: #b7b9c0; }
+  .side .note b { color: #fff; }
+  .corner { position: absolute; top: 0; bottom: 0; width: 44px; background: linear-gradient(90deg, #b9b2a2, #e9e4d6); }
+  .corner span { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-90deg); white-space: nowrap; font-size: 15px; letter-spacing: .25em; text-transform: uppercase; color: #5a5347; }
+  .edge { position: absolute; top: 14px; font-size: 16px; letter-spacing: .22em; text-transform: uppercase; color: #6b6355; font-weight: 700; }
+  .mode { position: absolute; left: 60px; top: 1040px; font-size: 24px; letter-spacing: .2em; text-transform: uppercase; color: #9a9ca3; }
+  .mode b { color: #fff; }
+</style></head><body>
+<div id="stage"></div>
+<div class="side" id="side"></div>
+<div class="mode" id="mode"></div>
+<script>
+  const td = new URLSearchParams(location.search).get("mode") === "td";
+  const S = 8.6;                       // px per inch
+  const W = 162, H = 114;              // wall: 13 ft 6 in wide, 9 ft 6 in ceiling (assumed; measure)
+  const px = (i) => Math.round(i * S);
+  const stage = document.getElementById("stage");
+  const accent = td ? "#CE1126" : "#1e3a8a", accent2 = td ? "#14213D" : "#b4975a";
+  stage.style.setProperty("--accent", accent); stage.style.setProperty("--accent2", accent2);
+  const wall = document.createElement("div"); wall.className = "wall" + (td ? " td" : "");
+  wall.style.cssText = `left:0; top:0; width:${px(W)}px; height:${px(H)}px;`;
+  stage.appendChild(wall);
+  // elements are placed in inches: x from the left corner, y from the floor
+  const add = (cls, x, y, w, h, inner = "", extra = "") => {
+    const el = document.createElement("div"); el.className = "el " + cls;
+    el.style.cssText = `left:${px(x)}px; top:${px(H - y - h)}px; width:${px(w)}px; height:${px(h)}px;` + extra;
+    el.innerHTML = inner; wall.appendChild(el); return el;
+  };
+  const img = (f) => `<img src="five/${f}${td ? "-td" : ""}.png">`;
+  // corners: door wall on the left, window wall on the right
+  wall.insertAdjacentHTML("beforeend", `<div class="corner" style="left:0"></div><div class="corner" style="right:0; background:linear-gradient(90deg,#e9e4d6,#b9b2a2)"></div><div class="edge" style="left:56px">◀ door wall (closet side)</div><div class="edge" style="right:56px">window wall ▶</div>`);
+  wall.insertAdjacentHTML("beforeend", `<div class="base"></div>`);
+  add("ledtop", 4, H - 2.5, W - 8, 0.7);                                   // accent strip under the ceiling
+  add("glow", 44, 22, 74, 48);                                             // bias light behind the Sony
+  add("projbeam", 50, 78, 62, 36, "", "opacity:.9");                        // MoGo throw onto the band
+  add("ribbon", 50, 68, 62, 10, img("ribbon"));                             // projected ribbon, 62 x 10 in
+  add("tv", 50.25, 28, 61.5, 35.5, `<div class="bc"><span>Sony 70" · the game</span></div>`);
+  add("tv", 8, 35, 38, 22, img("stats"));                                   // left 43"
+  add("tv", 116, 35, 38, 22, img("league"));                                // right 43"
+  add("tv", 13, 61, 28, 16, img("scoreboard"));                             // small smart TV (32" assumed)
+  add("tv", 123, 62, 24, 13.5, img("status"));                              // monitor (27" assumed)
+  add("bracket", 4.5, 90, 1, 6); add("spk", 2, 80, 6, 10);                  // satellites
+  add("bracket", 156.5, 90, 1, 6); add("spk", 154, 80, 6, 10);
+  add("console", 56, 5.5, 50, 20, `<i style="left:14px;top:12px"></i><i style="left:14px;top:40px"></i><i style="left:14px;top:68px"></i>`);
+  // callouts
+  const tag = (n, x, y) => { const t = document.createElement("div"); t.className = "tag"; t.style.cssText = `left:${px(x)}px; top:${px(H - y)}px;`; t.innerHTML = `<b>${n}</b>`; wall.appendChild(t); };
+  tag(1, 51, 63); tag(2, 8.5, 56.5); tag(3, 116.5, 56.5); tag(4, 13.5, 76.5); tag(5, 123.5, 75); tag(6, 50.5, 77.5); tag(7, 58, 24); tag(8, 10, 95); tag(9, 10, 108);
+  // dimensions
+  const dim = (cls, x, y, w, h, label) => { const d = document.createElement("div"); d.className = "dim " + cls; d.style.cssText = `left:${px(x)}px; top:${px(H - y - h)}px; width:${px(w)}px; height:${px(h)}px;`; d.innerHTML = `<span>${label}</span>`; wall.appendChild(d); };
+  dim("h", 50.25, 24, 61.5, 0, `61.5" (70" TV)`);
+  dim("h", 8, 31, 38, 0, `38"`); dim("h", 116, 31, 38, 0, `38"`);
+  dim("h", 46, 59.5, 4.25, 0, `4"`);
+  dim("v", 47.5, 0, 0, 46, `46" center`);
+  dim("v", 113.5, 68, 0, 10, `10"`);
+  dim("v l", 160.5, 0, 0, 114, `9' 6" ceiling (measure)`);
+  dim("h", 6, 4.5, 150, 0, `13' 6" wall (measure)`);
+  document.getElementById("side").innerHTML = `
+    <h1>The long wall</h1><h2>${td ? "Touchdown · every screen reacts" : "Game Day · five screens + ribbon"}</h2>
+    <ol>
+      <li><b>1</b><div><em>Sony 70" · the game</em>Apple TV through the Onkyo. Center 46" off the floor.</div></li>
+      <li><b>2</b><div><em>Left 43" TCL · Stats &amp; Leaders</em>Fire Stick 4K Plus on HDMI 1, Apple TV on HDMI 2.</div></li>
+      <li><b>3</b><div><em>Right 43" Element · League Scores</em>Same two inputs. Multiview flips it to a second game.</div></li>
+      <li><b>4</b><div><em>Small smart TV · Scoreboard</em>All your teams' games at once. Its own browser or a Chromecast.</div></li>
+      <li><b>5</b><div><em>Monitor · Room Status</em>Clock, next game, what is on. Old computer or a spare Apple TV with AirPlay.</div></li>
+      <li><b>6</b><div><em>Projected ribbon · 62 x 10"</em>MoGo 2 Plus on the opposite wall, viewport cropped to the band. Everything else black.</div></li>
+      <li><b>7</b><div><em>Console</em>Onkyo, Apple TV, Mac mini or laptop, Shelly plugs.</div></li>
+      <li><b>8</b><div><em>Rear satellites</em>Stay on their brackets, outer corners.</div></li>
+      <li><b>9</b><div><em>Accent LED strip</em>WLED, under the ceiling line. Team colors on a score.</div></li>
+    </ol>
+    <div class="note"><b>Assumed 13' 6" wide, 9' 6" ceiling.</b> Tape-measure both. Under 12' 6", the small TV and monitor move below the 43s instead of above. Bias light behind the Sony (${td ? "flashing Ole Miss red" : "team color"}); fog machine and goal light sit on the console shelf.</div>`;
+  document.getElementById("mode").innerHTML = td ? `<b>Touchdown Ole Miss</b> · side TVs take over · ribbon takeover · bias flash · horn` : `<b>Game Day</b> · game center · stats left · league right · scoreboard and status above`;
+</script></body></html>
