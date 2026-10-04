@@ -31,7 +31,7 @@ const port = Number(process.env.PORT ?? 8790);
 const providerId = process.env.PROVIDER ?? "simulated";
 const pin = process.env.ROOM_PIN || undefined;
 
-const provider = providerId === "espn" ? new EspnProvider({ leagues: (process.env.LEAGUES ?? "nfl,ncaaf").split(",") }) : new SimulatedProvider({ tickMs: Number(process.env.SIM_TICK_MS ?? 4000) });
+const provider = providerId === "espn" ? new EspnProvider({ leagues: (process.env.LEAGUES ?? "mlb,ncaaf,nfl").split(",") }) : new SimulatedProvider({ tickMs: Number(process.env.SIM_TICK_MS ?? 4000) });
 const store = new JsonFileStore(path.join(root, "data", "room.json"), seedRoom);
 const data = await store.load();
 const agent = new Agent(data, provider, store, pin ? "LOCAL_PIN" : "NONE");

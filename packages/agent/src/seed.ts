@@ -230,14 +230,54 @@ export function seedRoom(): RoomData {
         { kind: "wait", ms: 5000 },
         { kind: "restore", what: "lights" },
       ] },
+    { id: "auto_padres_run", roomId: ROOM, name: "Padres score", enabled: true, cooldownMs: 8_000,
+      trigger: { eventTypes: ["SCORE_CHANGE"], teams: ["SD"], watchedGamesOnly: true, manual: true },
+      steps: [
+        { kind: "wait", ms: "broadcast_delay" },
+        { kind: "if", condition: { minPoints: 2 }, then: [
+          { kind: "do", label: "Big inning", actions: [
+            { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "PADRES SCORE {{event.points}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 7000 } },
+            { target: { group: "accent" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 4000 }, delayMs: 200 },
+            { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "celebration", volume: 80 }, delayMs: 300 },
+            { target: { group: "goal_light" }, command: { type: "pulse", durationMs: 6000 }, delayMs: 400 },
+          ] },
+        ], else: [
+          { kind: "do", actions: [
+            { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "banner", text: "PADRES SCORE", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 5000 } },
+            { target: { group: "tv_bias" }, command: { type: "effect", effect: "pulse", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 3000 }, delayMs: 200 },
+            { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "field_goal", volume: 70 }, delayMs: 300 },
+          ] },
+        ] },
+        { kind: "wait", ms: 5000 },
+        { kind: "restore", what: "lights" },
+      ] },
+    { id: "auto_home_run", roomId: ROOM, name: "Home run", enabled: true, cooldownMs: 8_000,
+      trigger: { eventTypes: ["HOME_RUN"], teams: ["SD"], watchedGamesOnly: true, manual: true },
+      steps: [
+        { kind: "wait", ms: "broadcast_delay" },
+        { kind: "do", label: "Home run choreography", actions: [
+          { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "HOME RUN {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 8000 }, delayMs: 0 },
+          { target: { displayRole: "SECOND_GAME" }, overlay: { kind: "celebration", text: "HOME RUN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 6000 }, delayMs: 200 },
+          { target: { displayRole: "LEAGUE_SCORES" }, overlay: { kind: "celebration", text: "HOME RUN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 6000 }, delayMs: 200 },
+          { target: { group: "tv_bias" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 3000 }, delayMs: 200 },
+          { target: { group: "room_leds" }, command: { type: "effect", effect: "chase", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 6000 }, delayMs: 500 },
+          { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "touchdown", volume: 85 }, delayMs: 300 },
+          { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "{{team.audio}}", volume: 80 }, delayMs: 2600 },
+          { target: { group: "goal_light" }, command: { type: "pulse", durationMs: 8000 }, delayMs: 400 },
+          { target: { group: "fog" }, command: { type: "pulse", durationMs: 1500 }, delayMs: 800 },
+        ] },
+        { kind: "wait", ms: 8000 },
+        { kind: "restore", what: "lights" },
+      ] },
     { id: "auto_final", roomId: ROOM, name: "Final score", enabled: true,
       trigger: { eventTypes: ["GAME_END", "WIN", "LOSS"], watchedGamesOnly: true },
       steps: [
         { kind: "wait", ms: "broadcast_delay" },
-        { kind: "if", condition: { team: ["MISS"] }, then: [
+        { kind: "if", condition: { team: ["MISS", "SD", "NO"] }, then: [
           { kind: "do", actions: [
-            { target: { all: true }, overlay: { kind: "celebration", text: "REBELS WIN", subtext: "{{event.text}}", color: "#CE1126", durationMs: 12000 } },
-            { target: { group: "accent" }, command: { type: "effect", effect: "chase", colors: ["#CE1126", "#14213D", "#ffffff"], durationMs: 12000 }, delayMs: 300 },
+            { target: { all: true }, overlay: { kind: "celebration", text: "{{team.abbr}} WINS", subtext: "{{event.text}}", color: "{{team.primary}}", durationMs: 12000 } },
+            { target: { group: "accent" }, command: { type: "effect", effect: "chase", colors: ["{{team.primary}}", "{{team.secondary}}", "#ffffff"], durationMs: 12000 }, delayMs: 300 },
+            { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "{{team.audio}}", volume: 85 }, delayMs: 300 },
           ] },
           { kind: "wait", ms: 12000 },
           { kind: "restore", what: "lights" },
@@ -271,7 +311,7 @@ export function seedRoom(): RoomData {
     { id: "delay_espn_app", roomId: ROOM, name: "ESPN app", source: "ESPN", app: "ESPN", deviceId: "appletv", delayMs: 31_000 },
   ];
 
-  const room: Room = { id: ROOM, name: "Game Room", timezone: "America/Chicago", mode: null, watchedGameIds: [], favoriteTeams: ["MISS", "NO"], activeDelayProfileId: "delay_yttv_appletv" };
+  const room: Room = { id: ROOM, name: "Game Room", timezone: "America/Chicago", mode: null, watchedGameIds: [], favoriteTeams: ["MISS", "SD", "NO"], activeDelayProfileId: "delay_yttv_appletv" };
 
   return { room, devices, displays, presets, scenes, automations, delayProfiles, timeline: [], runs: [] };
 }

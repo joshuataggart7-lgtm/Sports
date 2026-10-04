@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { DisplayDevice, Game, RoomSnapshot } from "@room/core";
 import { favoriteSide, primaryGame } from "../app/store";
-import { BigTeam, Logo, ScoreBug } from "./broadcast";
+import { BigTeam, Logo, ScoreBug, Bases, Outs, InningMark } from "./broadcast";
 
 /** A broadcast-style field: dark gradient with both team colors bleeding in from the edges. */
 function Field({ g, children }: { g?: Game; children: React.ReactNode }) {
@@ -28,13 +28,24 @@ function FullGame({ g, fav, tag }: { g: Game; fav?: "home" | "away"; tag?: strin
       <div className="absolute inset-x-[5vw] top-1/2 grid -translate-y-1/2 grid-cols-[1fr_auto_1fr] items-center">
         <BigTeam game={g} side="away" fav={fav === "away"} align="left" />
         <div className="bc flex flex-col items-center px-[3vw] text-center">
-          <div className="text-[3.2vw] font-bold uppercase tracking-[0.1em] text-white/90">{g.status === "scheduled" ? "TONIGHT" : g.periodLabel}</div>
-          <div className="text-[5vw] font-black leading-none tabular-nums text-white">{g.status === "live" ? g.clock : g.status === "scheduled" ? new Date(g.startTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}</div>
+          {g.sport === "baseball" && g.status === "live" ? (
+            <>
+              <div className="text-[3.2vw] font-bold uppercase tracking-[0.1em] text-white/90"><InningMark game={g} /></div>
+              <div className="mt-[1.5vh] text-[4.5vw]"><Bases s={g.situation} size={1.6} /></div>
+              <div className="mt-[1.5vh] flex items-center gap-[1.2vw] text-[2.4vw] font-bold tabular-nums text-white/90"><span>{g.situation.balls ?? 0}-{g.situation.strikes ?? 0}</span><Outs n={g.situation.outs ?? 0} /></div>
+            </>
+          ) : (
+            <>
+              <div className="text-[3.2vw] font-bold uppercase tracking-[0.1em] text-white/90">{g.status === "scheduled" ? "TONIGHT" : g.periodLabel}</div>
+              <div className="text-[5vw] font-black leading-none tabular-nums text-white">{g.status === "live" ? g.clock : g.status === "scheduled" ? new Date(g.startTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : ""}</div>
+            </>
+          )}
         </div>
         <BigTeam game={g} side="home" fav={fav === "home"} align="right" />
       </div>
+      {g.sport === "baseball" && g.status !== "scheduled" && <LineScore g={g} />}
       <div className="absolute bottom-[5vh] left-1/2 -translate-x-1/2"><ScoreBug game={g} h={Math.round(w * 0.045)} fav={fav} /></div>
-      {g.situation.lastPlay && g.status === "live" && <div className="bc-body absolute bottom-[1.6vh] left-1/2 -translate-x-1/2 text-[1.3vw] text-white/50">{g.situation.lastPlay}</div>}
+      {g.situation.lastPlay && g.status === "live" && <div className="bc-body absolute bottom-[1.6vh] left-1/2 -translate-x-1/2 max-w-[80vw] truncate text-[1.3vw] text-white/50">{g.situation.batter ? `AB: ${g.situation.batter}  ·  P: ${g.situation.pitcher ?? ""}  ·  ` : ""}{g.situation.lastPlay}</div>}
     </Field>
   );
 }
@@ -154,3 +165,30 @@ export function Placeholder({ role, s }: { role: string; s: RoomSnapshot }) {
 }
 
 function Idle({ text }: { text: string }) { return <div className="flex h-full items-center justify-center text-[2.5vw] text-mute">{text}</div>; }
+
+/** Baseball line score: innings across, R H E on the right. */
+function LineScore({ g }: { g: Game }) {
+  const innings = Math.max(9, g.homeLine?.length ?? 0, g.awayLine?.length ?? 0);
+  const row = (side: "home" | "away") => {
+    const line = side === "home" ? g.homeLine ?? [] : g.awayLine ?? [];
+    const t = g[side];
+    return (
+      <tr className="bc text-[1.3vw]">
+        <td className="pr-[1vw] text-left font-bold uppercase" style={{ color: t.profile.primaryColor === "#000000" ? "#fff" : undefined }}><span className="mr-[0.5vw] inline-block h-[0.8em] w-[0.25em] rounded-sm align-middle" style={{ background: t.profile.primaryColor }} />{t.abbreviation}</td>
+        {Array.from({ length: innings }, (_, i) => <td key={i} className="w-[2.4vw] text-center tabular-nums text-white/75">{line[i] ?? ""}</td>)}
+        <td className="w-[2.8vw] text-center text-[1.15em] font-black tabular-nums">{side === "home" ? g.homeScore : g.awayScore}</td>
+        <td className="w-[2.8vw] text-center tabular-nums text-white/80">{side === "home" ? g.homeHits ?? "" : g.awayHits ?? ""}</td>
+        <td className="w-[2.8vw] text-center tabular-nums text-white/80">{side === "home" ? g.homeErrors ?? "" : g.awayErrors ?? ""}</td>
+      </tr>
+    );
+  };
+  return (
+    <div className="absolute left-1/2 top-[70vh] -translate-x-1/2 rounded-[0.6vw] border border-white/10 bg-black/40 px-[1.2vw] py-[0.8vh]">
+      <table className="border-collapse">
+        <thead><tr className="bc text-[0.9vw] uppercase tracking-[0.2em] text-white/40"><th></th>{Array.from({ length: innings }, (_, i) => <th key={i} className="w-[2.4vw] font-semibold">{i + 1}</th>)}<th className="w-[2.8vw] text-white/70">R</th><th className="w-[2.8vw]">H</th><th className="w-[2.8vw]">E</th></tr></thead>
+        <tbody>{row("away")}{row("home")}</tbody>
+      </table>
+      {g.seriesText && <div className="bc mt-[0.4vh] text-center text-[0.9vw] uppercase tracking-[0.2em] text-white/45">{g.seriesText}</div>}
+    </div>
+  );
+}

@@ -67,7 +67,7 @@ export class EventEngine {
         const key = [next.period, next.homeScore, next.awayScore];
         const base = { points, homeScore: next.homeScore, awayScore: next.awayScore, score: scoreText, lastPlay: next.situation.lastPlay };
         const specific = this.classifyScore(next, side, points, plays);
-        const change = mk("SCORE_CHANGE", side, { ...base, kind: specific?.type }, `${next[side].abbreviation} +${points}  ${scoreText}`, key, 0.95);
+        const change = mk("SCORE_CHANGE", side, { ...base, kind: specific?.type }, next.sport === "baseball" ? `${next[side].abbreviation} scores ${points > 1 ? points + " runs" : "a run"}  ${scoreText}` : `${next[side].abbreviation} +${points}  ${scoreText}`, key, 0.95);
         out.push(change);
         if (specific) {
           const ev = mk(specific.type, side, { ...base, ...specific.data }, `${specific.label} ${next[side].abbreviation}  ${scoreText}`, [...key, specific.type], 0.9);
@@ -150,7 +150,11 @@ export class EventEngine {
       return undefined;
     }
     if (game.sport === "hockey" || game.sport === "soccer") return { type: "GOAL", label: "Goal", data: {} };
-    if (game.sport === "baseball" && scoringPlays.some((p) => /home_run|homer/i.test(p.type))) return { type: "HOME_RUN", label: "Home run", data: {} };
+    if (game.sport === "baseball") {
+      const lp = game.situation.lastPlay ?? "";
+      if (scoringPlays.some((p) => /home_run|homer/i.test(p.type)) || /home run|homers|homered|grand slam/i.test(lp)) return { type: "HOME_RUN", label: points > 1 ? `${points}-run homer` : "Home run", data: { runs: points } };
+      return undefined; // a plain run is a SCORE_CHANGE with points = runs
+    }
     return undefined;
   }
 

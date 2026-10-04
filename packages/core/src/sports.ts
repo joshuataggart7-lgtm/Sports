@@ -31,6 +31,17 @@ export type GameStatus = "scheduled" | "live" | "halftime" | "final" | "postpone
 
 export interface GameSituation {
   possession?: "home" | "away";
+  // Baseball
+  /** Which half of the inning: top (away bats), bottom (home bats), or between halves. */
+  half?: "top" | "bottom" | "middle" | "end";
+  balls?: number;
+  strikes?: number;
+  outs?: number;
+  onFirst?: boolean;
+  onSecond?: boolean;
+  onThird?: boolean;
+  batter?: string;
+  pitcher?: string;
   down?: number;
   distance?: number;
   /** Yard line 0..100 measured from the offense's own goal line, so 80+ is the red zone. */
@@ -55,6 +66,16 @@ export interface Game {
   away: Team;
   homeScore: number;
   awayScore: number;
+  /** Baseball line score extras. */
+  homeHits?: number;
+  awayHits?: number;
+  homeErrors?: number;
+  awayErrors?: number;
+  /** Runs per inning, index 0 = inning 1. */
+  homeLine?: number[];
+  awayLine?: number[];
+  /** Series context from the provider, e.g. "SD leads series 1-0". */
+  seriesText?: string;
   situation: GameSituation;
   venue?: string;
   broadcast?: string;
@@ -93,7 +114,7 @@ export interface Standing {
 export interface StatLine { label: string; home: string | number; away: string | number; homePct?: number; awayPct?: number }
 
 export interface Leader {
-  category: "passing" | "rushing" | "receiving" | "points" | "rebounds" | "assists" | "defense";
+  category: "passing" | "rushing" | "receiving" | "points" | "rebounds" | "assists" | "defense" | "batting" | "home runs" | "rbi" | "pitching";
   name: string;
   position?: string;
   number?: string;

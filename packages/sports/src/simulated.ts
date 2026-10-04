@@ -12,6 +12,7 @@ const LEAGUES: League[] = [
   { id: "ncaaf", name: "College Football", sport: "football" },
   { id: "nfl", name: "NFL", sport: "football" },
   { id: "nba", name: "NBA", sport: "basketball" },
+  { id: "mlb", name: "MLB", sport: "baseball" },
 ];
 
 /** Logos come from ESPN's public CDN (personal, in-home use). */
@@ -38,6 +39,8 @@ export const SIM_TEAMS: Team[] = [
   team("nfl", "PHI", "Philadelphia Eagles", "Eagles", "#004C54", "#A5ACAF"),
   team("nba", "BOS", "Boston Celtics", "Celtics", "#007A33", "#BA9653"),
   team("nba", "NYK", "New York Knicks", "Knicks", "#006BB6", "#F58426"),
+  team("mlb", "SD", "San Diego Padres", "Padres", "#2F241D", "#FFC425", "chase"),
+  team("mlb", "MIL", "Milwaukee Brewers", "Brewers", "#12284B", "#FFC52F"),
 ];
 
 const byAbbr = (abbr: string) => SIM_TEAMS.find((t) => t.abbreviation === abbr)!;
@@ -110,6 +113,7 @@ export class SimulatedProvider implements SportsProvider {
     this.add("nfl", "PHI", "DAL", now - 35 * 60_000, live, { period: 3, clock: 300, home: 24, away: 27 }, "Lincoln Financial Field", "CBS");
     this.add("nba", "NYK", "BOS", now - 70 * 60_000, live, { period: 4, clock: 180, home: 98, away: 102 }, "Madison Square Garden", "TNT");
     this.add("ncaaf", "UGA", "ALA", now + 3 * 3600_000, false, { period: 0, clock: 900, home: 0, away: 0 }, "Sanford Stadium", "CBS");
+    this.add("mlb", "MIL", "SD", now - 80 * 60_000, live, { period: 5, clock: 0, home: 2, away: 3 }, "American Family Field", "FS1");
   }
 
   private add(leagueId: string, homeAbbr: string, awayAbbr: string, startTime: number, live: boolean, s: { period: number; clock: number; home: number; away: number }, venue: string, broadcast: string): void {
@@ -117,9 +121,10 @@ export class SimulatedProvider implements SportsProvider {
     const id = `sim:${leagueId}:${awayAbbr}@${homeAbbr}`;
     const game: Game = {
       id, leagueId, sport: league.sport, startTime, status: live ? "live" : "scheduled", period: s.period,
-      periodLabel: live ? periodLabel(league.sport, s.period) : "", clock: fmtClock(s.clock), clockSeconds: s.clock,
+      periodLabel: live ? (league.sport === "baseball" ? `TOP ${s.period}` : periodLabel(league.sport, s.period)) : "", clock: league.sport === "baseball" ? "" : fmtClock(s.clock), clockSeconds: s.clock,
       home: byAbbr(homeAbbr), away: byAbbr(awayAbbr), homeScore: s.home, awayScore: s.away,
-      situation: league.sport === "football" ? { possession: "home", down: 1, distance: 10, yardLine: 38, yardLineText: `${homeAbbr} 38`, redZone: false } : {},
+      situation: league.sport === "football" ? { possession: "home", down: 1, distance: 10, yardLine: 38, yardLineText: `${homeAbbr} 38`, redZone: false } : league.sport === "baseball" ? { half: "top", possession: "away", balls: 0, strikes: 0, outs: 0, onFirst: false, onSecond: false, onThird: false, batter: "", pitcher: "" } : {},
+      ...(league.sport === "baseball" ? { homeHits: s.home * 2 + 1, awayHits: s.away * 2 + 1, homeErrors: 0, awayErrors: 0, homeLine: Array.from({ length: s.period - 1 }, (_, i) => (i === 1 ? s.home : 0)), awayLine: Array.from({ length: s.period }, (_, i) => (i === 2 ? s.away : 0)), seriesText: `${awayAbbr} leads series 1-0` } : {}),
       venue, broadcast, seq: 1, updatedAt: Date.now(),
     };
     const st: SimState = { game, clockSeconds: s.clock, yardLine: 38, down: 1, distance: 10, plays: [], seq: 1, driveId: 1, acc: { home: emptyAcc(), away: emptyAcc() }, roster: { home: roster(hashSeed(homeAbbr)), away: roster(hashSeed(awayAbbr)) }, drives: [], driveLog: { side: "home", plays: 0, yards: 0, startClock: s.clock, period: s.period } };
@@ -174,6 +179,14 @@ export class SimulatedProvider implements SportsProvider {
     const s = this.games.get(gameId);
     if (!s) return undefined;
     const off = side ?? s.game.situation.possession ?? "home";
+    if (s.game.sport === "baseball") {
+      const sit = s.game.situation; sit.half = off === "home" ? "bottom" : "top"; sit.possession = off;
+      if (kind === "touchdown") { sit.onFirst = true; } // a runner on makes the homer a 2-run shot
+      const bumpRnd = this.rnd; this.rnd = () => (kind === "touchdown" ? 0.99 : kind === "field_goal" ? 0.95 : 0.3);
+      const play = this.baseballPlay(s); this.rnd = bumpRnd;
+      if (kind === "field_goal" && !play.scoring) { sit.onThird = true; const p2 = this.baseballPlay(s); this.publish(s, [play, p2]); return p2; }
+      this.publish(s, [play]); return play;
+    }
     s.game.situation.possession = off;
     let play: Play;
     if (kind === "touchdown") play = this.score(s, off, 6, "touchdown", `${abbr(s, off)} touchdown, ${12 + Math.floor(this.rnd() * 40)} yard pass`);
@@ -212,6 +225,7 @@ export class SimulatedProvider implements SportsProvider {
     }
     const elapsed = g.sport === "football" ? 12 + Math.floor(this.rnd() * 20) : 8 + Math.floor(this.rnd() * 16);
     s.clockSeconds = Math.max(0, s.clockSeconds - elapsed);
+    if (g.sport === "baseball") { out.push(this.baseballPlay(s)); this.publish(s, out); return; }
     if (g.sport === "football") out.push(this.footballPlay(s)); else out.push(this.basketballPlay(s));
     if (s.clockSeconds === 0) this.endPeriod(s);
     this.publish(s, out);
@@ -313,6 +327,46 @@ export class SimulatedProvider implements SportsProvider {
     return this.record(s, side, type, text, 0, pts > 0);
   }
 
+  /** One plate appearance per tick. Runners advance station to station, plus extra on doubles. */
+  private baseballPlay(s: SimState): Play {
+    const g = s.game, sit = g.situation;
+    const bat: "home" | "away" = sit.half === "bottom" ? "home" : "away";
+    const r = s.roster[bat];
+    const batters = [r.g1, r.g2, r.c, r.wr1, r.wr2, r.rb, r.qb, r.def];
+    const b = batters[s.seq % batters.length];
+    sit.batter = b.name; sit.pitcher = s.roster[bat === "home" ? "away" : "home"].qb.name;
+    const x = this.rnd();
+    const runners = { f: !!sit.onFirst, s2: !!sit.onSecond, t: !!sit.onThird };
+    let runs = 0, type = "out", text = "";
+    const score = (n: number) => { runs += n; if (bat === "home") g.homeScore += n; else g.awayScore += n; };
+    const advance = (bases: number) => {
+      for (let i = 0; i < bases; i++) { if (runners.t) { score(1); runners.t = false; } if (runners.s2) { runners.t = true; runners.s2 = false; } if (runners.f) { runners.s2 = true; runners.f = false; } }
+      if (bases === 1) runners.f = true; else if (bases === 2) runners.s2 = true; else if (bases === 3) runners.t = true;
+    };
+    if (x < 0.62) { sit.outs = (sit.outs ?? 0) + 1; type = x < 0.25 ? "strikeout" : x < 0.45 ? "groundout" : "flyout"; text = `${b.name} ${type === "strikeout" ? "strikes out" : type === "groundout" ? "grounds out" : "flies out"}`; if (type !== "strikeout" && runners.t && sit.outs < 3 && this.rnd() < 0.4) { score(1); runners.t = false; text += ", run scores"; type = "sac"; } }
+    else if (x < 0.74) { advance(1); type = "walk"; text = `${b.name} walks`; }
+    else if (x < 0.90) { advance(1); type = "single"; text = `${b.name} singles`; if (bat === "home") g.homeHits = (g.homeHits ?? 0) + 1; else g.awayHits = (g.awayHits ?? 0) + 1; }
+    else if (x < 0.96) { advance(2); type = "double"; text = `${b.name} doubles`; if (bat === "home") g.homeHits = (g.homeHits ?? 0) + 1; else g.awayHits = (g.awayHits ?? 0) + 1; }
+    else { const on = [runners.f, runners.s2, runners.t].filter(Boolean).length; runners.f = runners.s2 = runners.t = false; score(on + 1); type = "home_run"; text = `${b.name} homers${on ? ` (${on + 1}-run)` : ""}`; if (bat === "home") g.homeHits = (g.homeHits ?? 0) + 1; else g.awayHits = (g.awayHits ?? 0) + 1; }
+    if (runs) text += runs > 1 ? `, ${runs} runs score` : type === "home_run" ? "" : ", run scores";
+    sit.onFirst = runners.f; sit.onSecond = runners.s2; sit.onThird = runners.t; sit.balls = 0; sit.strikes = 0;
+    const line = bat === "home" ? (g.homeLine ??= []) : (g.awayLine ??= []);
+    line[g.period - 1] = (line[g.period - 1] ?? 0) + runs;
+    const acc = s.acc[bat]; acc.pts += runs; b.pts += runs; if (type === "home_run") b.recTd += 1;
+    if ((sit.outs ?? 0) >= 3) {
+      sit.outs = 0; sit.onFirst = sit.onSecond = sit.onThird = false;
+      if (sit.half === "top") { sit.half = "bottom"; sit.possession = "home"; (g.homeLine ??= [])[g.period - 1] ??= 0; }
+      else { sit.half = "top"; sit.possession = "away"; g.period += 1; (g.awayLine ??= [])[g.period - 1] = 0; if (g.period > 9 && g.homeScore !== g.awayScore) { g.status = "final"; g.periodLabel = "FINAL"; s.finalTicks = 0; } }
+      text += `. ${sit.half === "top" ? "End" : "Middle"} of the ${g.period}${["st", "nd", "rd"][g.period - 1] ?? "th"}`;
+    } else if (sit.half === "bottom" && g.period >= 9 && g.homeScore > g.awayScore) { g.status = "final"; g.periodLabel = "FINAL"; s.finalTicks = 0; text += ". Walk-off!"; }
+    if (g.status !== "final") g.periodLabel = `${sit.half === "top" ? "TOP" : "BOT"} ${g.period}`;
+    s.seq += 1;
+    const p: Play = { id: `${g.id}:${s.seq}`, gameId: g.id, seq: s.seq, ts: Date.now(), period: g.period, clock: "", team: bat, type, text, scoring: runs > 0, homeScore: g.homeScore, awayScore: g.awayScore };
+    s.plays.push(p); if (s.plays.length > 400) s.plays.shift();
+    g.situation.lastPlay = text;
+    return p;
+  }
+
   private endPeriod(s: SimState): void {
     const g = s.game;
     const regulation = g.sport === "football" ? 4 : 4;
@@ -377,7 +431,13 @@ export class SimulatedProvider implements SportsProvider {
     const pct = (x: number, y: number) => (x + y > 0 ? [x / (x + y), y / (x + y)] : [0.5, 0.5]);
     const row = (label: string, hv: string | number, av: string | number, hn: number, an: number): import("@room/core").StatLine => { const [hp, ap] = pct(hn, an); return { label, home: hv, away: av, homePct: hp, awayPct: ap }; };
     const mmss = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
-    const team = g.sport === "football" ? [
+    const team = g.sport === "baseball" ? [
+      row("Runs", g.homeScore, g.awayScore, g.homeScore, g.awayScore),
+      row("Hits", g.homeHits ?? 0, g.awayHits ?? 0, g.homeHits ?? 0, g.awayHits ?? 0),
+      row("Errors", g.homeErrors ?? 0, g.awayErrors ?? 0, g.awayErrors ?? 0, g.homeErrors ?? 0),
+      row("Home runs", s.roster.home.g1.recTd + s.roster.home.g2.recTd + s.roster.home.c.recTd, s.roster.away.g1.recTd + s.roster.away.g2.recTd + s.roster.away.c.recTd, 1, 1),
+      row("Left on base", Math.round((g.homeHits ?? 0) * 0.8), Math.round((g.awayHits ?? 0) * 0.8), 1, 1),
+    ] : g.sport === "football" ? [
       row("Total yards", h.passYds + h.rushYds, a.passYds + a.rushYds, h.passYds + h.rushYds, a.passYds + a.rushYds),
       row("Passing", h.passYds, a.passYds, h.passYds, a.passYds),
       row("Rushing", h.rushYds, a.rushYds, h.rushYds, a.rushYds),
@@ -394,6 +454,11 @@ export class SimulatedProvider implements SportsProvider {
     ];
     const leaders = (side: "home" | "away"): Leader[] => {
       const r = s.roster[side];
+      if (g.sport === "baseball") return [
+        { category: "points", name: r.g1.name, position: "SS", number: r.g1.number, line: `2-4, ${r.g1.recTd} HR, ${r.g1.pts} RBI`, value: r.g1.pts },
+        { category: "points", name: r.c.name, position: "1B", number: r.c.number, line: `1-3, ${r.c.pts} RBI`, value: r.c.pts },
+        { category: "defense", name: r.qb.name, position: "SP", number: r.qb.number, line: `5.1 IP, 6 K, ${g[side === "home" ? "awayScore" : "homeScore"]} ER`, value: 6 },
+      ];
       if (g.sport === "football") return [
         { category: "passing", name: r.qb.name, position: "QB", number: r.qb.number, line: `${r.qb.comp}/${r.qb.att}, ${r.qb.passYds} YDS, ${r.qb.passTd} TD`, value: r.qb.passYds },
         { category: "rushing", name: r.rb.name, position: "RB", number: r.rb.number, line: `${r.rb.carries} CAR, ${r.rb.rushYds} YDS, ${r.rb.rushTd} TD`, value: r.rb.rushYds },
@@ -408,11 +473,11 @@ export class SimulatedProvider implements SportsProvider {
     };
     const scoringPlays: ScoringPlay[] = s.plays.filter((p) => p.scoring && !p.reversed && p.team && p.type !== "extra_point" && p.type !== "free_throw").slice(-8).reverse().map((p) => ({ period: p.period, clock: p.clock, side: p.team!, text: p.text, homeScore: p.homeScore, awayScore: p.awayScore, type: p.type }));
     // Win probability: score margin against time left, squashed. Good enough for a demo board.
-    const regulation = g.sport === "football" ? 4 * 900 : 4 * 720;
-    const elapsed = Math.min(regulation, (g.period - 1) * (regulation / 4) + ((regulation / 4) - (s.clockSeconds || 0)));
+    const regulation = g.sport === "football" ? 4 * 900 : g.sport === "baseball" ? 9 : 4 * 720;
+    const elapsed = g.sport === "baseball" ? Math.min(9, g.period - 1 + (g.situation.half === "bottom" ? 0.5 : 0)) : Math.min(regulation, (g.period - 1) * (regulation / 4) + ((regulation / 4) - (s.clockSeconds || 0)));
     const left = Math.max(1, regulation - elapsed);
     const margin = g.homeScore - g.awayScore;
-    const k = g.sport === "football" ? 6.5 : 4.5;
+    const k = g.sport === "football" ? 6.5 : g.sport === "baseball" ? 2.2 : 4.5;
     const z = margin / (k * Math.sqrt(left / regulation) + 0.6);
     const wp = g.status === "final" ? (margin > 0 ? 1 : margin < 0 ? 0 : 0.5) : 1 / (1 + Math.exp(-z));
     return { gameId, updatedAt: Date.now(), team, leaders: { home: leaders("home"), away: leaders("away") }, scoringPlays, winProbabilityHome: Math.round(wp * 1000) / 1000, drives: s.drives.slice(0, 5) };
@@ -421,7 +486,7 @@ export class SimulatedProvider implements SportsProvider {
   private publish(s: SimState, plays: Play[]): void {
     const g = s.game;
     g.clock = fmtClock(s.clockSeconds); g.clockSeconds = s.clockSeconds; g.seq = s.seq; g.updatedAt = Date.now();
-    if (g.status === "live") g.periodLabel = periodLabel(g.sport, g.period);
+    if (g.status === "live" && g.sport !== "baseball") g.periodLabel = periodLabel(g.sport, g.period);
     const snapshot: Game = structuredClone(g);
     for (const cb of this.subs.get(g.id) ?? []) cb(snapshot, plays.map((p) => ({ ...p })));
   }
