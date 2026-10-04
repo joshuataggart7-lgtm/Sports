@@ -82,7 +82,7 @@ export class DisplayManager extends EventEmitter {
 
   overlay(target: { displayRole: DisplayRole } | { display: string } | { all: true }, overlay: Omit<DisplayOverlay, "until"> & { durationMs?: number }): void {
     const ids = "all" in target ? "all" : "display" in target ? [target.display] : this.byRole(target.displayRole).map((d) => d.id);
-    const payload: DisplayOverlay = { kind: overlay.kind, text: overlay.text, subtext: overlay.subtext, color: overlay.color, until: Date.now() + (overlay.durationMs ?? 5000) };
+    const payload: DisplayOverlay = { kind: overlay.kind, text: overlay.text, subtext: overlay.subtext, color: overlay.color, color2: overlay.color2, logoUrl: overlay.logoUrl || undefined, until: Date.now() + (overlay.durationMs ?? 5000) };
     this.emit("overlay", ids, payload);
   }
 }

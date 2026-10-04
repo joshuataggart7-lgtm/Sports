@@ -33,6 +33,9 @@ export interface DisplayOverlay {
   text?: string;
   subtext?: string;
   color?: string;
+  /** Secondary team color for stripes and accents. */
+  color2?: string;
+  logoUrl?: string;
   until: number;
 }
 

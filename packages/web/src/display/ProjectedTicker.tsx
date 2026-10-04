@@ -61,7 +61,7 @@ function Takeover({ o, h, g }: { o: DisplayOverlay; h: number; g?: Game }) {
   return (
     <div className="bc bc-wipe relative flex h-full items-center gap-[0.5em] overflow-hidden whitespace-nowrap px-[0.5em]" style={{ fontSize: h * 0.52, background: celebrate ? `linear-gradient(90deg, ${color} 0%, ${color} 55%, #0a0c10 100%)` : "linear-gradient(90deg,#1c2029,#0f1218)", borderLeft: celebrate ? "none" : `0.25em solid ${color}` }}>
       {celebrate && <div className="bc-shine absolute inset-0" />}
-      {g && side && <Logo game={g} side={side} size={h * 0.8} />}
+      {o.logoUrl ? <img src={o.logoUrl} alt="" style={{ height: h * 0.8, width: h * 0.8, objectFit: "contain" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} /> : g && side && <Logo game={g} side={side} size={h * 0.8} />}
       <span className="relative font-black uppercase tracking-[0.06em]" style={{ color: celebrate ? "#fff" : color, textShadow: celebrate ? "0 3px 12px rgba(0,0,0,.5)" : "none" }}>{o.text}</span>
       {o.subtext && <span className="relative text-[0.62em] font-bold text-white/85">{o.subtext}</span>}
     </div>

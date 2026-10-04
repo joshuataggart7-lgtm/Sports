@@ -87,13 +87,28 @@ export function OverlayLayer({ o }: { o: DisplayOverlay }) {
   useEffect(() => { const t = setInterval(() => tick((x) => x + 1), 500); return () => clearInterval(t); }, []);
   if (o.until <= Date.now()) return null;
   const color = o.color ?? "#ffffff";
+  const color2 = o.color2 ?? "#ffffff";
+  const secs = Math.max(1, (o.until - Date.now()) / 1000);
   if (o.kind === "celebration") return (
-    <div className="bc absolute inset-0 flex flex-col items-center justify-center" style={{ background: `radial-gradient(ellipse at center, ${color}dd 0%, ${color}33 50%, #000 100%)`, animation: `celebrate ${Math.max(1, (o.until - Date.now()) / 1000)}s ease-out forwards` }}>
-      <div className="bc-shine absolute inset-0" />
-      <div className="relative text-[13vw] font-black uppercase leading-none tracking-[0.04em] text-white" style={{ textShadow: "0 10px 40px rgba(0,0,0,.6)" }}>{o.text}</div>
-      {o.subtext && <div className="relative mt-[1vh] rounded-[0.4em] bg-black/40 px-[1em] py-[0.2em] text-[3.6vw] font-bold uppercase tracking-[0.12em] text-white/90">{o.subtext}</div>}
+    <div className="bc absolute inset-0 overflow-hidden" style={{ animation: `celebrate ${secs}s ease-out forwards` }}>
+      {/* Field: team color with animated secondary-color stripes, the way a stadium board bursts on a score. */}
+      <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 50% 45%, ${color} 0%, ${color} 35%, #05060a 100%)` }} />
+      <div className="absolute inset-[-50%]" style={{ background: `repeating-linear-gradient(115deg, transparent 0 7vw, ${color2}26 7vw 9vw)`, animation: "stripes 2.2s linear infinite" }} />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,.55) 100%)" }} />
+      <div className="absolute inset-y-0 left-0 w-[1.2vw]" style={{ background: color2 }} />
+      <div className="absolute inset-y-0 right-0 w-[1.2vw]" style={{ background: color2 }} />
+      <div className="relative flex h-full flex-col items-center justify-center">
+        {o.logoUrl && <img src={o.logoUrl} alt="" className="bc-pop h-[30vh] w-auto" style={{ filter: "drop-shadow(0 20px 40px rgba(0,0,0,.6))" }} onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
+        <div className="bc-pop text-[12vw] font-black uppercase leading-none tracking-[0.04em] text-white" style={{ textShadow: "0 10px 40px rgba(0,0,0,.6)", animationDelay: ".08s" }}>{o.text}</div>
+        {o.subtext && <div className="bc-pop mt-[1.5vh] rounded-[0.4em] bg-black/45 px-[1em] py-[0.2em] text-[3.2vw] font-bold uppercase tracking-[0.12em] text-white/95" style={{ animationDelay: ".18s" }}>{o.subtext}</div>}
+      </div>
     </div>
   );
   if (o.kind === "alert") return <div className="bc bc-slide absolute inset-x-0 top-0 flex items-center justify-center gap-6 py-[1.2vh]" style={{ background: `linear-gradient(180deg, ${color}, ${color}bb)` }}><span className="bc-pulse text-[3vw] font-black uppercase tracking-[0.2em] text-white">{o.text}</span>{o.subtext && <span className="text-[2vw] font-bold text-white/85">{o.subtext}</span>}</div>;
-  return <div className="bc bc-slide absolute inset-x-[6vw] bottom-[5vh] flex items-center gap-[1.2vw] overflow-hidden rounded-[0.5vw] bc-bar px-[1.5vw] py-[1vh]" style={{ borderLeft: `0.9vw solid ${color}` }}><span className="text-[3.2vw] font-black uppercase tracking-[0.06em] text-white">{o.text}</span>{o.subtext && <span className="text-[2vw] font-bold text-white/70">{o.subtext}</span>}</div>;
+  return (
+    <div className="bc bc-slide absolute inset-x-[6vw] bottom-[5vh] flex items-center gap-[1.2vw] overflow-hidden rounded-[0.5vw] bc-bar px-[1.5vw] py-[1vh]" style={{ borderLeft: `0.9vw solid ${color}` }}>
+      {o.logoUrl && <img src={o.logoUrl} alt="" className="h-[5vw] w-[5vw] object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />}
+      <span className="text-[3.2vw] font-black uppercase tracking-[0.06em] text-white">{o.text}</span>{o.subtext && <span className="text-[2vw] font-bold text-white/70">{o.subtext}</span>}
+    </div>
+  );
 }

@@ -43,15 +43,15 @@ export function seedRoom(): RoomData {
 
   const displays: DisplayDevice[] = [
     { id: "disp_sony", roomId: ROOM, name: "Sony TV", deviceId: "tv_sony", role: "MAIN_GAME", pairingCode: pairingCode(), paired: false, position: { x: 34, y: 22, w: 32, h: 20 }, kind: "tv" },
-    { id: "disp_left", roomId: ROOM, name: "Left TV", deviceId: "tv_left", role: "SECOND_GAME", pairingCode: pairingCode(), paired: false, position: { x: 8, y: 24, w: 22, h: 13 }, kind: "tv" },
+    { id: "disp_left", roomId: ROOM, name: "Left TV", deviceId: "tv_left", role: "PLAYER_STATS", pairingCode: pairingCode(), paired: false, position: { x: 8, y: 24, w: 22, h: 13 }, kind: "tv" },
     { id: "disp_right", roomId: ROOM, name: "Right TV", deviceId: "tv_right", role: "LEAGUE_SCORES", pairingCode: pairingCode(), paired: false, position: { x: 70, y: 24, w: 22, h: 13 }, kind: "tv" },
     { id: "disp_desk", roomId: ROOM, name: "Desk Ultrawide", deviceId: "desk_ultrawide", role: "ROOM_STATUS", pairingCode: pairingCode(), paired: false, position: { x: 4, y: 72, w: 26, h: 9 }, kind: "ultrawide" },
     { id: "disp_projector", roomId: ROOM, name: "Projector", deviceId: "projector_ribbon", role: "PROJECTED_TICKER", roleOptions: { ticker: { ...DEFAULT_TICKER } }, pairingCode: pairingCode(), paired: false, position: { x: 8, y: 8, w: 84, h: 7 }, kind: "projector" },
   ];
 
   const presets: DisplayPreset[] = [
-    { id: "preset_cfb", roomId: ROOM, name: "College Football Saturday", assignments: [{ displayId: "disp_sony", role: "MAIN_GAME" }, { displayId: "disp_left", role: "SECOND_GAME" }, { displayId: "disp_right", role: "LEAGUE_SCORES" }, { displayId: "disp_desk", role: "SCOREBOARD" }, { displayId: "disp_projector", role: "PROJECTED_TICKER" }] },
-    { id: "preset_nfl", roomId: ROOM, name: "NFL Sunday", assignments: [{ displayId: "disp_sony", role: "MAIN_GAME" }, { displayId: "disp_left", role: "SECOND_GAME" }, { displayId: "disp_right", role: "SECOND_GAME" }, { displayId: "disp_desk", role: "FANTASY" }, { displayId: "disp_projector", role: "PROJECTED_TICKER" }] },
+    { id: "preset_cfb", roomId: ROOM, name: "Game Day", assignments: [{ displayId: "disp_sony", role: "MAIN_GAME" }, { displayId: "disp_left", role: "PLAYER_STATS" }, { displayId: "disp_right", role: "LEAGUE_SCORES" }, { displayId: "disp_desk", role: "SCOREBOARD" }, { displayId: "disp_projector", role: "PROJECTED_TICKER" }] },
+    { id: "preset_nfl", roomId: ROOM, name: "Multiview Sunday", assignments: [{ displayId: "disp_sony", role: "MAIN_GAME" }, { displayId: "disp_left", role: "SECOND_GAME" }, { displayId: "disp_right", role: "PLAYER_STATS" }, { displayId: "disp_desk", role: "LEAGUE_SCORES" }, { displayId: "disp_projector", role: "PROJECTED_TICKER" }] },
     { id: "preset_movie", roomId: ROOM, name: "Movie Night", assignments: [{ displayId: "disp_sony", role: "OFF" }, { displayId: "disp_left", role: "OFF" }, { displayId: "disp_right", role: "OFF" }, { displayId: "disp_desk", role: "OFF" }, { displayId: "disp_projector", role: "MOVIE_INFO" }] },
     { id: "preset_fantasy", roomId: ROOM, name: "Fantasy Command Center", assignments: [{ displayId: "disp_sony", role: "MAIN_GAME" }, { displayId: "disp_left", role: "FANTASY" }, { displayId: "disp_right", role: "PLAYER_STATS" }, { displayId: "disp_desk", role: "FANTASY" }, { displayId: "disp_projector", role: "PROJECTED_TICKER" }] },
     { id: "preset_work", roomId: ROOM, name: "Work", assignments: [{ displayId: "disp_sony", role: "OFF" }, { displayId: "disp_left", role: "OFF" }, { displayId: "disp_right", role: "SCOREBOARD" }, { displayId: "disp_desk", role: "OFF" }, { displayId: "disp_projector", role: "OFF" }] },
@@ -177,15 +177,14 @@ export function seedRoom(): RoomData {
       steps: [
         { kind: "wait", ms: "broadcast_delay", label: "Wait for the TV to catch up" },
         { kind: "do", label: "Choreographed celebration", actions: [
-          { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "TOUCHDOWN {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 8000 }, delayMs: 0 },
+          { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "TOUCHDOWN {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 8000 }, delayMs: 0 },
           { target: { group: "tv_bias" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 3000 }, delayMs: 200 },
           { target: { group: "room_leds" }, command: { type: "effect", effect: "pulse", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 5000 }, delayMs: 500 },
           { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "touchdown", volume: 85 }, delayMs: 300 },
           { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "{{team.audio}}", volume: 80 }, delayMs: 2600 },
           { target: { group: "goal_light" }, command: { type: "pulse", durationMs: 8000 }, delayMs: 400 },
           { target: { group: "fog" }, command: { type: "pulse", durationMs: 1500 }, delayMs: 800 },
-          { target: { displayRole: "SECOND_GAME" }, overlay: { kind: "celebration", text: "TOUCHDOWN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 5000 }, delayMs: 200 },
-          { target: { displayRole: "LEAGUE_SCORES" }, overlay: { kind: "celebration", text: "TOUCHDOWN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 5000 }, delayMs: 200 },
+          { target: { all: true }, overlay: { kind: "celebration", text: "TOUCHDOWN", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 6000 }, delayMs: 150 },
         ] },
         { kind: "wait", ms: 8000 },
         { kind: "restore", what: "lights" },
@@ -196,6 +195,7 @@ export function seedRoom(): RoomData {
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "do", actions: [
           { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "banner", text: "FIELD GOAL {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 5000 } },
+          { target: { all: true }, overlay: { kind: "banner", text: "FIELD GOAL", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", logoUrl: "{{team.logo}}", durationMs: 5000 }, delayMs: 150 },
           { target: { group: "tv_bias" }, command: { type: "effect", effect: "pulse", colors: ["{{team.primary}}"], durationMs: 2500 }, delayMs: 200 },
           { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "field_goal", volume: 75 }, delayMs: 300 },
         ] },
@@ -225,6 +225,7 @@ export function seedRoom(): RoomData {
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "do", actions: [
           { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "banner", text: "TAKEAWAY", subtext: "{{event.text}}", color: "{{team.secondary}}", durationMs: 5000 } },
+          { target: { all: true }, overlay: { kind: "alert", text: "TAKEAWAY", subtext: "{{event.text}}", color: "{{team.primary}}", durationMs: 5000 }, delayMs: 150 },
           { target: { group: "room_leds" }, command: { type: "effect", effect: "chase", colors: ["{{team.secondary}}", "{{team.primary}}"], durationMs: 4000 }, delayMs: 300 },
         ] },
         { kind: "wait", ms: 5000 },
@@ -236,7 +237,8 @@ export function seedRoom(): RoomData {
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "if", condition: { minPoints: 2 }, then: [
           { kind: "do", label: "Big inning", actions: [
-            { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "PADRES SCORE {{event.points}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 7000 } },
+            { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "PADRES SCORE {{event.points}}", subtext: "{{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 7000 } },
+            { target: { all: true }, overlay: { kind: "celebration", text: "{{event.points}} RUNS SCORE", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 6000 }, delayMs: 150 },
             { target: { group: "accent" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 4000 }, delayMs: 200 },
             { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "celebration", volume: 80 }, delayMs: 300 },
             { target: { group: "goal_light" }, command: { type: "pulse", durationMs: 6000 }, delayMs: 400 },
@@ -244,6 +246,7 @@ export function seedRoom(): RoomData {
         ], else: [
           { kind: "do", actions: [
             { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "banner", text: "PADRES SCORE", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 5000 } },
+            { target: { all: true }, overlay: { kind: "banner", text: "RUN SCORES", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", logoUrl: "{{team.logo}}", durationMs: 5000 }, delayMs: 150 },
             { target: { group: "tv_bias" }, command: { type: "effect", effect: "pulse", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 3000 }, delayMs: 200 },
             { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "field_goal", volume: 70 }, delayMs: 300 },
           ] },
@@ -256,9 +259,8 @@ export function seedRoom(): RoomData {
       steps: [
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "do", label: "Home run choreography", actions: [
-          { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "HOME RUN {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 8000 }, delayMs: 0 },
-          { target: { displayRole: "SECOND_GAME" }, overlay: { kind: "celebration", text: "HOME RUN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 6000 }, delayMs: 200 },
-          { target: { displayRole: "LEAGUE_SCORES" }, overlay: { kind: "celebration", text: "HOME RUN", subtext: "{{team.name}}", color: "{{team.primary}}", durationMs: 6000 }, delayMs: 200 },
+          { target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "celebration", text: "HOME RUN {{team.abbr}}", subtext: "{{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 8000 }, delayMs: 0 },
+          { target: { all: true }, overlay: { kind: "celebration", text: "HOME RUN", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 6000 }, delayMs: 150 },
           { target: { group: "tv_bias" }, command: { type: "effect", effect: "flash", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 3000 }, delayMs: 200 },
           { target: { group: "room_leds" }, command: { type: "effect", effect: "chase", colors: ["{{team.primary}}", "{{team.secondary}}"], durationMs: 6000 }, delayMs: 500 },
           { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "touchdown", volume: 85 }, delayMs: 300 },
@@ -275,7 +277,7 @@ export function seedRoom(): RoomData {
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "if", condition: { team: ["MISS", "SD", "NO"] }, then: [
           { kind: "do", actions: [
-            { target: { all: true }, overlay: { kind: "celebration", text: "{{team.abbr}} WINS", subtext: "{{event.text}}", color: "{{team.primary}}", durationMs: 12000 } },
+            { target: { all: true }, overlay: { kind: "celebration", text: "{{team.abbr}} WINS", subtext: "{{event.text}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 12000 } },
             { target: { group: "accent" }, command: { type: "effect", effect: "chase", colors: ["{{team.primary}}", "{{team.secondary}}", "#ffffff"], durationMs: 12000 }, delayMs: 300 },
             { target: { device: "fx_speaker" }, command: { type: "play_audio", clip: "{{team.audio}}", volume: 85 }, delayMs: 300 },
           ] },

@@ -20,7 +20,7 @@ export interface DeviceAction {
 /** Display-level actions that are not device commands: show an overlay, change a role temporarily. */
 export interface DisplayAction {
   target: { displayRole: DisplayRole } | { display: string } | { all: true };
-  overlay: { kind: "celebration" | "banner" | "alert" | "clear"; text?: string; subtext?: string; color?: string; durationMs?: number };
+  overlay: { kind: "celebration" | "banner" | "alert" | "clear"; text?: string; subtext?: string; color?: string; color2?: string; logoUrl?: string; durationMs?: number };
   delayMs?: number;
 }
 
