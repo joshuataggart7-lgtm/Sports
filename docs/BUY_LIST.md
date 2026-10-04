@@ -31,7 +31,15 @@ iPads. See `TOMORROW.md` for the steps.
 Smoke alarm note: a photoelectric alarm in the same room will trip on fog. Test one burst with the
 door open before game day. If the alarm is in the room, skip fog and keep the goal light and horn.
 
-## Phase 3: lights, about $120 to $180
+## Phase 3: lights, about $50 to $180
+
+Two routes. Both flash on cue; the app drives either one directly on your Wi-Fi.
+
+| Route | Where | ~Price | Notes |
+|---|---|---|---|
+| **Govee Wi-Fi strip, model H619A (16.4 ft) or H61A0/H61A1/H6159/H6163/H6172/H6176** | Lowe's (gift cards), Walmart, Amazon | $20–35 each | Turn on "LAN Control" in the Govee Home app (device → gear → LAN Control). The app then talks to it over UDP with no cloud. Model number is on the box; the ones listed are on Govee's LAN list |
+| WLED kit (controller + WS2812B strip + supply) | Walmart or athom.tech | $55–85 each | Open firmware, built-in effects, the hobbyist standard. Buy this if the Govee model on the shelf is not on the LAN list |
+
 
 | Item | Where | ~Price | Why |
 |---|---|---|---|
