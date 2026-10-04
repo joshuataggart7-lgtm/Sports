@@ -14,7 +14,7 @@ iPads. See `TOMORROW.md` for the steps.
 
 | Item | Where | ~Price | Why |
 |---|---|---|---|
-| Fire TV Stick HD | Amazon ($18 on sale, $35 list) or Walmart | $18–35 | Browser box for the right Roku TV if you cannot find yours. Any Fire TV Stick works; the HD one is enough for a web page |
+| Fire TV Stick 4K, two of them | Walmart or Amazon ($50 list, often $30–35 on sale) | $60–100 | One behind each Roku TV. The 4K has 2 GB of RAM and keeps the animated takeovers smooth; the HD model (1 GB) works but can stutter. Two identical sticks means one setup, and the old computer goes back to being a spare. Power each from its wall adapter, not the TV's USB port, so the stick stays alive when the TV sleeps |
 | Shelly Plus Plug US, 2-pack | shelly.com ($45) or Amazon (~$29 each) | $45–58 | One pulses the goal light, one keeps the fog machine warm only during Game Day. Local control, no cloud, no hub |
 | HDMI cables, 6 ft, pack of 3 | Amazon or Walmart | $10–15 | Fire Stick extender, old computer to TV, spare |
 | Powered USB speaker for the Mac (or any Bluetooth speaker you own) | Walmart | $0–30 | The horn and fanfare come from the Mac, layered over the broadcast on the Onkyo |
@@ -66,7 +66,7 @@ door open before game day. If the alarm is in the room, skip fog and keep the go
   Someone has written custom ESPHome firmware for it, so with a weekend of flashing it could
   become a one-button "Game Day" remote, but a $20 Shelly button or the iPad on the wall already
   does that with zero work.
-- **Raspberry Pi.** The old computer and a Fire Stick cover the two browser screens.
+- **Raspberry Pi, or a Google TV box (onn, Chromecast).** Google TV has no browser built in, so it needs a sideloaded one before it can show a page. A Fire Stick ships with Silk, and Room OS already drives both over ADB. The old computer stays a spare.
 - **Home Assistant box.** Every device here has a local protocol Room OS speaks directly.
 - **A second Onkyo output or new speakers.** The surround set you have is complete.
 
