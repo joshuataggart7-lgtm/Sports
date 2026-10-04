@@ -20,8 +20,9 @@ for (const [name, c, vp] of [["stats", code("disp_left"), [1920,1080]], ["league
 }
 const proj = await b.newPage({ viewport: { width: 1920, height: 1080 } }); await proj.goto(`${base}/display/projector?mode=ticker`); pages.ribbon = proj;
 await new Promise((r) => setTimeout(r, 2000));
-for (const [n, p] of Object.entries(pages)) await p.screenshot({ path: `${out}/${n}.png`, ...(n === "ribbon" ? { clip: { x: 0, y: 0, width: 1920, height: 220 } } : {}) });
+const shoot = async (suffix) => { for (const [n, p] of Object.entries(pages)) { if (n === "ribbon") { await p.screenshot({ path: `${out}/ribbon-top${suffix}.png`, clip: { x: 0, y: 30, width: 1920, height: 150 } }); await p.screenshot({ path: `${out}/ribbon-bottom${suffix}.png`, clip: { x: 0, y: 900, width: 1920, height: 150 } }); await p.screenshot({ path: `${out}/projector${suffix}.png` }); } else await p.screenshot({ path: `${out}/${n}${suffix}.png` }); } };
+await shoot("");
 await post("/api/events/manual", { type: "TOUCHDOWN", side: "home" });
 await new Promise((r) => setTimeout(r, 1200));
-for (const [n, p] of Object.entries(pages)) await p.screenshot({ path: `${out}/${n}-td.png`, ...(n === "ribbon" ? { clip: { x: 0, y: 0, width: 1920, height: 220 } } : {}) });
+await shoot("-td");
 await b.close();

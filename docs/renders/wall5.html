@@ -13,13 +13,14 @@
   .tv .bc::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 48px, rgba(255,255,255,.08) 48px 50px); opacity: .5; }
   .tv .bc span { position: absolute; left: 14px; top: 10px; font-size: 16px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.6); }
   .ribbon { background: #000; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,.35); }
-  .ribbon img { width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block; }
+  .ribbon img { width: 100%; height: 100%; object-fit: contain; object-position: left center; display: block; }
   .glow { background: var(--accent); filter: blur(40px); opacity: .5; border-radius: 30px; }
   .ledtop { height: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent)); box-shadow: 0 0 24px 6px var(--accent); opacity: .9; }
   .spk { background: linear-gradient(180deg, #2a2a2a, #121212); border-radius: 4px; box-shadow: 0 8px 18px rgba(0,0,0,.5); }
   .bracket { background: #777; }
   .console { background: linear-gradient(180deg, #1d1d1f, #0e0e10); border-radius: 3px; box-shadow: 0 10px 24px rgba(0,0,0,.6); }
   .console i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #34c759; box-shadow: 0 0 6px #34c759; }
+  .projimg { border: 2px dashed rgba(60,60,60,.45); border-radius: 4px; }
   .projbeam { position: absolute; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.0), rgba(255,255,255,.12)); clip-path: polygon(48% 0, 52% 0, 100% 100%, 0 100%); }
   .tag { position: absolute; display: flex; align-items: center; gap: 8px; font-size: 20px; letter-spacing: .06em; color: #111; font-weight: 700; }
   .tag b { display: inline-flex; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 50%; background: #111; color: #fff; font-size: 17px; }
@@ -68,47 +69,55 @@
     el.style.cssText = `left:${px(x)}px; top:${px(H - y - h)}px; width:${px(w)}px; height:${px(h)}px;` + extra;
     el.innerHTML = inner; wall.appendChild(el); return el;
   };
-  const img = (f) => `<img src="five/${f}${td ? "-td" : ""}.png">`;
+  const img = (f) => `<img src="five/${f}${td ? "-td" : ""}.png">`; const imgf = img;
   // corners: door wall on the left, window wall on the right
   wall.insertAdjacentHTML("beforeend", `<div class="corner" style="left:0"></div><div class="corner" style="right:0; background:linear-gradient(90deg,#e9e4d6,#b9b2a2)"></div><div class="edge" style="left:56px">◀ door wall (closet side)</div><div class="edge" style="right:56px">window wall ▶</div>`);
   wall.insertAdjacentHTML("beforeend", `<div class="base"></div>`);
   add("ledtop", 4, H - 2.5, W - 8, 0.7);                                   // accent strip under the ceiling
-  add("glow", 44, 22, 74, 48);                                             // bias light behind the Sony
-  add("projbeam", 50, 78, 62, 36, "", "opacity:.9");                        // MoGo throw onto the band
-  add("ribbon", 50, 68, 62, 10, img("ribbon"));                             // projected ribbon, 62 x 10 in
-  add("tv", 50.25, 28, 61.5, 35.5, `<div class="bc"><span>Sony 70" · the game</span></div>`);
-  add("tv", 8, 35, 38, 22, img("stats"));                                   // left 43"
-  add("tv", 116, 35, 38, 22, img("league"));                                // right 43"
-  add("tv", 13, 61, 28, 16, img("scoreboard"));                             // small smart TV (32" assumed)
-  add("tv", 123, 62, 24, 13.5, img("status"));                              // monitor (27" assumed)
-  add("bracket", 4.5, 90, 1, 6); add("spk", 2, 80, 6, 10);                  // satellites
-  add("bracket", 156.5, 90, 1, 6); add("spk", 154, 80, 6, 10);
-  add("console", 56, 5.5, 50, 20, `<i style="left:14px;top:12px"></i><i style="left:14px;top:40px"></i><i style="left:14px;top:68px"></i>`);
+  add("glow", 44, 28, 74, 48);                                             // bias light behind the Sony
+  add("projimg", 26, 21, 110, 62);                                          // full projector image, 110 x 62 in (black except the bands)
+  add("ribbon", 50, 73, 62, 10, imgf("ribbon-top"));                        // upper band, 62 x 10 in
+  add("tv", 50.25, 34.25, 61.5, 35.5, `<div class="bc"><span>Sony 70" · the game</span></div>`);
+  add("ribbon", 50, 21, 62, 10, imgf("ribbon-bottom"));                     // lower band, 62 x 10 in
+  add("tv", 8, 41, 38, 22, img("stats"));                                   // left 43"
+  add("tv", 116, 41, 38, 22, img("league"));                                // right 43"
+  add("tv", 13, 67, 28, 16, img("scoreboard"));                             // small smart TV (32" assumed)
+  add("tv", 123, 68, 24, 13.5, img("status"));                              // monitor (27" assumed)
+  add("bracket", 4.5, 96, 1, 6); add("spk", 2, 86, 6, 10);                  // satellites
+  add("bracket", 156.5, 96, 1, 6); add("spk", 154, 86, 6, 10);
+  add("console", 51, 0.5, 60, 18, `<i style="left:14px;top:12px"></i><i style="left:14px;top:40px"></i><i style="left:14px;top:68px"></i>`);
   // callouts
   const tag = (n, x, y) => { const t = document.createElement("div"); t.className = "tag"; t.style.cssText = `left:${px(x)}px; top:${px(H - y)}px;`; t.innerHTML = `<b>${n}</b>`; wall.appendChild(t); };
-  tag(1, 51, 63); tag(2, 8.5, 56.5); tag(3, 116.5, 56.5); tag(4, 13.5, 76.5); tag(5, 123.5, 75); tag(6, 50.5, 77.5); tag(7, 58, 24); tag(8, 10, 95); tag(9, 10, 108);
-  // dimensions
+  tag(1, 51, 69.25); tag(2, 8.5, 62.5); tag(3, 116.5, 62.5); tag(4, 13.5, 82.5); tag(5, 123.5, 81); tag(6, 50.5, 82.5); tag(7, 50.5, 30.5); tag(8, 52, 17.5); tag(9, 10, 101); tag(10, 10, 108);
+  // dimensions: heights are from the floor to the bottom edge, so you can mark the wall with a tape
   const dim = (cls, x, y, w, h, label) => { const d = document.createElement("div"); d.className = "dim " + cls; d.style.cssText = `left:${px(x)}px; top:${px(H - y - h)}px; width:${px(w)}px; height:${px(h)}px;`; d.innerHTML = `<span>${label}</span>`; wall.appendChild(d); };
-  dim("h", 50.25, 24, 61.5, 0, `61.5" (70" TV)`);
-  dim("h", 8, 31, 38, 0, `38"`); dim("h", 116, 31, 38, 0, `38"`);
-  dim("h", 46, 59.5, 4.25, 0, `4"`);
-  dim("v", 47.5, 0, 0, 46, `46" center`);
-  dim("v", 113.5, 68, 0, 10, `10"`);
+  dim("h", 50.25, 33, 61.5, 0, `61.5" (70" TV)`);
+  dim("h", 8, 38.5, 38, 0, `38"`); dim("h", 116, 38.5, 38, 0, `38"`);
+  dim("h", 46, 65, 4.25, 0, `4"`);
+  dim("v", 47.5, 0, 0, 34.25, `34¼"`);
+  dim("v", 47.5, 34.25, 0, 35.5, `TV 35½" tall · center 52"`);
+  dim("v", 113.5, 73, 0, 10, `73"–83"`);
+  dim("v", 113.5, 21, 0, 10, `21"–31"`);
+  dim("v", 113.5, 0, 0, 18, `console 18"`);
+  dim("v", 6, 0, 0, 41, `41" to 43" bottom`);
+  dim("v", 6, 41, 0, 22, `22"`);
+  dim("v", 6, 67, 0, 16, `67"–83"`);
   dim("v l", 160.5, 0, 0, 114, `9' 6" ceiling (measure)`);
-  dim("h", 6, 4.5, 150, 0, `13' 6" wall (measure)`);
+  dim("h", 8, 4.5, 146, 0, `13' 6" wall (measure)`);
   document.getElementById("side").innerHTML = `
-    <h1>The long wall</h1><h2>${td ? "Touchdown · every screen reacts" : "Game Day · five screens + ribbon"}</h2>
+    <h1>The long wall</h1><h2>${td ? "Touchdown · every screen reacts" : "Game Day · five screens, two ribbons"}</h2>
     <ol>
-      <li><b>1</b><div><em>Sony 70" · the game</em>Apple TV through the Onkyo. Center 46" off the floor.</div></li>
-      <li><b>2</b><div><em>Left 43" TCL · Stats &amp; Leaders</em>Fire Stick 4K Plus on HDMI 1, Apple TV on HDMI 2.</div></li>
-      <li><b>3</b><div><em>Right 43" Element · League Scores</em>Same two inputs. Multiview flips it to a second game.</div></li>
-      <li><b>4</b><div><em>Small smart TV · Scoreboard</em>All your teams' games at once. Its own browser or a Chromecast.</div></li>
-      <li><b>5</b><div><em>Monitor · Room Status</em>Clock, next game, what is on. Old computer or a spare Apple TV with AirPlay.</div></li>
-      <li><b>6</b><div><em>Projected ribbon · 62 x 10"</em>MoGo 2 Plus on the opposite wall, viewport cropped to the band. Everything else black.</div></li>
-      <li><b>7</b><div><em>Console</em>Onkyo, Apple TV, Mac mini or laptop, Shelly plugs.</div></li>
-      <li><b>8</b><div><em>Rear satellites</em>Stay on their brackets, outer corners.</div></li>
-      <li><b>9</b><div><em>Accent LED strip</em>WLED, under the ceiling line. Team colors on a score.</div></li>
+      <li><b>1</b><div><em>Sony 70" · the game</em>Bottom edge 34¼" off the floor, center 52". Mount centered on the wall.</div></li>
+      <li><b>2</b><div><em>Left 43" · Stats &amp; Leaders</em>Bottom edge 41", 4" gap to the Sony. Fire Stick 4K Plus.</div></li>
+      <li><b>3</b><div><em>Right 43" · League Scores</em>Mirror of the left: bottom 41", 4" gap.</div></li>
+      <li><b>4</b><div><em>Small TV · Scoreboard</em>Centered over the left 43, bottom edge 67".</div></li>
+      <li><b>5</b><div><em>Monitor · Room Status</em>Centered over the right 43, bottom edge 68".</div></li>
+      <li><b>6</b><div><em>Upper ribbon · 73" to 83"</em>Score bug + red zone. Projected on the paint, TV width.</div></li>
+      <li><b>7</b><div><em>Lower ribbon · 21" to 31"</em>Continuous crawl: every other score, or the leaders of the watched game.</div></li>
+      <li><b>8</b><div><em>Low console · 18" tall</em>Onkyo, Apple TV, Mac, Shelly plugs. The current 24" stand is too tall for the lower band.</div></li>
+      <li><b>9</b><div><em>Rear satellites</em>Outer top corners, bottom at 86".</div></li>
+      <li><b>10</b><div><em>Accent LED strip</em>WLED under the ceiling line.</div></li>
     </ol>
-    <div class="note"><b>Assumed 13' 6" wide, 9' 6" ceiling.</b> Tape-measure both. Under 12' 6", the small TV and monitor move below the 43s instead of above. Bias light behind the Sony (${td ? "flashing Ole Miss red" : "team color"}); fog machine and goal light sit on the console shelf.</div>`;
-  document.getElementById("mode").innerHTML = td ? `<b>Touchdown Ole Miss</b> · side TVs take over · ribbon takeover · bias flash · horn` : `<b>Game Day</b> · game center · stats left · league right · scoreboard and status above`;
+    <div class="note"><b>Dashed box = the MoGo's full image, 110 x 62".</b> Only the two bands light up; the rest is black. The MoGo sits on the opposite wall about 11 ft back (1.2:1 throw). Wall assumed 13' 6" x 9' 6": measure both. Under 12' 6", the small TV and monitor move below the 43s.</div>`;
+  document.getElementById("mode").innerHTML = td ? `<b>Touchdown Ole Miss</b> · both ribbons and both side TVs take over · bias flash · horn` : `<b>Game Day</b> · score bug above the TV · scores crawl below it · stats left · league right`;
 </script></body></html>

@@ -28,12 +28,25 @@ export interface TickerConfig {
   /** Full projector image size, so the editor can preview the black surround. */
   canvasWidth: number;
   canvasHeight: number;
+  /** Optional second band (for instance below the TV, above the console). Crawls continuously. */
+  lower?: LowerBandConfig;
+}
+
+export interface LowerBandConfig {
+  enabled: boolean;
+  x?: number;         // defaults to the upper band's x
+  y: number;          // px from the top of the projector image
+  width?: number;     // defaults to the upper band's width
+  height: number;     // px
+  content: "scores" | "leaders";
+  scrollPxPerSec: number;
 }
 
 export const DEFAULT_TICKER: TickerConfig = {
   x: 0, y: 30, width: 1920, height: 150, fontPx: 56, mode: "static", scrollPxPerSec: 60, leagues: [],
   showClock: true, showDownDistance: true, showPossession: true, redZoneAlert: true, scoreFlash: true,
   canvasWidth: 1920, canvasHeight: 1080,
+  lower: { enabled: false, y: 900, height: 150, content: "scores", scrollPxPerSec: 90 },
 };
 
 export interface DisplayDevice {

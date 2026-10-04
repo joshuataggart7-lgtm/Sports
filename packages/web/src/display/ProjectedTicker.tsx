@@ -4,7 +4,7 @@
  * watched game as a score bug, then one line of other scores that cycles or scrolls.
  */
 import { useEffect, useState } from "react";
-import { DEFAULT_TICKER, type DisplayDevice, type DisplayOverlay, type Game, type RoomSnapshot, type TickerConfig } from "@room/core";
+import { DEFAULT_TICKER, type DisplayDevice, type DisplayOverlay, type Game, type Leader, type LowerBandConfig, type RoomSnapshot, type TickerConfig } from "@room/core";
 import { favoriteSide, primaryGame } from "../app/store";
 import { Logo, ScoreBug } from "./broadcast";
 
@@ -17,7 +17,10 @@ export function ProjectedTicker({ s, display, overlay }: { s: RoomSnapshot; disp
   const active = overlay && overlay.until > Date.now() && overlay.kind !== "clear" ? overlay : undefined;
   const scale = typeof window !== "undefined" ? window.innerWidth / cfg.canvasWidth : 1;
   const box = { left: cfg.x * scale, top: cfg.y * scale, width: cfg.width * scale, height: cfg.height * scale };
-  const twoRows = box.height >= 1.9 * cfg.fontPx * scale;
+  const lower = cfg.lower?.enabled ? cfg.lower : undefined;
+  const lowerBox = lower ? { left: (lower.x ?? cfg.x) * scale, top: lower.y * scale, width: (lower.width ?? cfg.width) * scale, height: lower.height * scale } : undefined;
+  // With a lower band the upper one is a single row: the other scores crawl below instead.
+  const twoRows = !lower && box.height >= 1.9 * cfg.fontPx * scale;
   const mainH = twoRows ? Math.round(box.height * 0.58) : box.height;
 
   return (
@@ -32,6 +35,56 @@ export function ProjectedTicker({ s, display, overlay }: { s: RoomSnapshot; disp
             {twoRows && others.length > 0 && <OthersLine others={others} h={box.height - mainH} cfg={cfg} s={s} />}
           </>
         ) : <div className="bc flex h-full items-center px-[1em] text-[0.6em] text-white/40">ROOM OS</div>}
+      </div>
+      {lower && lowerBox && (
+        <div className="absolute overflow-hidden" style={lowerBox}>
+          {active ? <TakeoverCrawl o={active} h={lowerBox.height} /> : <LowerBand lower={lower} h={lowerBox.height} g={g} others={others} s={s} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The second band: a continuous crawl, like the bottom line under a studio show. */
+function LowerBand({ lower, h, g, others, s }: { lower: LowerBandConfig; h: number; g?: Game; others: Game[]; s: RoomSnapshot }) {
+  const stats = g ? s.stats?.[g.id] : undefined;
+  const items: React.ReactNode[] = lower.content === "leaders" && stats
+    ? [...stats.leaders.home.map((l, i) => <Leader key={`h${i}`} l={l} abbr={g!.home.abbreviation} color={g!.home.profile.primaryColor} h={h} />), ...stats.leaders.away.map((l, i) => <Leader key={`a${i}`} l={l} abbr={g!.away.abbreviation} color={g!.away.profile.primaryColor} h={h} />)]
+    : others.map((o) => <ScoreBug key={o.id} game={o} h={Math.round(h * 0.72)} showSituation={false} fav={favoriteSide(s, o)} />);
+  if (items.length === 0) return <div className="bc flex h-full items-center px-[1em] text-white/40" style={{ fontSize: h * 0.4 }}>{lower.content === "leaders" ? "LEADERS" : "SCORES"}</div>;
+  // The row is rendered twice and slides by half its width, so the crawl is seamless and visible from the first frame.
+  const seconds = Math.max(12, Math.round((items.length * 700) / lower.scrollPxPerSec));
+  return (
+    <div className="relative flex h-full items-center overflow-hidden border-t border-white/10 bg-[#0a0c10]">
+      <div className="bc absolute left-0 top-0 z-10 flex h-full items-center bg-[#0a0c10] px-[0.8em] font-black tracking-[0.2em] text-white/60" style={{ fontSize: h * 0.34, boxShadow: "12px 0 24px #0a0c10" }}>{lower.content === "leaders" ? "LEADERS" : "SCORES"}</div>
+      <div className="flex items-center whitespace-nowrap pl-[6em]" style={{ fontSize: h * 0.4, animation: `crawl ${seconds}s linear infinite` }}>
+        <div className="flex items-center gap-[1.4em] pr-[1.4em]">{items}</div>
+        <div className="flex items-center gap-[1.4em] pr-[1.4em]" aria-hidden>{items}</div>
+      </div>
+    </div>
+  );
+}
+
+function Leader({ l, abbr, color, h }: { l: Leader; abbr: string; color: string; h: number }) {
+  return (
+    <span className="bc inline-flex items-center gap-[0.4em] whitespace-nowrap" style={{ fontSize: h * 0.4 }}>
+      <span className="inline-block h-[1.1em] w-[0.22em] rounded-sm" style={{ background: color }} />
+      <span className="font-black text-white/70">{abbr}</span>
+      <span className="font-bold uppercase tracking-[0.08em] text-white">{l.name}</span>
+      <span className="text-white/60">{l.line}</span>
+    </span>
+  );
+}
+
+/** During a takeover the lower band crawls the same message in the team color. */
+function TakeoverCrawl({ o, h }: { o: DisplayOverlay; h: number }) {
+  const color = o.color ?? "#fff";
+  const msg = [o.text, o.subtext].filter(Boolean).join("   ·   ");
+  return (
+    <div className="bc bc-wipe flex h-full items-center overflow-hidden" style={{ background: `linear-gradient(90deg, #0a0c10 0%, ${color} 18%, ${color} 82%, #0a0c10 100%)` }}>
+      <div className="flex whitespace-nowrap font-black uppercase tracking-[0.1em] text-white" style={{ fontSize: h * 0.5, animation: "crawl 8s linear infinite", textShadow: "0 3px 12px rgba(0,0,0,.5)" }}>
+        <div className="flex gap-[2em] pr-[2em]">{[0, 1, 2].map((i) => <span key={i}>{msg}</span>)}</div>
+        <div className="flex gap-[2em] pr-[2em]" aria-hidden>{[0, 1, 2].map((i) => <span key={i}>{msg}</span>)}</div>
       </div>
     </div>
   );

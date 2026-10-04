@@ -33,6 +33,7 @@ body { background: var(--color-ink); color: var(--color-fog); font-family: var(-
 @keyframes pulseGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 @keyframes scoreFlash { 0% { background: var(--flash, #fff); color: #000; } 100% { background: transparent; color: inherit; } }
 @keyframes ticker { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+@keyframes crawl { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes celebrate { 0% { transform: scale(0.92); opacity: 0; } 12% { transform: scale(1.02); opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
 .rise { animation: rise .35s ease-out both; }
 .live-dot { animation: pulseGlow 1.6s ease-in-out infinite; }

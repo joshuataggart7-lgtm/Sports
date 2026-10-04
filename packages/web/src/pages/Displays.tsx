@@ -91,6 +91,9 @@ function TickerSettings({ d }: { d: DisplayDevice }) {
   const set = (k: string, v: unknown) => api(`/api/displays/${d.id}/role`, { role: "PROJECTED_TICKER", roleOptions: { ticker: { ...t, [k]: v } } });
   const num = (k: string, label: string) => <label className="text-xs text-mute">{label}<input type="number" className="mt-1 w-full rounded-lg border border-line bg-panel2 p-1.5 text-sm text-fog" defaultValue={Number(t[k] ?? 0)} onBlur={(e) => set(k, Number(e.target.value))} /></label>;
   const bool = (k: string, label: string) => <label className="flex items-center gap-2 text-xs text-mute"><input type="checkbox" checked={Boolean(t[k])} onChange={(e) => set(k, e.target.checked)} />{label}</label>;
+  const lower = ((t.lower as Record<string, unknown> | undefined) ?? { enabled: false, y: 900, height: 150, content: "scores", scrollPxPerSec: 90 });
+  const setLower = (k: string, v: unknown) => set("lower", { ...lower, [k]: v });
+  const lnum = (k: string, label: string) => <label className="text-xs text-mute">{label}<input type="number" className="mt-1 w-24 rounded-lg border border-line bg-panel2 p-1.5 text-sm text-fog" defaultValue={Number(lower[k] ?? 0)} onBlur={(e) => setLower(k, Number(e.target.value))} /></label>;
   return (
     <div className="sm:col-span-2">
       <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-mute">Projected ribbon viewport (px on the projector image)</div>
@@ -98,6 +101,12 @@ function TickerSettings({ d }: { d: DisplayDevice }) {
       <div className="mt-2 flex flex-wrap gap-4">
         <label className="text-xs text-mute">Mode<select className="ml-2 rounded-lg border border-line bg-panel2 p-1 text-sm text-fog" value={String(t.mode ?? "static")} onChange={(e) => set("mode", e.target.value)}><option value="static">static</option><option value="scroll">scroll</option></select></label>
         {bool("showClock", "clock")}{bool("showDownDistance", "down & distance")}{bool("showPossession", "possession")}{bool("redZoneAlert", "red-zone alert")}{bool("scoreFlash", "score flash")}
+      </div>
+      <div className="mt-3 mb-2 text-xs font-semibold uppercase tracking-widest text-mute">Lower band (below the TV)</div>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex items-center gap-2 text-xs text-mute"><input type="checkbox" checked={Boolean(lower.enabled)} onChange={(e) => setLower("enabled", e.target.checked)} />enabled</label>
+        {lnum("y", "Y")}{lnum("height", "Height")}{lnum("scrollPxPerSec", "Scroll px/s")}
+        <label className="text-xs text-mute">Shows<select className="ml-2 rounded-lg border border-line bg-panel2 p-1 text-sm text-fog" value={String(lower.content ?? "scores")} onChange={(e) => setLower("content", e.target.value)}><option value="scores">other scores</option><option value="leaders">leaders of the watched game</option></select></label>
       </div>
       <p className="mt-2 text-xs text-mute">Everything outside the viewport renders true black. If the projector's black is not black enough, mask the lens or move the ribbon to a dark wall; the viewport math stays the same.</p>
     </div>
