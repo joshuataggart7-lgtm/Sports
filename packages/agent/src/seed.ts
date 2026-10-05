@@ -48,7 +48,7 @@ export function seedRoom(): RoomData {
   const displays: DisplayDevice[] = [
     { id: "disp_sony", roomId: ROOM, name: "Sony TV", deviceId: "tv_sony", role: "MAIN_GAME", pairingCode: pairingCode(), paired: false, position: { x: 34, y: 22, w: 32, h: 20 }, kind: "tv" },
     { id: "disp_left", roomId: ROOM, name: "Left TV", deviceId: "stick_left", rotation: 270, role: "PLAYER_STATS", pairingCode: pairingCode(), paired: false, position: { x: 8, y: 24, w: 22, h: 13 }, kind: "tv" },
-    { id: "disp_right", roomId: ROOM, name: "Right TV", deviceId: "tv_right", rotation: 90, role: "LEAGUE_SCORES", pairingCode: pairingCode(), paired: false, position: { x: 70, y: 24, w: 22, h: 13 }, kind: "tv" },
+    { id: "disp_right", roomId: ROOM, name: "Right TV", deviceId: "tv_right", rotation: 270, role: "LEAGUE_SCORES", pairingCode: pairingCode(), paired: false, position: { x: 70, y: 24, w: 22, h: 13 }, kind: "tv" },
     { id: "disp_desk", roomId: ROOM, name: "Desk Ultrawide", deviceId: "desk_ultrawide", role: "ROOM_STATUS", pairingCode: pairingCode(), paired: false, position: { x: 4, y: 72, w: 26, h: 9 }, kind: "ultrawide" },
     { id: "disp_projector", roomId: ROOM, name: "Projector", deviceId: "projector_ribbon", role: "PROJECTED_TICKER", roleOptions: { ticker: { ...DEFAULT_TICKER, lower: { enabled: true, y: 900, height: 150, content: "scores", scrollPxPerSec: 90 } } }, pairingCode: pairingCode(), paired: false, position: { x: 8, y: 8, w: 84, h: 7 }, kind: "projector" },
   ];
