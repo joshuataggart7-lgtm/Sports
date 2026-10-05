@@ -31,6 +31,9 @@ function parse(buf: Buffer): string[] {
 
 export class OnkyoDriver implements DeviceDriver {
   id = "onkyo";
+  /** Onkyos drop a second connection that arrives on the heels of the first, so commands to one
+   *  receiver go out one at a time with a short gap, and a reset gets one retry. */
+  private queues = new Map<string, Promise<unknown>>();
 
   async connect(devices: RoomDevice[]): Promise<IntegrationStatus> {
     let any: IntegrationStatus = "OFFLINE";
@@ -68,8 +71,25 @@ export class OnkyoDriver implements DeviceDriver {
 
   private send(device: RoomDevice, cmd: string): Promise<string[]> {
     const host = String(device.driverConfig?.host ?? "");
-    const port = Number(device.driverConfig?.port ?? 60128);
     if (!host) return Promise.reject(new Error(`${device.name} has no host`));
+    const prev = this.queues.get(host) ?? Promise.resolve();
+    const run = prev.catch(() => undefined).then(async () => {
+      try { return await this.once(device, cmd); }
+      catch (e) {
+        const msg = (e as Error).message;
+        if (!/ECONNRESET|ECONNREFUSED|timeout|EPIPE/.test(msg)) throw e;
+        await new Promise((r) => setTimeout(r, 600));
+        return this.once(device, cmd);
+      }
+      finally { await new Promise((r) => setTimeout(r, 250)); }
+    });
+    this.queues.set(host, run);
+    return run;
+  }
+
+  private once(device: RoomDevice, cmd: string): Promise<string[]> {
+    const host = String(device.driverConfig?.host ?? "");
+    const port = Number(device.driverConfig?.port ?? 60128);
     return new Promise((resolve, reject) => {
       const sock = net.createConnection({ host, port });
       const chunks: Buffer[] = [];
