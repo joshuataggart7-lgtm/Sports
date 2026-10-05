@@ -1,0 +1,20 @@
+import { chromium } from "playwright";
+const base = "http://localhost:8790"; const out = process.argv[2];
+const post = (p, b, m = "POST") => fetch(base + p, { method: m, headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const snap = await (await fetch(base + "/api/snapshot")).json();
+const code = (id) => snap.displays.find((d) => d.id === id).pairingCode;
+await post("/api/room", { watchedGameIds: ["sim:ncaaf:LSU@MISS"] });
+await post("/api/mode", { mode: "GAME_DAY" }); await sleep(2500);
+await post("/api/displays/disp_left/role", { role: "PLAYER_STATS" });
+await post("/api/displays/disp_right/role", { role: "LEAGUE_SCORES" });
+await post("/api/displays/disp_desk/role", { role: "SCOREBOARD" });
+for (const id of ["disp_left", "disp_right", "disp_desk"]) await post(`/api/displays/${id}`, { rotation: 90 }, "PUT");
+const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "localhost,127.0.0.1" } : undefined, args: ["--ignore-certificate-errors"] });
+const pages = {};
+for (const [n, id] of [["stats", "disp_left"], ["league", "disp_right"], ["scoreboard", "disp_desk"]]) { const p = await b.newPage({ viewport: { width: 1920, height: 1080 } }); await p.goto(`${base}/display/${code(id)}`); pages[n] = p; }
+await sleep(3500);
+for (const [n, p] of Object.entries(pages)) await p.screenshot({ path: `${out}/portrait-${n}.png` });
+await post("/api/events/manual", { type: "TOUCHDOWN", side: "home" }); await sleep(1500);
+await pages.stats.screenshot({ path: `${out}/portrait-td.png` });
+await b.close();

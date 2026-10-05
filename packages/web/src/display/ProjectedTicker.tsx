@@ -24,7 +24,7 @@ export function ProjectedTicker({ s, display, overlay }: { s: RoomSnapshot; disp
   const mainH = twoRows ? Math.round(box.height * 0.58) : box.height;
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-black">
+    <div className="h-full w-full overflow-hidden bg-black">
       <div className="absolute flex flex-col overflow-hidden" style={box}>
         {active ? <Takeover o={active} h={box.height} g={g} /> : g ? (
           <>

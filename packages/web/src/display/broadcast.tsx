@@ -84,14 +84,14 @@ export function BigTeam({ game, side, fav, align }: { game: Game; side: "home" |
   const flash = useFlash(score);
   const poss = game.situation.possession === side && game.status === "live";
   return (
-    <div className={`bc flex items-center gap-[2.5vw] ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
-      <div className="relative flex items-center justify-center rounded-[1.2vw]" style={{ width: "16vw", height: "16vw", background: `radial-gradient(circle at 50% 40%, ${t.profile.primaryColor}cc, ${t.profile.primaryColor}55 60%, transparent 75%)` }}>
+    <div className={`bc flex items-center gap-[calc(2.5*var(--u))] ${align === "right" ? "flex-row-reverse text-right" : ""}`}>
+      <div className="relative flex items-center justify-center rounded-[calc(1.2*var(--u))]" style={{ width: "calc(16*var(--u))", height: "calc(16*var(--u))", background: `radial-gradient(circle at 50% 40%, ${t.profile.primaryColor}cc, ${t.profile.primaryColor}55 60%, transparent 75%)` }}>
         <LogoFill game={game} side={side} />
       </div>
       <div>
-        <div className={`whitespace-nowrap text-[2.4vw] font-bold uppercase tracking-[0.12em] ${fav ? "text-white" : "text-white/70"}`}>{t.shortName}{t.record ? <span className="ml-[0.6em] text-[0.7em] tracking-normal text-white/50">{t.record}</span> : null}</div>
-        <div className={`flex items-center gap-[1vw] ${align === "right" ? "flex-row-reverse" : ""}`}>
-          <div className={`text-[11vw] font-black leading-[0.9] ${flash ? "score-flash" : ""}`} style={{ ["--flash" as string]: t.profile.primaryColor }}>{game.status === "scheduled" ? "" : score}</div>
+        <div className={`whitespace-nowrap text-[calc(2.4*var(--u))] font-bold uppercase tracking-[0.12em] ${fav ? "text-white" : "text-white/70"}`}>{t.shortName}{t.record ? <span className="ml-[0.6em] text-[0.7em] tracking-normal text-white/50">{t.record}</span> : null}</div>
+        <div className={`flex items-center gap-[calc(1*var(--u))] ${align === "right" ? "flex-row-reverse" : ""}`}>
+          <div className={`text-[calc(11*var(--u))] font-black leading-[0.9] ${flash ? "score-flash" : ""}`} style={{ ["--flash" as string]: t.profile.primaryColor }}>{game.status === "scheduled" ? "" : score}</div>
           <PossessionMark side={side} active={poss} />
         </div>
       </div>
@@ -102,7 +102,7 @@ export function BigTeam({ game, side, fav, align }: { game: Game; side: "home" |
 function LogoFill({ game, side }: { game: Game; side: "home" | "away" }) {
   const t = game[side];
   const [failed, setFailed] = useState(!t.logoUrl || failedLogos.has(t.logoUrl));
-  if (failed) return <div className="bc text-[5vw] font-black text-white" style={{ textShadow: "0 6px 16px rgba(0,0,0,.7)" }}>{t.abbreviation}</div>;
+  if (failed) return <div className="bc text-[calc(5*var(--u))] font-black text-white" style={{ textShadow: "0 6px 16px rgba(0,0,0,.7)" }}>{t.abbreviation}</div>;
   return <img src={t.logoUrl} alt="" className="absolute inset-[12%] h-[76%] w-[76%] object-contain" style={{ filter: "drop-shadow(0 6px 16px rgba(0,0,0,.7))" }} draggable={false} onError={() => { failedLogos.add(t.logoUrl!); setFailed(true); }} />;
 }
 

@@ -64,6 +64,8 @@ export interface DisplayDevice {
   /** Schematic position in the room editor. */
   position: { x: number; y: number; w: number; h: number };
   kind: "tv" | "monitor" | "projector" | "ultrawide";
+  /** Physical rotation of the panel. 90 = portrait with the TV's top edge on the right, 270 = top edge on the left. */
+  rotation?: 0 | 90 | 180 | 270;
 }
 
 export interface DisplayPreset {
