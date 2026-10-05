@@ -17,7 +17,7 @@ export function seedRoom(): RoomData {
   // Element Roku TV (Roku ECP), XGIMI Horizon Pro (movies) and XGIMI MoGo 2 Plus (ribbon),
   // both Android TV over ADB, an Onkyo receiver (eISCP). Hosts are filled in from Settings.
   const devices: RoomDevice[] = [
-    dev("tv_sony", "television", "Sony 70\" (KD-70X690E)", ["power", "input", "volume"], { driver: "bravia", driverConfig: { host: "192.168.1.18", psk: "" }, inputs: { appletv: "1", receiver: "1", browser: "3" }, groups: ["sports_wall"], position: { x: 0.5, y: 0.22, w: 0.3, h: 0.17 } }),
+    dev("tv_sony", "television", "Sony 70\" (KD-70X690E)", ["power", "input", "volume"], { driver: "bravia", driverConfig: { host: "192.168.1.18", psk: "" }, inputs: { appletv: "3", receiver: "3", browser: "1" }, groups: ["sports_wall"], position: { x: 0.5, y: 0.22, w: 0.3, h: 0.17 } }),
     // Left 43: a TCL Roku TV (power + input over Roku ECP) with a Fire TV Stick 4K Plus on HDMI 1
     // that shows the page (ADB). Right 43: an Insignia Fire TV Edition, Fire OS built in, so one
     // device does power, input and the page.
