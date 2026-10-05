@@ -8,3 +8,4 @@ export * from "./modes";
 export * from "./room";
 export * from "./protocol";
 export * from "./ids";
+export * from "./experience";

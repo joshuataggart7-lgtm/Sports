@@ -36,6 +36,7 @@ export type AutomationCondition =
   | { team: string[] }                       // event team abbreviation in
   | { minPoints: number }                    // event data.points >= n
   | { scoreDiffAtMost: number }              // close game
+  | { period: number[] }                     // event data.period in (halftime = PERIOD_END with period 2)
   | { not: AutomationCondition };
 
 export interface AutomationTrigger {
@@ -55,6 +56,8 @@ export interface Automation {
   id: string;
   roomId: string;
   name: string;
+  /** Seed revision; a saved copy with a lower version is replaced on load (user edits bump it). */
+  version?: number;
   enabled: boolean;
   trigger: AutomationTrigger;
   steps: AutomationStep[];

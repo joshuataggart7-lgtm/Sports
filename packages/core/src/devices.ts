@@ -1,12 +1,14 @@
 import type { IntegrationStatus } from "./status";
+import type { FixtureOp, TactilePattern } from "./experience";
 
 export type DeviceType =
   | "television" | "monitor" | "projector" | "projector_screen" | "av_receiver" | "speaker"
-  | "light" | "smart_plug" | "computer" | "browser_display" | "virtual_display" | "button";
+  | "light" | "smart_plug" | "computer" | "browser_display" | "virtual_display" | "button"
+  | "dmx_fixture" | "tactile";
 
 export type DeviceCapability =
   | "power" | "input" | "volume" | "brightness" | "color" | "url" | "layout"
-  | "screen_position" | "audio_playback" | "scene" | "effect" | "momentary";
+  | "screen_position" | "audio_playback" | "scene" | "effect" | "momentary" | "tactile" | "dmx";
 
 /** Commands are a closed union so drivers, scenes and automations all agree on the vocabulary. */
 export type DeviceCommand =
@@ -24,7 +26,11 @@ export type DeviceCommand =
   | { type: "play_audio"; clip: string; volume?: number }
   | { type: "run_scene"; scene: string }
   /** Close a contact for a moment: fog machine trigger, confetti cannon, goal light, air horn relay. */
-  | { type: "pulse"; durationMs?: number };
+  | { type: "pulse"; durationMs?: number }
+  /** Couch / seat shaker pattern. intensity 0..100. */
+  | { type: "tactile"; pattern: TactilePattern; intensity?: number; durationMs?: number }
+  /** Semantic DMX fixture operation; the fixture profile turns it into channel values. */
+  | { type: "fixture"; op: FixtureOp; color?: string; intensity?: number; speed?: number; durationMs?: number };
 
 export type DeviceCommandType = DeviceCommand["type"];
 
@@ -38,6 +44,9 @@ export interface DeviceState {
   url?: string;
   screenPosition?: "up" | "down" | "moving";
   playing?: string | null;
+  /** Last tactile pattern / fixture op, for the UI. */
+  tactile?: string | null;
+  fixture?: string | null;
   updatedAt: number;
 }
 
@@ -76,4 +85,5 @@ export const CAPABILITY_FOR_COMMAND: Record<DeviceCommandType, DeviceCapability>
   power_on: "power", power_off: "power", set_input: "input", set_volume: "volume", set_brightness: "brightness",
   set_color: "color", effect: "effect", open_url: "url", display_layout: "layout", screen_up: "screen_position",
   screen_down: "screen_position", play_audio: "audio_playback", run_scene: "scene", pulse: "momentary",
+  tactile: "tactile", fixture: "dmx",
 };

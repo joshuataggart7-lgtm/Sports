@@ -7,6 +7,7 @@ import { EventEmitter } from "node:events";
 import { uid, type Automation, type AutomationCondition, type AutomationRun, type AutomationStep, type DeviceAction, type DeviceCommand, type DisplayAction, type Game, type Room, type RoomMode, type Scene, type SportsEvent, type Team, type TimelineEntry } from "@room/core";
 import type { DeviceManager, Origin } from "./devices";
 import type { DisplayManager } from "./displays";
+import { applyExperience } from "./experience";
 import { contextFor, render, type RenderContext } from "./template";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -53,12 +54,15 @@ export class Orchestrator extends EventEmitter {
     await this.runScene(scene, origin);
   }
 
-  async runScene(scene: Scene, origin: Origin = "manual"): Promise<void> {
+  async runScene(scene: Scene, origin: Origin = "manual", event?: SportsEvent): Promise<void> {
     const game = this.primaryGame();
-    const ctx = contextFor(undefined, game, this.favoriteTeam());
-    if (game && ctx.team === undefined) ctx.team = contextFor(undefined, game, game.home).team;
+    const ctx = contextFor(event, game, this.favoriteTeam(), this.room.teams);
+    if (game && ctx.team === undefined) ctx.team = contextFor(undefined, game, game.home, this.room.teams).team;
     const actions = [...scene.actions].sort((a, b) => a.delayMs - b.delayMs);
+    const runId = uid("scene");
+    this.devices.metrics.startRun(runId);
     const start = Date.now();
+    if (scene.fx) this.log({ kind: "automation", text: `${scene.name}`, detail: { sceneId: scene.id, runId, origin } });
     await Promise.all(actions.map(async (a) => {
       const wait = start + a.delayMs - Date.now();
       if (wait > 0) await sleep(wait);
@@ -68,14 +72,25 @@ export class Orchestrator extends EventEmitter {
         const ra = action.roleAssignment;
         const targets = ra.displayId ? [this.displays.get(ra.displayId)] : this.displays.displays.filter((d) => d.kind === ra.displayKind);
         for (const d of targets) if (d) this.displays.setRole(d.id, ra.role, ra.roleOptions, `scene ${scene.name}`);
-      } else if ("overlay" in action) this.displays.overlay(action.target, action.overlay);
-      else await this.runDeviceAction(action, origin === "manual" ? "scene" : origin);
+      } else if ("overlay" in action) this.showOverlay(action, !!scene.fx);
+      else await this.runDeviceAction(action, origin === "manual" ? "scene" : origin, { fx: !!scene.fx, runId });
     }));
     this.emit("change");
     this.emit("scene", scene);
   }
 
-  private async runDeviceAction(action: DeviceAction, origin: Origin): Promise<void> {
+  /** Display FX go through the Experience gate too; a disabled Display FX category hides overlays. */
+  private showOverlay(action: DisplayAction, fx: boolean): void {
+    const e = this.room.experience;
+    if (fx && e && (!e.master || !e.categories.display?.enabled)) return;
+    this.displays.overlay(action.target, action.overlay);
+  }
+
+  /**
+   * Resolve the target, pass each command through the Experience gate when it is an effect,
+   * and fire every device concurrently so one slow or dead device never holds the rest.
+   */
+  private async runDeviceAction(action: DeviceAction, origin: Origin, opts: { fx: boolean; runId?: string }): Promise<void> {
     const t = action.target;
     let targets: string[] = [];
     if ("device" in t) targets = [t.device];
@@ -83,7 +98,13 @@ export class Orchestrator extends EventEmitter {
     else if ("deviceType" in t) targets = this.devices.byType(t.deviceType).map((d) => d.id);
     else if ("displayRole" in t) targets = this.displays.byRole(t.displayRole).map((d) => d.deviceId).filter((x): x is string => !!x);
     else if ("display" in t) { const d = this.displays.get(t.display); if (d?.deviceId) targets = [d.deviceId]; }
-    await Promise.all(targets.map((id) => this.devices.execute(id, action.command as DeviceCommand, origin)));
+    await Promise.all(targets.map((id) => {
+      const device = this.devices.get(id);
+      if (!opts.fx) return this.devices.execute(id, action.command as DeviceCommand, origin, { runId: opts.runId });
+      const gated = applyExperience(this.room.experience, action.command as DeviceCommand, device);
+      if (!gated.command) { this.devices.metrics.record({ ts: Date.now(), deviceId: id, deviceName: device?.name ?? id, driver: device?.driver ?? "?", status: device?.status ?? "OFFLINE", command: (action.command as DeviceCommand).type, origin, category: gated.category, runId: opts.runId, durationMs: 0, ok: false, reason: gated.reason }); return undefined; }
+      return this.devices.execute(id, gated.command, origin, { runId: opts.runId, category: gated.category });
+    }));
   }
 
   // ------------------------------------------------------------------ automations
@@ -142,12 +163,13 @@ export class Orchestrator extends EventEmitter {
     const run = this.recordRun(auto, event, "running");
     const flag = { cancelled: false };
     this.activeRuns.set(run.id, flag);
-    const ctx = contextFor(event, game, this.favoriteTeam());
+    const ctx = contextFor(event, game, this.favoriteTeam(), this.room.teams);
     const snapshot = this.snapshotLights();
+    this.devices.metrics.startRun(run.id);
     const say = (text: string) => { run.log.push({ ts: Date.now(), text }); this.emit("change"); };
     this.log({ kind: "automation", text: `${auto.name} started${event ? ` for ${event.text}` : ""}`, detail: { automationId: auto.id, runId: run.id, eventId: event?.id } });
     try {
-      await this.runSteps(auto.steps, ctx, event, flag, say, snapshot);
+      await this.runSteps(auto.steps, ctx, event, flag, say, snapshot, run.id);
       run.status = flag.cancelled ? "cancelled" : "done";
     } catch (e) {
       run.status = "failed"; run.reason = (e as Error).message;
@@ -160,7 +182,7 @@ export class Orchestrator extends EventEmitter {
     return run;
   }
 
-  private async runSteps(steps: AutomationStep[], ctx: RenderContext, event: SportsEvent | undefined, flag: { cancelled: boolean }, say: (t: string) => void, snapshot: LightSnapshot): Promise<void> {
+  private async runSteps(steps: AutomationStep[], ctx: RenderContext, event: SportsEvent | undefined, flag: { cancelled: boolean }, say: (t: string) => void, snapshot: LightSnapshot, runId?: string): Promise<void> {
     for (const step of steps) {
       if (flag.cancelled) return;
       if (step.kind === "wait") {
@@ -177,19 +199,19 @@ export class Orchestrator extends EventEmitter {
           const wait = start + (a.delayMs ?? 0) - Date.now();
           if (wait > 0) await sleep(wait);
           if (flag.cancelled) return;
-          if ("overlay" in a) this.displays.overlay((a as DisplayAction).target, (a as DisplayAction).overlay);
-          else await this.runDeviceAction(a as DeviceAction, "automation");
+          if ("overlay" in a) this.showOverlay(a as DisplayAction, true);
+          else await this.runDeviceAction(a as DeviceAction, "automation", { fx: true, runId });
         }));
       } else if (step.kind === "if") {
         const ok = this.evaluate(step.condition, event);
         say(`if ${JSON.stringify(step.condition)} → ${ok}`);
-        await this.runSteps(ok ? step.then : step.else ?? [], ctx, event, flag, say, snapshot);
+        await this.runSteps(ok ? step.then : step.else ?? [], ctx, event, flag, say, snapshot, runId);
       } else if (step.kind === "restore") {
         say(`restore ${step.what ?? "all"}`);
         await this.restore(step.what ?? "all", snapshot);
       } else if (step.kind === "scene") {
         const scene = this.scenes.find((s) => s.id === step.sceneId);
-        if (scene) { say(`scene ${scene.name}`); await this.runScene(scene, "automation"); }
+        if (scene) { say(`scene ${scene.name}`); await this.runScene(scene, "automation", event); }
       }
     }
   }
@@ -200,6 +222,7 @@ export class Orchestrator extends EventEmitter {
     if ("team" in c) return !!event?.teamAbbr && c.team.map((t) => t.toUpperCase()).includes(event.teamAbbr.toUpperCase());
     if ("minPoints" in c) return Number(event?.data.points ?? 0) >= c.minPoints;
     if ("scoreDiffAtMost" in c) return Math.abs(Number(event?.data.homeScore ?? 0) - Number(event?.data.awayScore ?? 0)) <= c.scoreDiffAtMost;
+    if ("period" in c) return c.period.includes(Number(event?.data.period ?? -1));
     return false;
   }
 

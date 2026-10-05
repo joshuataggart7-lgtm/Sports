@@ -50,6 +50,9 @@ test("manual touchdown runs the choreographed celebration and restores the light
   const { agent, data } = await boot();
   const auto = data.automations.find((a) => a.id === "auto_touchdown")!;
   auto.steps = auto.steps.map((s) => (s.kind === "wait" && s.ms !== "broadcast_delay" ? { ...s, ms: 50 } : s));
+  // The choreography lives in the Touchdown scene; compress its 8.5 s timeline for the test.
+  const scene = data.scenes.find((x) => x.id === "fx_touchdown")!;
+  scene.actions = scene.actions.map((a) => ({ ...a, delayMs: Math.round(a.delayMs / 20) }));
   await agent.orchestrator.setMode("SPORTS");
   await agent.devices.execute("bias_lights", { type: "set_color", color: "#123456" }, "scene");
   agent.watcher.manual("TOUCHDOWN", "home");

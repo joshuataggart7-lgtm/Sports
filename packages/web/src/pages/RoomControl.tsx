@@ -43,6 +43,7 @@ export function RoomControl() {
               </div>
               <div className="flex items-center gap-2">
                 <StatusTag status={d.status} />
+                {d.capabilities.some((c) => ["effect", "tactile", "dmx", "audio_playback", "momentary"].includes(c)) && <Button variant="ghost" onClick={() => api(`/api/devices/${d.id}/test`, {})}>Test</Button>}
                 {d.capabilities.includes("screen_position") ? (
                   <Button onClick={() => api(`/api/devices/${d.id}/command`, { command: { type: d.state.screenPosition === "down" ? "screen_up" : "screen_down" } })}>{d.state.screenPosition === "down" ? "Up" : "Down"}</Button>
                 ) : d.capabilities.includes("power") ? (
@@ -57,7 +58,7 @@ export function RoomControl() {
   );
 }
 
-function describe(st: { power?: string; input?: string; volume?: number; brightness?: number; color?: string; effect?: string; screenPosition?: string }): string {
+function describe(st: { power?: string; input?: string; volume?: number; brightness?: number; color?: string; effect?: string; screenPosition?: string; tactile?: string | null; fixture?: string | null }): string {
   const parts: string[] = [];
   if (st.screenPosition) parts.push(`screen ${st.screenPosition}`);
   else parts.push(st.power ?? "unknown");
@@ -66,5 +67,7 @@ function describe(st: { power?: string; input?: string; volume?: number; brightn
   if (st.brightness !== undefined) parts.push(`${st.brightness}%`);
   if (st.color) parts.push(st.color);
   if (st.effect) parts.push(st.effect.split(":")[0]);
+  if (st.tactile) parts.push(st.tactile.split("@")[0]);
+  if (st.fixture) parts.push(st.fixture.split("@")[0]);
   return parts.join(" · ");
 }

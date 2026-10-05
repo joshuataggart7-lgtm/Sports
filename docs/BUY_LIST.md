@@ -32,6 +32,21 @@ iPads. See `TOMORROW.md` for the steps.
 Smoke alarm note: a photoelectric alarm in the same room will trip on fog. Test one burst with the
 door open before game day. If the alarm is in the room, skip fog and keep the goal light and horn.
 
+## Phase 2b: the immersion kit (couch shaker and DMX beams), about $300
+
+The Experience layer already has scenes, a Simulator and intensity modes for these; each one
+is a driver away once the box arrives. Prices are typical Amazon / Parts Express / Guitar Center.
+
+| Item | ~Price | Notes |
+|---|---|---|
+| Dayton Audio BST-1 bass shaker (50 W, 4 Ω) | $55 | Bolts to the couch frame. One is plenty for a two-seat section |
+| Fosi Audio M03 mono subwoofer amp (or Dayton DTA-120) | $60–75 | Powers the shaker. Confirm it is the mono version with a low-pass knob |
+| Passive 2-into-1 RCA mixer (or a second amp input) | $10 | The shaker needs two feeds: Onkyo sub pre-out for movies and games, the Mac for Room OS effects. One amp input cannot take both |
+| 3.5 mm to RCA cable, 10 ft | $8 | Mac headphone jack (or a $10 USB sound dongle) into the mixer |
+| Chauvet DJ Mini Kinta ILS | $110–120 | RGBW moving beams, standard DMX. The seeded `fx_kinta` fixture profile targets it |
+| Art-Net / sACN to DMX node | $45–70 | Pure UDP on your Wi-Fi, no drivers on the Mac. Not ENTTEC Open DMX USB: that one has no hardware timing and needs a flaky FTDI driver on macOS |
+| 3-pin DMX cable, 10 ft | $12 | Node to the Kinta |
+
 ## Phase 3: lights, about $50 to $180
 
 Two routes. Both flash on cue; the app drives either one directly on your Wi-Fi.
@@ -95,6 +110,7 @@ The Sony stays on its console, the two 43s sit on side tables, both ribbons are 
 |---|---|---|
 | 1. This week | $70 | $140 |
 | 2. Celebration kit | $150 | $230 |
+| 2b. Immersion kit | $300 | $330 |
 | 3. Lights | $120 | $180 |
 | 4. Remount | $130 | $260 |
 | 5. Screen control | $20 | $130 |

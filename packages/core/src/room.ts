@@ -1,3 +1,4 @@
+import type { ExperienceSettings, TeamExperience } from "./experience";
 import type { IntegrationStatus } from "./status";
 import type { RoomMode } from "./modes";
 
@@ -27,6 +28,10 @@ export interface Room {
   automationsPausedUntil?: number;
   /** Guest/kids simplifications. */
   guestMode?: boolean;
+  /** Effects master, categories, intensity mode. Missing = DEFAULT_EXPERIENCE. */
+  experience?: ExperienceSettings;
+  /** Per-team colors and audio used by the shared scenes. */
+  teams?: TeamExperience[];
 }
 
 export interface TimelineEntry {

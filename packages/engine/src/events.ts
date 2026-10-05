@@ -12,7 +12,7 @@ export interface EngineOptions {
   now?: () => number;
 }
 
-const DEFAULT_COOLDOWNS: Partial<Record<SportsEventType, number>> = { BIG_PLAY: 30_000, RED_ZONE: 45_000, LEAD_CHANGE: 10_000 };
+const DEFAULT_COOLDOWNS: Partial<Record<SportsEventType, number>> = { BIG_PLAY: 30_000, RED_ZONE: 45_000, LEAD_CHANGE: 10_000, THIRD_DOWN: 20_000, FOURTH_DOWN: 20_000, SACK: 20_000 };
 const REGULATION: Record<string, number> = { football: 4, basketball: 4, hockey: 3, soccer: 2, baseball: 9 };
 
 export class EventEngine {
@@ -106,6 +106,15 @@ export class EventEngine {
       }
     }
     for (const p of plays) if (!p.scoring && (p.yards ?? 0) >= 25 && p.team) out.push(mk("BIG_PLAY", p.team, { yards: p.yards, text: p.text }, `Big play: ${p.text}`, [p.id], 0.8));
+    // Down and distance: a new 3rd or 4th down for the team with the ball (the Experience layer keeps these subtle).
+    if (s.possession && s.down && s.down !== ps.down && (s.down === 3 || s.down === 4) && next.period === prev.period) {
+      const type = s.down === 3 ? "THIRD_DOWN" : "FOURTH_DOWN";
+      out.push(mk(type, s.possession, { down: s.down, distance: s.distance, text: s.yardLineText }, `${next[s.possession].abbreviation} ${s.down === 3 ? "3rd" : "4th"} & ${s.distance ?? "?"}${s.yardLineText ? ` at ${s.yardLineText}` : ""}`, [next.period, prev.seq, s.down, s.yardLine, s.distance], 0.8));
+    }
+    for (const p of plays) if (p.type === "sack" && p.team) out.push(mk("SACK", p.team === "home" ? "away" : "home", { text: p.text }, `Sack: ${p.text}`, [p.id, "sack"], 0.8));
+    // Halftime and the two-minute warning are moments, not plays.
+    if (next.status === "halftime" && prev.status !== "halftime") out.push(mk("HALFTIME", undefined, { period: prev.period }, `Halftime: ${next.away.abbreviation} ${next.awayScore} ${next.home.abbreviation} ${next.homeScore}`, ["half"], 1));
+    if (next.sport === "football" && next.status === "live" && (next.period === 2 || next.period === 4) && (next.clockSeconds ?? 9999) <= 120 && ((prev.clockSeconds ?? 9999) > 120 || prev.period !== next.period)) out.push(mk("TWO_MINUTE", undefined, { period: next.period }, `Two-minute warning, ${next.periodLabel}`, ["2min", next.period], 1));
 
     // End
     if (prev.status !== "final" && next.status === "final") {

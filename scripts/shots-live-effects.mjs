@@ -1,0 +1,17 @@
+import { chromium } from "playwright";
+const base = "http://localhost:8799"; const out = process.argv[2];
+const post = (p, b, m = "POST") => fetch(base + p, { method: m, headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+await post("/api/room", { watchedGameIds: ["sim:ncaaf:LSU@MISS"] });
+await post("/api/experience", { mode: "BIG_GAME" }, "PUT");
+const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "localhost,127.0.0.1" } : undefined, args: ["--ignore-certificate-errors"] });
+const p = await b.newPage({ viewport: { width: 1180, height: 1500 } });
+await p.goto(`${base}/game`); await sleep(2500);
+await p.getByText("▸ Advanced").click();
+await p.getByText("▸ Debug", { exact: false }).click();
+await post("/api/events/manual", { type: "TOUCHDOWN", side: "home" }); await sleep(3500);
+await p.screenshot({ path: `${out}/live-effects.png`, fullPage: true });
+const ipad = await b.newPage({ viewport: { width: 820, height: 1180 } });
+await ipad.goto(`${base}/game`); await sleep(2000);
+await ipad.screenshot({ path: `${out}/live-ipad.png` });
+await b.close();

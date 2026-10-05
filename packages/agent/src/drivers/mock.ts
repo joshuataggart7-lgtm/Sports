@@ -24,6 +24,8 @@ export class MockDriver implements DeviceDriver {
       case "play_audio": return { playing: command.clip, power: "on" };
       case "run_scene": return {};
       case "pulse": return { playing: `pulse ${command.durationMs ?? 1000}ms` };
+      case "tactile": return { tactile: command.pattern === "stop" ? null : `${command.pattern}@${command.intensity ?? 70}`, power: "on" };
+      case "fixture": return { fixture: command.op === "blackout" ? null : `${command.op}${command.color ? ` ${command.color}` : ""}@${command.intensity ?? 100}`, power: command.op === "blackout" ? "off" : "on" };
     }
   }
 }

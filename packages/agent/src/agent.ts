@@ -1,6 +1,6 @@
 import os from "node:os";
 import { EventEmitter } from "node:events";
-import { uid, type AgentStatus, type GameStats, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
+import { DEFAULT_EXPERIENCE, FX_CATEGORIES, INTENSITY_MODES, uid, type AgentStatus, type ExperienceSettings, type FxCategory, type GameStats, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
 import { SimulatedProvider } from "@room/sports";
 import { DeviceManager } from "./devices";
 import { DisplayManager } from "./displays";
@@ -9,6 +9,12 @@ import { GameWatcher } from "./watcher";
 import type { RoomData, RoomStore } from "./store";
 
 export const VERSION = "0.1.0";
+
+function normalizeExperience(e: ExperienceSettings | undefined): ExperienceSettings {
+  const out: ExperienceSettings = { master: e?.master ?? DEFAULT_EXPERIENCE.master, mode: e?.mode ?? DEFAULT_EXPERIENCE.mode, categories: { ...DEFAULT_EXPERIENCE.categories } };
+  for (const c of FX_CATEGORIES) out.categories[c] = { ...DEFAULT_EXPERIENCE.categories[c], ...(e?.categories?.[c] ?? {}) };
+  return out;
+}
 
 export class Agent extends EventEmitter {
   readonly devices: DeviceManager;
@@ -30,7 +36,7 @@ export class Agent extends EventEmitter {
       primaryGame: () => this.watcher.games.get(data.room.watchedGameIds[0] ?? ""),
     });
     for (const src of [this.devices, this.displays, this.orchestrator]) src.on("change", () => this.changed());
-    this.orchestrator.on("scene", () => void this.openDisplayPages());
+    this.orchestrator.on("scene", (scene: { fx?: boolean }) => { if (!scene.fx) void this.openDisplayPages(); });
     this.displays.on("overlay", (ids: string[] | "all", overlay: DisplayOverlay) => this.emit("overlay", ids, overlay));
     this.watcher.on("game", (g: Game) => this.emit("game", g));
     this.watcher.on("games", () => { this.autoWatch(); this.changed(); });
@@ -40,6 +46,47 @@ export class Agent extends EventEmitter {
   }
 
   get room() { return this.data.room; }
+
+  /**
+   * Additive upgrade of a saved room: scenes, automations and devices the current seed has
+   * and the file does not are appended by id, defaults are filled in. Nothing the person
+   * configured is touched, so a git pull brings new experiences without a reseed.
+   */
+  static migrate(data: RoomData, seed: RoomData): RoomData {
+    const add = <T extends { id: string }>(have: T[], want: T[], label: string) => {
+      for (const w of want) if (!have.some((h) => h.id === w.id)) { have.push(w); console.log(`[store] added ${label} ${w.id}`); }
+    };
+    add(data.scenes, seed.scenes, "scene");
+    add(data.automations, seed.automations, "automation");
+    // A seed automation with a higher version replaces the stored one (its enabled flag survives).
+    for (const w of seed.automations) {
+      const i = data.automations.findIndex((h) => h.id === w.id);
+      if (i >= 0 && (w.version ?? 0) > (data.automations[i].version ?? 0)) { data.automations[i] = { ...w, enabled: data.automations[i].enabled }; console.log(`[store] upgraded automation ${w.id} to v${w.version}`); }
+    }
+    add(data.devices, seed.devices, "device");
+    data.room.experience = normalizeExperience(data.room.experience);
+    if (!data.room.teams) data.room.teams = seed.room.teams;
+    return data;
+  }
+
+  get experience(): ExperienceSettings { return this.room.experience ?? (this.room.experience = normalizeExperience(undefined)); }
+
+  setExperience(patch: Record<string, unknown>): ExperienceSettings {
+    const e = this.experience;
+    if (typeof patch.master === "boolean") e.master = patch.master;
+    if (typeof patch.mode === "string" && (INTENSITY_MODES as readonly string[]).includes(patch.mode)) e.mode = patch.mode as ExperienceSettings["mode"];
+    if (patch.categories && typeof patch.categories === "object") {
+      for (const [k, v] of Object.entries(patch.categories as Record<string, { enabled?: unknown; intensity?: unknown }>)) {
+        if (!(FX_CATEGORIES as readonly string[]).includes(k) || !v) continue;
+        const c = e.categories[k as FxCategory];
+        if (typeof v.enabled === "boolean") c.enabled = v.enabled;
+        if (typeof v.intensity === "number") c.intensity = Math.max(0, Math.min(100, Math.round(v.intensity)));
+      }
+    }
+    this.log({ kind: "manual", text: `Effects: ${e.master ? e.mode.replace("_", " ").toLowerCase() : "OFF"} · ${FX_CATEGORIES.filter((c) => !e.categories[c].enabled).map((c) => `${c} off`).join(", ") || "all categories on"}`, detail: { experience: e } });
+    this.changed();
+    return e;
+  }
 
   /** Second-game displays name a game; keep its stats fresh as well. */
   private syncExtraStats(): void {

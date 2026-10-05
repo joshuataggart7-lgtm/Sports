@@ -1,18 +1,21 @@
-import type { Game, SportsEvent, Team } from "@room/core";
+import type { Game, SportsEvent, Team, TeamExperience } from "@room/core";
 
 export interface RenderContext {
-  team?: { abbr: string; name: string; primary: string; secondary: string; audio: string; logo: string };
+  team?: { abbr: string; name: string; primary: string; secondary: string; audio: string; bigPlayAudio: string; winAudio: string; logo: string };
   opponent?: { abbr: string; name: string };
   event?: { text: string; score: string; points: number; yard: string; type: string };
   game?: { home: string; away: string; homeScore: number; awayScore: number; clock: string; period: string };
 }
 
-export function contextFor(event: SportsEvent | undefined, game: Game | undefined, fallbackTeam?: Team): RenderContext {
+export function contextFor(event: SportsEvent | undefined, game: Game | undefined, fallbackTeam?: Team, teams?: TeamExperience[]): RenderContext {
   const side = event?.side;
   const team = game && side ? game[side] : fallbackTeam;
   const opp = game && side ? game[side === "home" ? "away" : "home"] : undefined;
+  // Room-level team preferences (own colors, own clips) win over what the feed says.
+  const pref = team ? teams?.find((t) => t.abbr.toUpperCase() === team.abbreviation.toUpperCase()) : undefined;
+  const score = pref?.audio?.score ?? team?.profile.audioClip ?? `${team?.abbreviation.toLowerCase()}_celebration`;
   return {
-    team: team ? { abbr: team.abbreviation, name: team.name, primary: team.profile.primaryColor, secondary: team.profile.secondaryColor, audio: team.profile.audioClip ?? `${team.abbreviation.toLowerCase()}_celebration`, logo: team.logoUrl ?? "" } : undefined,
+    team: team ? { abbr: team.abbreviation, name: pref?.name ?? team.name, primary: pref?.primaryColor ?? team.profile.primaryColor, secondary: pref?.secondaryColor ?? team.profile.secondaryColor, audio: score, bigPlayAudio: pref?.audio?.bigPlay ?? "big_play", winAudio: pref?.audio?.win ?? score, logo: team.logoUrl ?? "" } : undefined,
     opponent: opp ? { abbr: opp.abbreviation, name: opp.name } : undefined,
     event: event ? { text: event.text, score: String(event.data.score ?? (game ? `${game.away.abbreviation} ${game.awayScore} - ${game.home.abbreviation} ${game.homeScore}` : "")), points: Number(event.data.points ?? 0), yard: String(event.data.text ?? ""), type: event.type } : undefined,
     game: game ? { home: game.home.abbreviation, away: game.away.abbreviation, homeScore: game.homeScore, awayScore: game.awayScore, clock: game.clock, period: game.periodLabel } : undefined,

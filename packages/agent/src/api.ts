@@ -26,6 +26,10 @@ export function createApi(agent: Agent, opts: { staticDir?: string; pin?: string
 
         if (p === "/api/snapshot") return json(res, 200, agent.snapshot());
         if (p === "/api/mode" && m === "POST") { const b = await readBody(req); const mode = String(b.mode) as RoomMode; if (!ROOM_MODES.includes(mode)) return json(res, 400, { error: "unknown mode" }); void agent.orchestrator.setMode(mode, "manual"); return json(res, 202, { ok: true, mode }); }
+        if (p === "/api/experience" && m === "GET") return json(res, 200, agent.experience);
+        if (p === "/api/experience" && (m === "PUT" || m === "POST")) { const b = await readBody(req); return json(res, 200, agent.setExperience(b)); }
+        if (p === "/api/metrics") return json(res, 200, agent.devices.metrics.summary(Number(url.searchParams.get("limit") ?? 120)));
+        if (p.startsWith("/api/devices/") && p.endsWith("/test") && m === "POST") { const r = await agent.devices.test(p.split("/")[3]); agent.changed(); return json(res, r.ok ? 200 : 400, r); }
         if (p.startsWith("/api/scenes/") && m === "POST") { const s = agent.orchestrator.scenes.find((x) => x.id === p.split("/")[3]); if (!s) return json(res, 404, { error: "no scene" }); void agent.orchestrator.runScene(s); return json(res, 202, { ok: true }); }
         if (p === "/api/devices/reconnect" && m === "POST") { agent.driverStatus = await agent.devices.connectAll(); agent.changed(); return json(res, 200, agent.driverStatus); }
         if (p.startsWith("/api/devices/") && m === "PUT") { const b = await readBody(req); const d = await agent.devices.update(p.split("/")[3], b); agent.changed(); return d ? json(res, 200, d) : json(res, 404, { error: "no device" }); }

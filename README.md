@@ -91,3 +91,10 @@ CHROMIUM_PATH=/opt/pw-browsers/chromium node scripts/screenshots.mjs out/   # ev
 - **MVP 2**: Home Assistant verified on hardware; projector, screen, receiver, lights, real TVs.
 - **MVP 3**: licensed sports API with live subscriptions, delay calibration from known plays.
 - **MVP 4**: automation step editor, room map from a photo, smart multiview promotion, kids mode, fantasy content, notifications.
+
+## Experience layer
+
+Touchdowns, takeaways, halftime and the win are coordinated room moments: screens, lights, DMX
+beams, couch shaker, sound and props on one timeline, gated by a master switch, per-category
+dials and an intensity mode (Normal, Big Game, Insane, Quiet). Eleven manual buttons and a
+Simulator with per-command timing live on the Live page. See [docs/EXPERIENCE.md](docs/EXPERIENCE.md).

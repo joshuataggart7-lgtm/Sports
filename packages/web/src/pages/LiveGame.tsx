@@ -3,6 +3,7 @@ import type { SportsEventType } from "@room/core";
 import { api } from "../app/api";
 import { favoriteSide, primaryGame, useRoom } from "../app/store";
 import { Button, Card, Dot } from "../components/ui";
+import { EffectsPanel, SimulatorPanel } from "../components/Effects";
 import { ScoreBlock, Situation } from "../components/Score";
 import { Connecting } from "./Home";
 
@@ -29,6 +30,8 @@ export function LiveGame() {
           <Situation game={game} className="mt-5 justify-center" />
         </Card>
       ) : <Card><div className="py-6 text-center text-mute">No game watched. Choose one in Settings.</div></Card>}
+
+      <EffectsPanel s={s} />
 
       <div className="grid gap-5 md:grid-cols-2">
         <Card title="Broadcast sync" right={profile && <span className="text-xs text-mute">{profile.name}</span>}>
@@ -99,8 +102,10 @@ export function LiveGame() {
         </ul>
       </Card>
 
+      <SimulatorPanel s={s} />
+
       {s.agent.provider.id === "simulated" && (
-        <Card title="Simulation" right={<span className="rounded-md border border-warn/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-warn">SIMULATED</span>}>
+        <Card title="Simulation feed" right={<span className="rounded-md border border-warn/40 px-1.5 py-0.5 text-[10px] font-semibold tracking-wider text-warn">SIMULATED</span>}>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => api("/api/sim", { action: "play", kind: "touchdown", side: fav ?? "home" })}>Feed: {game?.sport === "baseball" ? "home run" : "touchdown"}</Button>
             <Button onClick={() => api("/api/sim", { action: "play", kind: "field_goal", side: fav ?? "home" })}>Feed: {game?.sport === "baseball" ? "run scores" : "field goal"}</Button>

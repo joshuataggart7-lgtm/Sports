@@ -25,6 +25,28 @@ function fanfare() {
   notes.forEach((f, k) => { const s = Math.floor(k * per * RATE), len = k === notes.length - 1 ? RATE * 0.9 : RATE * per; for (let i = 0; i < len && s + i < n; i++) { const t = i / RATE, env = Math.min(1, t * 60) * Math.exp(-t * (k === notes.length - 1 ? 2.5 : 8)); out[s + i] += (Math.sin(2 * Math.PI * f * t) + 0.5 * Math.sin(2 * Math.PI * f * 2 * t) + 0.25 * Math.sin(2 * Math.PI * f * 3 * t)) * 0.3 * env; } });
   return out;
 }
+function noiseBurst(seconds, attack, decay, lowpass) {
+  // Crowd roar / boom placeholders: filtered noise with an envelope.
+  const n = Math.floor(RATE * seconds), out = new Float64Array(n);
+  let y = 0;
+  for (let i = 0; i < n; i++) {
+    const t = i / RATE, env = Math.min(1, t / attack) * Math.exp(-Math.max(0, t - attack) * decay);
+    y += (Math.random() * 2 - 1 - y) * lowpass;
+    out[i] = y * env * 0.9;
+  }
+  return out;
+}
+function boom() {
+  const n = Math.floor(RATE * 1.4), out = new Float64Array(n);
+  for (let i = 0; i < n; i++) { const t = i / RATE, f = 120 * Math.exp(-t * 6) + 35; out[i] = Math.sin(2 * Math.PI * f * t) * Math.exp(-t * 3.5) * 0.9; }
+  const n2 = noiseBurst(0.3, 0.005, 25, 0.5);
+  for (let i = 0; i < n2.length; i++) out[i] += n2[i] * 0.4;
+  return out;
+}
+fs.writeFileSync("boom.wav", wav(boom()));
+fs.writeFileSync("crowd_roar.wav", wav(noiseBurst(5, 0.8, 0.7, 0.08)));
+fs.writeFileSync("horn.wav", wav(horn(2.0, 98)));
+fs.writeFileSync("big_play.wav", wav(horn(0.6, 196)));
 fs.writeFileSync("touchdown.wav", wav(horn(2.2, 110)));
 fs.writeFileSync("miss_celebration.wav", wav(fanfare()));
 fs.writeFileSync("celebration.wav", wav(fanfare()));
