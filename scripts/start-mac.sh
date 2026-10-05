@@ -19,7 +19,12 @@ if ! command -v kasa >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/kasa" ]; then
 fi
 if [ "${1:-}" = "reseed" ]; then rm -f packages/agent/data/room.json; echo "Room data reset to the built-in seed."; shift || true; fi
 [ -d node_modules ] || npm install
-[ -f packages/web/dist/index.html ] || npm run build -w @room/web
+# Rebuild the screen pages whenever the code has changed since the last build.
+STAMP=packages/web/dist/.built-from
+HEAD=$(git rev-parse HEAD 2>/dev/null || echo unknown)
+if [ ! -f packages/web/dist/index.html ] || [ "$(cat "$STAMP" 2>/dev/null)" != "$HEAD" ]; then
+  npm run build -w @room/web && echo "$HEAD" > "$STAMP"
+fi
 IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname)
 echo
 echo "Room OS will be at:  http://$IP:8790   (open this on the iPad, then Share -> Add to Home Screen)"
