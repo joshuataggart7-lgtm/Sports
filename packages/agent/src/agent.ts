@@ -1,3 +1,4 @@
+import os from "node:os";
 import { EventEmitter } from "node:events";
 import { uid, type AgentStatus, type GameStats, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
 import { SimulatedProvider } from "@room/sports";
@@ -29,6 +30,7 @@ export class Agent extends EventEmitter {
       primaryGame: () => this.watcher.games.get(data.room.watchedGameIds[0] ?? ""),
     });
     for (const src of [this.devices, this.displays, this.orchestrator]) src.on("change", () => this.changed());
+    this.orchestrator.on("scene", () => void this.openDisplayPages());
     this.displays.on("overlay", (ids: string[] | "all", overlay: DisplayOverlay) => this.emit("overlay", ids, overlay));
     this.watcher.on("game", (g: Game) => this.emit("game", g));
     this.watcher.on("games", () => { this.autoWatch(); this.changed(); });
@@ -111,6 +113,32 @@ export class Agent extends EventEmitter {
     if (action === "overturn") return { ok: true, play: this.provider.forceOverturn(gameId) };
     if (action === "speed") { this.provider.setTickMs(Number(b.tickMs ?? 4000)); return { ok: true }; }
     return { ok: false, error: "unknown action" };
+  }
+
+  /** The address displays open: PUBLIC_URL if set, else this machine's LAN address and port. */
+  baseUrl(): string {
+    if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, "");
+    const port = Number(process.env.PORT ?? 8790);
+    for (const list of Object.values(os.networkInterfaces())) for (const n of list ?? []) if (n.family === "IPv4" && !n.internal) return `http://${n.address}:${port}`;
+    return `http://localhost:${port}`;
+  }
+
+  /**
+   * After a scene, every display whose device can open a URL (Fire Sticks, Fire TVs, Android TV
+   * boxes) gets its own page pushed to it, unless that page already checked in during the last
+   * minute. So Game Day puts the stats board on the left TV by itself.
+   */
+  async openDisplayPages(): Promise<void> {
+    const base = this.baseUrl();
+    for (const disp of this.displays.displays) {
+      if (!disp.deviceId || disp.role === "OFF") continue;
+      const dev = this.devices.get(disp.deviceId);
+      if (!dev || !dev.capabilities.includes("url") || dev.driver === "mock") continue;
+      if (disp.lastSeenAt && Date.now() - disp.lastSeenAt < 60_000) continue;
+      const url = disp.role === "PROJECTED_TICKER" ? `${base}/display/projector?mode=ticker` : `${base}/display/${disp.pairingCode}`;
+      const r = await this.devices.execute(dev.id, { type: "open_url", url }, "scene");
+      if (!r.ok) this.log({ kind: "device", text: `${dev.name}: could not open ${disp.name}'s page (${r.reason ?? "unknown"})`, detail: { deviceId: dev.id } });
+    }
   }
 
   status(): AgentStatus {

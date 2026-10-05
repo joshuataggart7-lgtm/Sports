@@ -2,6 +2,7 @@
 # One command to run Room OS on a Mac: installs what is missing, builds the app, starts the agent.
 #   ./scripts/start-mac.sh            live sports (ESPN), MLB + college football + NFL
 #   ./scripts/start-mac.sh demo       simulated game instead of live data
+#   ./scripts/start-mac.sh reseed     forget saved devices/displays and start from the built-in room again
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if ! command -v node >/dev/null 2>&1; then
@@ -16,6 +17,7 @@ if ! command -v kasa >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/kasa" ]; then
   echo "python-kasa (for TP-Link Kasa/Tapo plugs) is not installed; installing with pipx..."
   command -v brew >/dev/null 2>&1 && { brew install --quiet pipx && pipx install python-kasa; } || echo "skipped python-kasa install"
 fi
+if [ "${1:-}" = "reseed" ]; then rm -f packages/agent/data/room.json; echo "Room data reset to the built-in seed."; shift || true; fi
 [ -d node_modules ] || npm install
 [ -f packages/web/dist/index.html ] || npm run build -w @room/web
 IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname)

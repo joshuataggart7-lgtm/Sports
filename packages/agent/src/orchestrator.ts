@@ -72,6 +72,7 @@ export class Orchestrator extends EventEmitter {
       else await this.runDeviceAction(action, origin === "manual" ? "scene" : origin);
     }));
     this.emit("change");
+    this.emit("scene", scene);
   }
 
   private async runDeviceAction(action: DeviceAction, origin: Origin): Promise<void> {

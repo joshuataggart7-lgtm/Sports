@@ -17,14 +17,18 @@ export function seedRoom(): RoomData {
   // Element Roku TV (Roku ECP), XGIMI Horizon Pro (movies) and XGIMI MoGo 2 Plus (ribbon),
   // both Android TV over ADB, an Onkyo receiver (eISCP). Hosts are filled in from Settings.
   const devices: RoomDevice[] = [
-    dev("tv_sony", "television", "Sony 70\" (KD-70X690E)", ["power", "input", "volume"], { driver: "bravia", driverConfig: { host: "", psk: "" }, inputs: { appletv: "1", receiver: "1", browser: "3" }, groups: ["sports_wall"], position: { x: 0.5, y: 0.22, w: 0.3, h: 0.17 } }),
-    dev("tv_left", "television", "Left TV (TCL 43S431 Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "" }, inputs: { browser: "tvinput.hdmi1", cable: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.17, y: 0.25, w: 0.2, h: 0.12 } }),
-    dev("tv_right", "television", "Right TV (Element Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "" }, inputs: { browser: "tvinput.hdmi1", cable: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.83, y: 0.25, w: 0.2, h: 0.12 } }),
+    dev("tv_sony", "television", "Sony 70\" (KD-70X690E)", ["power", "input", "volume"], { driver: "bravia", driverConfig: { host: "192.168.1.18", psk: "" }, inputs: { appletv: "1", receiver: "1", browser: "3" }, groups: ["sports_wall"], position: { x: 0.5, y: 0.22, w: 0.3, h: 0.17 } }),
+    // Left 43: a TCL Roku TV (power + input over Roku ECP) with a Fire TV Stick 4K Plus on HDMI 1
+    // that shows the page (ADB). Right 43: an Insignia Fire TV Edition, Fire OS built in, so one
+    // device does power, input and the page.
+    dev("tv_left", "television", "Left TV (TCL 43S431 Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "" }, inputs: { browser: "tvinput.hdmi1", appletv: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.17, y: 0.25, w: 0.2, h: 0.12 } }),
+    dev("stick_left", "browser_display", "Fire TV Stick 4K Plus (left TV)", ["power", "url"], { driver: "androidtv", driverConfig: { host: "192.168.1.21" }, groups: ["aux_browsers"], position: { x: 0.17, y: 0.38, w: 0.06, h: 0.03 } }),
+    dev("tv_right", "television", "Right TV (Insignia Fire TV)", ["power", "input", "url"], { driver: "androidtv", driverConfig: { host: "192.168.1.20" }, inputs: { browser: "-a android.intent.action.MAIN -c android.intent.category.HOME", appletv: "hdmi1" }, groups: ["sports_wall", "aux", "aux_browsers"], position: { x: 0.83, y: 0.25, w: 0.2, h: 0.12 } }),
     dev("desk_ultrawide", "monitor", "Desk Ultrawide 49\"", ["power", "input", "url"], { groups: ["desk"], position: { x: 0.22, y: 0.85, w: 0.3, h: 0.08 } }),
     dev("projector_ribbon", "projector", "Ribbon Projector (XGIMI MoGo 2 Plus)", ["power", "input", "url"], { driver: "androidtv", driverConfig: { host: "" }, inputs: { ribbon: "hdmi1" }, position: { x: 0.5, y: 0.58, w: 0.06, h: 0.04 } }),
     dev("projector", "projector", "Movie Projector (XGIMI Horizon Pro)", ["power", "input", "url"], { driver: "androidtv", driverConfig: { host: "" }, inputs: { appletv: "hdmi1", receiver: "hdmi1", ribbon: "hdmi2" }, position: { x: 0.5, y: 0.5, w: 0.08, h: 0.05 } }),
     dev("screen", "projector_screen", "Motorized Screen", ["screen_position"], { position: { x: 0.5, y: 0.12, w: 0.5, h: 0.03 } }),
-    dev("avr", "av_receiver", "Onkyo Receiver", ["power", "input", "volume", "audio_playback"], { driver: "onkyo", driverConfig: { host: "" }, inputs: { appletv: "10", game: "02", tv_arc: "12", music: "2B" }, position: { x: 0.5, y: 0.42, w: 0.16, h: 0.05 } }),
+    dev("avr", "av_receiver", "Onkyo Receiver (TX-NR6100)", ["power", "input", "volume", "audio_playback"], { driver: "onkyo", driverConfig: { host: "192.168.1.10" }, inputs: { appletv: "10", game: "02", tv_arc: "12", music: "2B" }, position: { x: 0.5, y: 0.42, w: 0.16, h: 0.05 } }),
     dev("bias_lights", "light", "TV Bias Lights (WLED)", ["power", "brightness", "color", "effect"], { driver: "wled", driverConfig: { host: "" }, groups: ["tv_bias", "accent"], position: { x: 0.5, y: 0.3, w: 0.32, h: 0.02 } }),
     dev("room_leds", "light", "Wall LED Strip (WLED)", ["power", "brightness", "color", "effect"], { driver: "wled", driverConfig: { host: "" }, groups: ["room_leds", "accent"], position: { x: 0.5, y: 0.05, w: 0.9, h: 0.02 } }),
     dev("lamps", "light", "Ceiling Light", ["power", "brightness", "color"], { groups: ["ambient"], position: { x: 0.5, y: 0.7, w: 0.05, h: 0.05 } }),
@@ -39,12 +43,12 @@ export function seedRoom(): RoomData {
   ];
   // Devices without a host yet run on the mock driver so every scene still completes; the
   // real driver takes over the moment a host is entered in Settings.
-  for (const d of devices) if (d.driver !== "mock" && d.driver !== "localaudio" && !d.driverConfig?.host) { d.driverConfig = { ...d.driverConfig, intendedDriver: d.driver }; d.driver = "mock"; }
+  for (const d of devices) if (d.driver !== "mock" && d.driver !== "localaudio" && (!d.driverConfig?.host || (d.driver === "bravia" && !d.driverConfig?.psk))) { d.driverConfig = { ...d.driverConfig, intendedDriver: d.driver }; d.driver = "mock"; }
 
   const displays: DisplayDevice[] = [
     { id: "disp_sony", roomId: ROOM, name: "Sony TV", deviceId: "tv_sony", role: "MAIN_GAME", pairingCode: pairingCode(), paired: false, position: { x: 34, y: 22, w: 32, h: 20 }, kind: "tv" },
-    { id: "disp_left", roomId: ROOM, name: "Left TV", deviceId: "tv_left", role: "PLAYER_STATS", pairingCode: pairingCode(), paired: false, position: { x: 8, y: 24, w: 22, h: 13 }, kind: "tv" },
-    { id: "disp_right", roomId: ROOM, name: "Right TV", deviceId: "tv_right", role: "LEAGUE_SCORES", pairingCode: pairingCode(), paired: false, position: { x: 70, y: 24, w: 22, h: 13 }, kind: "tv" },
+    { id: "disp_left", roomId: ROOM, name: "Left TV", deviceId: "stick_left", rotation: 270, role: "PLAYER_STATS", pairingCode: pairingCode(), paired: false, position: { x: 8, y: 24, w: 22, h: 13 }, kind: "tv" },
+    { id: "disp_right", roomId: ROOM, name: "Right TV", deviceId: "tv_right", rotation: 90, role: "LEAGUE_SCORES", pairingCode: pairingCode(), paired: false, position: { x: 70, y: 24, w: 22, h: 13 }, kind: "tv" },
     { id: "disp_desk", roomId: ROOM, name: "Desk Ultrawide", deviceId: "desk_ultrawide", role: "ROOM_STATUS", pairingCode: pairingCode(), paired: false, position: { x: 4, y: 72, w: 26, h: 9 }, kind: "ultrawide" },
     { id: "disp_projector", roomId: ROOM, name: "Projector", deviceId: "projector_ribbon", role: "PROJECTED_TICKER", roleOptions: { ticker: { ...DEFAULT_TICKER, lower: { enabled: true, y: 900, height: 150, content: "scores", scrollPxPerSec: 90 } } }, pairingCode: pairingCode(), paired: false, position: { x: 8, y: 8, w: 84, h: 7 }, kind: "projector" },
   ];
