@@ -54,7 +54,12 @@ export class OnkyoDriver implements DeviceDriver {
     switch (command.type) {
       case "power_on": await this.send(device, "PWR01"); return { power: "on" };
       case "power_off": await this.send(device, "PWR00"); return { power: "off", playing: null };
-      case "set_input": { const code = device.inputs?.[command.input] ?? command.input; await this.send(device, `SLI${code.toUpperCase().padStart(2, "0")}`); return { input: command.input, power: "on" }; }
+      case "set_input": {
+        // Only switch to inputs we have a real code for; an unmapped name would land on a dead source and black out the TV.
+        const code = device.inputs?.[command.input];
+        if (!code) throw new Error(`no Onkyo input code for "${command.input}" yet; set it in the device's inputs`);
+        await this.send(device, `SLI${code.toUpperCase().padStart(2, "0")}`); return { input: command.input, power: "on" };
+      }
       case "set_volume": { const v = Math.max(0, Math.min(100, Math.round(command.volume))); await this.send(device, `MVL${v.toString(16).toUpperCase().padStart(2, "0")}`); return { volume: v }; }
       case "play_audio": return { playing: command.clip }; // celebration audio plays from the Apple TV / a speaker; the receiver only routes it
       default: throw new Error(`Onkyo cannot ${command.type}`);
