@@ -21,7 +21,7 @@ export function seedRoom(): RoomData {
     // Left 43: a TCL Roku TV (power + input over Roku ECP) with a Fire TV Stick 4K Plus on HDMI 1
     // that shows the page (ADB). Right 43: an Insignia Fire TV Edition, Fire OS built in, so one
     // device does power, input and the page.
-    dev("tv_left", "television", "Left TV (TCL 43S431 Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "" }, inputs: { browser: "tvinput.hdmi1", appletv: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.17, y: 0.25, w: 0.2, h: 0.12 } }),
+    dev("tv_left", "television", "Left TV (TCL 43S431 Roku)", ["power", "input", "volume"], { driver: "roku", driverConfig: { host: "192.168.1.27" }, inputs: { browser: "tvinput.hdmi1", appletv: "tvinput.hdmi2", antenna: "tvinput.dtv" }, groups: ["sports_wall", "aux"], position: { x: 0.17, y: 0.25, w: 0.2, h: 0.12 } }),
     dev("stick_left", "browser_display", "Fire TV Stick 4K Plus (left TV)", ["power", "url"], { driver: "androidtv", driverConfig: { host: "192.168.1.21" }, groups: ["aux_browsers"], position: { x: 0.17, y: 0.38, w: 0.06, h: 0.03 } }),
     dev("tv_right", "television", "Right TV (Insignia Fire TV)", ["power", "input", "url"], { driver: "androidtv", driverConfig: { host: "192.168.1.20" }, inputs: { browser: "-a android.intent.action.MAIN -c android.intent.category.HOME", appletv: "hdmi1" }, groups: ["sports_wall", "aux", "aux_browsers"], position: { x: 0.83, y: 0.25, w: 0.2, h: 0.12 } }),
     dev("desk_ultrawide", "monitor", "Desk Ultrawide 49\"", ["power", "input", "url"], { groups: ["desk"], position: { x: 0.22, y: 0.85, w: 0.3, h: 0.08 } }),
