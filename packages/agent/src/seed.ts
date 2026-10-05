@@ -177,7 +177,7 @@ export function seedRoom(): RoomData {
 
   const automations: Automation[] = [
     { id: "auto_touchdown", roomId: ROOM, name: "Touchdown celebration", enabled: true, cooldownMs: 15_000,
-      trigger: { eventTypes: ["TOUCHDOWN"], teams: ["MISS"], watchedGamesOnly: true, manual: true },
+      trigger: { eventTypes: ["TOUCHDOWN"], teams: ["@favorites"], watchedGamesOnly: true, manual: true },
       steps: [
         { kind: "wait", ms: "broadcast_delay", label: "Wait for the TV to catch up" },
         { kind: "do", label: "Choreographed celebration", actions: [
@@ -194,7 +194,7 @@ export function seedRoom(): RoomData {
         { kind: "restore", what: "lights" },
       ] },
     { id: "auto_field_goal", roomId: ROOM, name: "Field goal", enabled: true, cooldownMs: 10_000,
-      trigger: { eventTypes: ["FIELD_GOAL"], teams: ["MISS"], watchedGamesOnly: true },
+      trigger: { eventTypes: ["FIELD_GOAL"], teams: ["@favorites"], watchedGamesOnly: true },
       steps: [
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "do", actions: [
@@ -207,7 +207,7 @@ export function seedRoom(): RoomData {
         { kind: "restore", what: "lights" },
       ] },
     { id: "auto_opponent_score", roomId: ROOM, name: "Opponent scores", enabled: true, cooldownMs: 10_000,
-      trigger: { eventTypes: ["TOUCHDOWN", "FIELD_GOAL"], teams: ["LSU", "ALA", "UGA"], watchedGamesOnly: true },
+      trigger: { eventTypes: ["TOUCHDOWN", "FIELD_GOAL"], teams: ["@opponents"], watchedGamesOnly: true },
       steps: [
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "do", actions: [{ target: { displayRole: "PROJECTED_TICKER" }, overlay: { kind: "banner", text: "{{event.text}}", color: "#8a93a6", durationMs: 4000 } }] },
@@ -224,7 +224,7 @@ export function seedRoom(): RoomData {
         { kind: "restore", what: "lights" },
       ] },
     { id: "auto_turnover", roomId: ROOM, name: "Defense takes it away", enabled: true, cooldownMs: 15_000,
-      trigger: { eventTypes: ["TURNOVER", "DEFENSE"], teams: ["MISS"], watchedGamesOnly: true, manual: true },
+      trigger: { eventTypes: ["TURNOVER", "DEFENSE"], teams: ["@favorites"], watchedGamesOnly: true, manual: true },
       steps: [
         { kind: "wait", ms: "broadcast_delay" },
         { kind: "do", actions: [

@@ -40,7 +40,10 @@ export type AutomationCondition =
 
 export interface AutomationTrigger {
   eventTypes: SportsEventType[];
-  /** Only for these teams (abbreviations). Empty = any. */
+  /**
+   * Only for these teams (abbreviations). Empty = any. Two special entries: "@favorites" matches
+   * any of the room's favorite teams, "@opponents" matches a team that is not a favorite.
+   */
   teams?: string[];
   /** Only the watched game(s). Default true. */
   watchedGamesOnly?: boolean;

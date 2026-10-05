@@ -97,6 +97,18 @@ export class Orchestrator extends EventEmitter {
   }
 
   /** Called when the scheduler releases an event (already broadcast-delayed) or a manual button fires. */
+  /** "@favorites" and "@opponents" resolve against the room's favorite teams; anything else is a plain abbreviation. */
+  teamMatches(teams: string[], abbr: string): boolean {
+    const a = abbr.toUpperCase();
+    const favs = this.room.favoriteTeams.map((t) => t.toUpperCase());
+    for (const t of teams) {
+      if (t === "@favorites" && favs.includes(a)) return true;
+      if (t === "@opponents" && !favs.includes(a)) return true;
+      if (t.toUpperCase() === a) return true;
+    }
+    return false;
+  }
+
   async handleEvent(event: SportsEvent, game: Game | undefined): Promise<void> {
     const watched = new Set(this.room.watchedGameIds);
     for (const auto of this.automations) {
@@ -105,7 +117,7 @@ export class Orchestrator extends EventEmitter {
       if (!tr.eventTypes.includes(event.type)) continue;
       if (event.source === "manual" && tr.manual === false) continue;
       if (event.source !== "manual" && (tr.watchedGamesOnly ?? true) && !watched.has(event.gameId)) continue;
-      if (tr.teams?.length && event.teamAbbr && !tr.teams.map((t) => t.toUpperCase()).includes(event.teamAbbr.toUpperCase())) continue;
+      if (tr.teams?.length && event.teamAbbr && !this.teamMatches(tr.teams, event.teamAbbr)) continue;
       if (tr.teams?.length && !event.teamAbbr && event.source !== "manual") continue;
       const suppressed = this.isSuppressed();
       if (suppressed) { this.recordRun(auto, event, "suppressed", suppressed); continue; }
