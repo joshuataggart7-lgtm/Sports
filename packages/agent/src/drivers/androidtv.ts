@@ -57,6 +57,9 @@ export class AndroidTvDriver implements DeviceDriver {
       case "open_url": {
         const browser = device.driverConfig?.browser ? ["-n", String(device.driverConfig.browser)] : [];
         await this.shell(device, ["am", "start", "-a", "android.intent.action.VIEW", "-d", command.url, ...browser]);
+        // A D-pad press a few seconds later counts as the user gesture that lets the page go full
+        // screen and hides the browser's address bar.
+        setTimeout(() => { void this.shell(device, ["input", "keyevent", "20"]).catch(() => undefined); }, 5000);
         return { url: command.url, power: "on" };
       }
       default: throw new Error(`Android TV cannot ${command.type}`);

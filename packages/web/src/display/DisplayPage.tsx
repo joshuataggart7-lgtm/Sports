@@ -46,6 +46,14 @@ export function DisplayPage() {
   }, [id]);
 
   useEffect(() => { if (paired) connect({ role: "display", displayId: paired.id }); }, [paired?.id]);
+  // TV browsers (Silk on Fire TV, TV Bro) keep an address bar until the page goes full screen, and
+  // full screen needs a user gesture. The first remote-control key or tap does it; the agent sends a
+  // harmless D-pad press after opening the page so nobody has to touch the remote.
+  useEffect(() => {
+    const go = () => { const el = document.documentElement; if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => undefined); };
+    window.addEventListener("keydown", go); window.addEventListener("click", go); window.addEventListener("touchstart", go);
+    return () => { window.removeEventListener("keydown", go); window.removeEventListener("click", go); window.removeEventListener("touchstart", go); };
+  }, []);
 
   const display = useMemo(() => s?.displays.find((d) => d.id === paired?.id) ?? paired, [s, paired]);
   const [win, setWin] = useState({ w: window.innerWidth, h: window.innerHeight });
