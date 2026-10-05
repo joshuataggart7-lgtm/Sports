@@ -32,7 +32,11 @@ export function seedRoom(): RoomData {
     dev("avr", "av_receiver", "Onkyo Receiver (TX-NR6100)", ["power", "input", "volume", "audio_playback"], { driver: "onkyo", driverConfig: { host: "192.168.1.10" }, inputs: { appletv: "11", game: "02", tv_arc: "12", music: "2B" } /* STRM BOX = 11 on the TX-NR6100 */, position: { x: 0.5, y: 0.42, w: 0.16, h: 0.05 } }),
     dev("bias_lights", "light", "TV Bias Lights (WLED)", ["power", "brightness", "color", "effect"], { driver: "wled", driverConfig: { host: "" }, groups: ["tv_bias", "accent"], position: { x: 0.5, y: 0.3, w: 0.32, h: 0.02 } }),
     dev("room_leds", "light", "Wall LED Strip (WLED)", ["power", "brightness", "color", "effect"], { driver: "wled", driverConfig: { host: "" }, groups: ["room_leds", "accent"], position: { x: 0.5, y: 0.05, w: 0.9, h: 0.02 } }),
-    dev("lamps", "light", "Ceiling Light", ["power", "brightness", "color"], { groups: ["ambient"], position: { x: 0.5, y: 0.7, w: 0.05, h: 0.05 } }),
+    // Ceiling fan and lamps: WiZ Color bulbs ($5 at Walmart) speak a local UDP protocol. Several
+    // bulbs act as one light via driverConfig.hosts; one IP per bulb from the WiZ app.
+    dev("lamps", "light", "Ceiling Fan Bulbs (WiZ)", ["power", "brightness", "color", "effect"], { driver: "wiz", driverConfig: { host: "", hosts: [] }, groups: ["ambient", "fan"], position: { x: 0.5, y: 0.7, w: 0.05, h: 0.05 } }),
+    dev("lamp_left", "light", "Left Lamp (WiZ)", ["power", "brightness", "color", "effect"], { driver: "wiz", driverConfig: { host: "" }, groups: ["ambient", "lamps"], position: { x: 0.08, y: 0.62, w: 0.04, h: 0.06 } }),
+    dev("lamp_right", "light", "Right Lamp (WiZ)", ["power", "brightness", "color", "effect"], { driver: "wiz", driverConfig: { host: "" }, groups: ["ambient", "lamps"], position: { x: 0.92, y: 0.62, w: 0.04, h: 0.06 } }),
     dev("desk_lamp", "light", "Desk Lamp", ["power", "brightness"], { groups: ["desk"], position: { x: 0.1, y: 0.8, w: 0.04, h: 0.04 } }),
     dev("appletv", "computer", "Apple TV", ["power"], { position: { x: 0.42, y: 0.42, w: 0.05, h: 0.03 } }),
     // Celebration effects. The speaker is the Mac's own audio output (free). The fog machine

@@ -43,7 +43,8 @@ export class DeviceManager extends EventEmitter {
     Object.assign(d, patch);
     // A seeded device remembers the driver it is meant to use; entering a host switches it over.
     const intended = d.driverConfig?.intendedDriver;
-    if (d.driver === "mock" && typeof intended === "string" && d.driverConfig?.host && (intended !== "bravia" || d.driverConfig?.psk) && this.drivers.has(intended)) d.driver = intended;
+    const hasHost = !!d.driverConfig?.host || (Array.isArray(d.driverConfig?.hosts) && d.driverConfig.hosts.length > 0);
+    if (d.driver === "mock" && typeof intended === "string" && hasHost && (intended !== "bravia" || d.driverConfig?.psk) && this.drivers.has(intended)) d.driver = intended;
     const driver = this.drivers.get(d.driver);
     if (driver) d.status = driver.probe ? await driver.probe(d) : await driver.connect([d]);
     this.log({ kind: "device", text: `${d.name}: driver ${d.driver} → ${d.status}`, detail: { deviceId: id } });
