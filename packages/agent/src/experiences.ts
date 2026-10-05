@@ -24,8 +24,9 @@ export function experienceDevices(ROOM: string, dev: (id: string, type: RoomDevi
     dev("fx_shaker", "tactile", "Couch Shaker (BST-1)", ["power", "tactile"], { driver: "tactile", driverConfig: { host: "", output: "", intendedDriver: "tactile" }, groups: ["fx", "tactile"], position: { x: 0.5, y: 0.78, w: 0.2, h: 0.05 } }),
     // Effect light on DMX. Profile named here; the DMX driver maps semantic ops to channels.
     dev("fx_kinta", "dmx_fixture", "Effect Light (Mini Kinta)", ["power", "color", "brightness", "dmx"], { driver: "dmx", driverConfig: { host: "", universe: 1, address: 1, profile: "mini_kinta_ils", intendedDriver: "dmx" }, groups: ["fx", "dmx"], position: { x: 0.5, y: 0.02, w: 0.05, h: 0.03 } }),
-    // Stadium horn on a Kasa plug: 12 V horn + adapter, two seconds on a score.
-    dev("fx_horn", "smart_plug", "Stadium Horn (Kasa plug)", ["power", "momentary"], { driver: "kasa", driverConfig: { host: "", intendedDriver: "kasa" }, groups: ["fx", "horn"], position: { x: 0.92, y: 0.6, w: 0.04, h: 0.03 } }),
+    // Stadium horn on a smart plug: 12 V horn + adapter, two seconds on a score. Driver kasa (Kasa/Tapo)
+    // or wiz (WiZ plug) depending on what the store had; set it in Settings with the plug's IP.
+    dev("fx_horn", "smart_plug", "Stadium Horn (smart plug)", ["power", "momentary"], { driver: "wiz", driverConfig: { host: "", intendedDriver: "wiz" }, groups: ["fx", "horn"], position: { x: 0.92, y: 0.6, w: 0.04, h: 0.03 } }),
   ];
 }
 

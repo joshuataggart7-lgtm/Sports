@@ -7,6 +7,8 @@
  * ceiling fan with several bulbs that should act as one light (commands fan out concurrently).
  * Bulb IPs show in the WiZ app (device → settings → Device info) or the Orbi device list.
  * WiZ has built-in scenes but no fast color effects, so flash/pulse/chase alternate colors here.
+ * WiZ smart plugs speak the same protocol (state on/off only); give a plug the "momentary"
+ * capability and `pulse` turns it on for durationMs then off again, for a horn or fog machine.
  */
 import dgram from "node:dgram";
 import type { DeviceCommand, DeviceDriver, DeviceState, IntegrationStatus, RoomDevice } from "@room/core";
@@ -18,6 +20,7 @@ interface Pilot { state?: boolean; r?: number; g?: number; b?: number; c?: numbe
 export class WizDriver implements DeviceDriver {
   id = "wiz";
   private timers = new Map<string, NodeJS.Timeout>();
+  private pulses = new Map<string, NodeJS.Timeout>();
 
   async connect(devices: RoomDevice[]): Promise<IntegrationStatus> {
     let any: IntegrationStatus = "OFFLINE";
@@ -39,8 +42,16 @@ export class WizDriver implements DeviceDriver {
 
   async execute(device: RoomDevice, command: DeviceCommand): Promise<Partial<DeviceState>> {
     switch (command.type) {
-      case "power_on": this.stopEffect(device); await this.all(device, { state: true }); return { power: "on" };
-      case "power_off": this.stopEffect(device); await this.all(device, { state: false }); return { power: "off", effect: undefined };
+      case "power_on": this.stopEffect(device); this.cancelPulse(device); await this.all(device, { state: true }); return { power: "on" };
+      case "power_off": this.stopEffect(device); this.cancelPulse(device); await this.all(device, { state: false }); return { power: "off", effect: undefined, playing: null };
+      case "pulse": {
+        // Plug on for a moment, then off from here. Capped at 30 s so a lost "off" packet cannot leave a horn running.
+        this.cancelPulse(device);
+        const ms = Math.min(30_000, Math.max(100, command.durationMs ?? 1000));
+        await this.all(device, { state: true });
+        this.pulses.set(device.id, setTimeout(() => { this.pulses.delete(device.id); void this.all(device, { state: false }).catch(() => undefined); }, ms));
+        return { power: "on", playing: `pulse ${(ms / 1000).toFixed(1)}s` };
+      }
       case "set_brightness": {
         const dimming = Math.max(10, Math.min(100, Math.round(command.brightness))); // WiZ floors at 10%
         if (command.brightness <= 0) { await this.all(device, { state: false }); return { brightness: 0, power: "off" }; }
@@ -69,6 +80,7 @@ export class WizDriver implements DeviceDriver {
     }
   }
 
+  private cancelPulse(device: RoomDevice): void { const t = this.pulses.get(device.id); if (t) { clearTimeout(t); this.pulses.delete(device.id); } }
   private stopEffect(device: RoomDevice): void { const t = this.timers.get(device.id); if (t) { clearTimeout(t); this.timers.delete(device.id); } }
 
   private hosts(device: RoomDevice): string[] {
