@@ -25,6 +25,12 @@ HEAD=$(git rev-parse HEAD 2>/dev/null || echo unknown)
 if [ ! -f packages/web/dist/index.html ] || [ "$(cat "$STAMP" 2>/dev/null)" != "$HEAD" ]; then
   npm run build -w @room/web && echo "$HEAD" > "$STAMP"
 fi
+# A previous run that did not exit cleanly keeps the port; free it so this start always wins.
+PORT="${PORT:-8790}"
+if command -v lsof >/dev/null 2>&1; then
+  OLD=$(lsof -ti tcp:"$PORT" 2>/dev/null || true)
+  if [ -n "$OLD" ]; then echo "Stopping the previous Room OS on port $PORT..."; kill $OLD 2>/dev/null || true; sleep 1; kill -9 $OLD 2>/dev/null || true; fi
+fi
 IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname)
 echo
 echo "Room OS will be at:  http://$IP:8790   (open this on the iPad, then Share -> Add to Home Screen)"
