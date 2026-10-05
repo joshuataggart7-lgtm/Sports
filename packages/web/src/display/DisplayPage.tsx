@@ -50,9 +50,10 @@ export function DisplayPage() {
   // full screen needs a user gesture. The first remote-control key or tap does it; the agent sends a
   // harmless D-pad press after opening the page so nobody has to touch the remote.
   useEffect(() => {
-    const go = () => { const el = document.documentElement; if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => undefined); };
+    const go = () => { window.scrollTo(0, 400); const el = document.documentElement; if (!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen().catch(() => undefined); };
+    const t = setTimeout(() => window.scrollTo(0, 400), 1500);
     window.addEventListener("keydown", go); window.addEventListener("click", go); window.addEventListener("touchstart", go);
-    return () => { window.removeEventListener("keydown", go); window.removeEventListener("click", go); window.removeEventListener("touchstart", go); };
+    return () => { clearTimeout(t); window.removeEventListener("keydown", go); window.removeEventListener("click", go); window.removeEventListener("touchstart", go); };
   }, []);
 
   const display = useMemo(() => s?.displays.find((d) => d.id === paired?.id) ?? paired, [s, paired]);
@@ -88,13 +89,17 @@ export function DisplayPage() {
   const W = swap ? win.h : win.w, H = swap ? win.w : win.h;
   const transform = rot === 90 ? "rotate(90deg) translateY(-100%)" : rot === 270 ? "rotate(-90deg) translateX(-100%)" : rot === 180 ? "rotate(180deg)" : undefined;
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-black text-fog">
-      <div className="relative overflow-hidden" style={{ width: W, height: H, transform, transformOrigin: rot === 180 ? "center" : "top left", containerType: "size", ["--u" as string]: swap ? `${(H / W).toFixed(4)}cqw` : "1cqw", ["--v" as string]: swap ? `${(W / H).toFixed(4)}cqh` : "1cqh" }}>
-        {body}
-        {role !== "PROJECTED_TICKER" && overlay && overlay.until > Date.now() && <OverlayLayer o={overlay} />}
-        {role !== "PROJECTED_TICKER" && <div className="absolute bottom-1.5 right-3 text-[10px] uppercase tracking-widest text-white/20">{display.name} · {role?.replace(/_/g, " ")}{!connected ? " · reconnecting" : ""}</div>}
+    <>
+      <div className="fixed inset-0 overflow-hidden bg-black text-fog">
+        <div className="relative overflow-hidden" style={{ width: W, height: H, transform, transformOrigin: rot === 180 ? "center" : "top left", containerType: "size", ["--u" as string]: swap ? `${(H / W).toFixed(4)}cqw` : "1cqw", ["--v" as string]: swap ? `${(W / H).toFixed(4)}cqh` : "1cqh" }}>
+          {body}
+          {role !== "PROJECTED_TICKER" && overlay && overlay.until > Date.now() && <OverlayLayer o={overlay} />}
+          {role !== "PROJECTED_TICKER" && <div className="absolute bottom-1.5 right-3 text-[10px] uppercase tracking-widest text-white/20">{display.name} · {role?.replace(/_/g, " ")}{!connected ? " · reconnecting" : ""}</div>}
+        </div>
       </div>
-    </div>
+      {/* Scroll room for TV browsers: Silk on Fire TV only hides its address bar once the page scrolls. */}
+      <div aria-hidden style={{ height: "140vh", background: "#000" }} />
+    </>
   );
 }
 
