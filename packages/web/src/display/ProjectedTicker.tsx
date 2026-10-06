@@ -41,6 +41,24 @@ export function ProjectedTicker({ s, display, overlay }: { s: RoomSnapshot; disp
           {active ? <TakeoverCrawl o={active} h={lowerBox.height} /> : <LowerBand lower={lower} h={lowerBox.height} g={g} others={others} s={s} />}
         </div>
       )}
+      {cfg.ruler && <Ruler canvasHeight={cfg.canvasHeight} scale={scale} />}
+    </div>
+  );
+}
+
+/** Calibration lines: read the number at the top and bottom edge of the surface, then set the bands' Y and Height. */
+function Ruler({ canvasHeight, scale }: { canvasHeight: number; scale: number }) {
+  const lines: number[] = [];
+  for (let y = 0; y <= canvasHeight; y += 60) lines.push(y);
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      {lines.map((y) => (
+        <div key={y} className="absolute left-0 right-0 flex items-center" style={{ top: y * scale, height: 0 }}>
+          <div className="h-px w-full" style={{ background: y % 300 === 0 ? "#ffffff" : "rgba(255,255,255,0.35)" }} />
+          <span className="absolute left-[2%] -translate-y-1/2 rounded bg-black/70 px-[0.4em] font-mono font-bold text-white" style={{ fontSize: 22 * scale }}>{y}</span>
+          <span className="absolute right-[2%] -translate-y-1/2 rounded bg-black/70 px-[0.4em] font-mono font-bold text-white" style={{ fontSize: 22 * scale }}>{y}</span>
+        </div>
+      ))}
     </div>
   );
 }

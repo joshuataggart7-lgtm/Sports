@@ -101,7 +101,7 @@ function TickerSettings({ d }: { d: DisplayDevice }) {
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{num("x", "X")}{num("y", "Y")}{num("width", "Width")}{num("height", "Height")}{num("fontPx", "Font px")}{num("scrollPxPerSec", "Scroll px/s")}</div>
       <div className="mt-2 flex flex-wrap gap-4">
         <label className="text-xs text-mute">Mode<select className="ml-2 rounded-lg border border-line bg-panel2 p-1 text-sm text-fog" value={String(t.mode ?? "static")} onChange={(e) => set("mode", e.target.value)}><option value="static">static</option><option value="scroll">scroll</option></select></label>
-        {bool("showClock", "clock")}{bool("showDownDistance", "down & distance")}{bool("showPossession", "possession")}{bool("redZoneAlert", "red-zone alert")}{bool("scoreFlash", "score flash")}
+        {bool("showClock", "clock")}{bool("showDownDistance", "down & distance")}{bool("showPossession", "possession")}{bool("redZoneAlert", "red-zone alert")}{bool("scoreFlash", "score flash")}{bool("ruler", "ruler (numbered lines to place the bands)")}
       </div>
       <div className="mt-3 mb-2 text-xs font-semibold uppercase tracking-widest text-mute">Lower band (below the TV)</div>
       <div className="flex flex-wrap items-end gap-3">

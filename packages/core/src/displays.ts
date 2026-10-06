@@ -30,6 +30,8 @@ export interface TickerConfig {
   canvasHeight: number;
   /** Optional second band (for instance below the TV, above the console). Crawls continuously. */
   lower?: LowerBandConfig;
+  /** Calibration: draw numbered horizontal lines every 60 px over the whole image so the bands can be placed on a wall or screen. */
+  ruler?: boolean;
 }
 
 export interface LowerBandConfig {
