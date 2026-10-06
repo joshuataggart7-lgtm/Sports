@@ -19,7 +19,9 @@ export default defineConfig({
         orientation: "any",
         icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
       },
-      workbox: { navigateFallbackDenylist: [/^\/api/, /^\/ws/] },
+      // Display pages on the TVs must always load the newest build: never serve them from the
+      // service worker's cached index, so a pull on the Mac shows up on the next page push.
+      workbox: { navigateFallbackDenylist: [/^\/api/, /^\/ws/, /^\/display/], skipWaiting: true, clientsClaim: true },
     }),
   ],
   server: {
