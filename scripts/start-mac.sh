@@ -29,9 +29,15 @@ if [ ! -f packages/web/dist/index.html ] || [ "$(cat "$STAMP" 2>/dev/null)" != "
 fi
 # A previous run that did not exit cleanly keeps the port; free it so this start always wins.
 PORT="${PORT:-8790}"
+# An agent left behind by a closed terminal keeps running and restarts itself whenever files change,
+# so stop every old watcher by name first, then anything still holding the port, and wait for it to free.
+pkill -f "tsx watch src/main.ts" 2>/dev/null || true
 if command -v lsof >/dev/null 2>&1; then
-  OLD=$(lsof -ti tcp:"$PORT" 2>/dev/null || true)
-  if [ -n "$OLD" ]; then echo "Stopping the previous Room OS on port $PORT..."; kill $OLD 2>/dev/null || true; sleep 1; kill -9 $OLD 2>/dev/null || true; fi
+  for i in 1 2 3 4 5; do
+    OLD=$(lsof -ti tcp:"$PORT" 2>/dev/null || true)
+    [ -z "$OLD" ] && break
+    echo "Stopping the previous Room OS on port $PORT..."; kill $OLD 2>/dev/null || true; sleep 1; kill -9 $OLD 2>/dev/null || true; sleep 1
+  done
 fi
 IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname)
 echo
