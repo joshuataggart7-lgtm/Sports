@@ -33,4 +33,6 @@ export interface Scene {
   button?: { label: string; group: "celebrate" | "sports" | "mode"; color?: string };
   /** Sports event types this scene is the default experience for (drives seeded automations). */
   forEvents?: string[];
+  /** Seed revision; a stored copy with a lower version is replaced on load. Edit in the app to keep yours. */
+  version?: number;
 }

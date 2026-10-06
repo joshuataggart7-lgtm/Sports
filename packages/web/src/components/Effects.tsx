@@ -120,6 +120,11 @@ export function SimulatorPanel({ s }: { s: RoomSnapshot }) {
         <Button big onClick={() => event("HALFTIME")}>Halftime</Button>
         <Button big onClick={() => (game ? event("WIN") : scene("fx_game_win"))}>Win</Button>
       </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Button variant="primary" onClick={() => api("/api/demo", {})}>SHOW ME ROOM OS</Button>
+        <Button variant="ghost" onClick={() => api("/api/demo", undefined, "DELETE")}>Stop demo</Button>
+        <span className="text-xs text-mute">75 seconds: pregame, pressure, big play, touchdown, takeaway, win. For guests when nothing is on.</span>
+      </div>
       {(paused || suppressed) && <p className="mt-2 text-xs text-warn">Automations are {suppressed ? `suppressed by ${s.room.mode?.replace("_", " ")} mode` : "paused"}: these buttons log the event but nothing fires. The Moments below run their scene directly.</p>}
       <div className="mt-3 flex flex-wrap gap-1.5">
         {moments.map((m) => <button key={m.id} type="button" onClick={() => scene(m.id)} className="rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-mute hover:border-mute/60 hover:text-fog">{m.name}</button>)}

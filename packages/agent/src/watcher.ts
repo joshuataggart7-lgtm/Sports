@@ -4,7 +4,7 @@
  * events to the orchestrator. Reversals cancel whatever has not reached the room yet.
  */
 import { EventEmitter } from "node:events";
-import type { BroadcastDelayProfile, Game, GameStats, Play, Room, SportsEvent, SportsProvider, TimelineEntry, Unsubscribe } from "@room/core";
+import { EVENT_BASE_IMPORTANCE, type BroadcastDelayProfile, type EventContext, type Game, type GameStats, type Play, type Room, type SportsEvent, type SportsProvider, type TimelineEntry, type Unsubscribe } from "@room/core";
 import { DelayScheduler, EventEngine, rankGames, type GameInterest } from "@room/engine";
 
 export class GameWatcher extends EventEmitter {
@@ -28,7 +28,7 @@ export class GameWatcher extends EventEmitter {
   ) {
     super();
     this.engine = new EventEngine({ favoriteTeams: room.favoriteTeams });
-    this.scheduler.onRelease((e) => { this.remember(e); this.emit("event", e); this.onRelease(e, this.games.get(e.gameId)); });
+    this.scheduler.onRelease((e) => { const game = this.games.get(e.gameId); e.context = this.contextFor(e, game); this.remember(e); this.emit("event", e); this.onRelease(e, game); });
     this.scheduler.onCancel((e, reason) => { this.remember(e); this.log({ kind: "event", text: `${e.text} ${reason === "reversed" ? "reversed before it reached the room" : "cancelled"}`, detail: { eventId: e.id } }); this.emit("event", e); });
   }
 
@@ -92,7 +92,12 @@ export class GameWatcher extends EventEmitter {
       this.log({ kind: "event", text: `Play overturned in ${game.away.abbreviation} @ ${game.home.abbreviation}; ${cancelled} queued reaction(s) withdrawn`, detail: { reversedIds } });
     }
     const delay = this.delayMs();
+    const wpNow = this.stats.get(game.id)?.winProbabilityHome;
+    // Refresh stats shortly before the events release so win probability and the drive summary reflect the play.
+    if (events.length && this.provider.getGameStats) setTimeout(() => void this.refreshStats(), Math.max(500, delay - 3000));
     for (const e of events) {
+      // Win probability before the play, read at feed time; the swing is measured when the event releases.
+      if (wpNow !== undefined) e.data.wpBefore = wpNow;
       this.scheduler.schedule(e, delay);
       this.remember(e);
       this.emit("event", e);
@@ -100,11 +105,47 @@ export class GameWatcher extends EventEmitter {
     }
   }
 
+  /**
+   * Derived context for a released event: how important it is, how tense the game is, whether
+   * it belongs to the primary game, the latest drive summary. The orchestrator scales effects and
+   * picks scene flavors from this; nothing here names hardware.
+   */
+  contextFor(e: SportsEvent, game: Game | undefined): EventContext {
+    const st = this.stats.get(e.gameId);
+    const primaryGame = !game || e.gameId === (this.room.watchedGameIds[0] ?? e.gameId) || e.source === "manual";
+    const favs = this.room.favoriteTeams.map((t) => t.toUpperCase());
+    const rivals = (this.room.rivals ?? []).map((t) => t.toUpperCase());
+    const opp = game && e.side ? game[e.side === "home" ? "away" : "home"].abbreviation.toUpperCase() : undefined;
+    const both = game ? [game.home.abbreviation.toUpperCase(), game.away.abbreviation.toUpperCase()] : [];
+    const rivalry = !!game && both.some((t) => favs.includes(t)) && both.some((t) => rivals.includes(t)) && (!opp || rivals.includes(opp) || favs.includes(opp));
+    const margin = game ? Math.abs(game.homeScore - game.awayScore) : 99;
+    const reg = game?.sport === "football" ? 4 : game?.sport === "basketball" ? 4 : game?.sport === "hockey" ? 3 : 9;
+    const lateGame = !!game && game.status !== "final" && game.period >= reg && (game.clockSeconds ?? 9999) <= 300;
+    const oneScore = margin <= (game?.sport === "football" ? 8 : game?.sport === "basketball" ? 3 : 1);
+    // Win probability from the event team's point of view.
+    const wpHome = st?.winProbabilityHome;
+    const sideSign = e.side === "away" ? -1 : 1;
+    const wp = wpHome === undefined ? undefined : e.side === "away" ? 1 - wpHome : wpHome;
+    const before = typeof e.data.wpBefore === "number" ? e.data.wpBefore : undefined;
+    const wpDelta = wpHome !== undefined && before !== undefined ? Math.round((wpHome - before) * sideSign * 1000) / 1000 : undefined;
+    let importance = EVENT_BASE_IMPORTANCE[e.type] ?? 0.3;
+    if (wpDelta !== undefined) importance += Math.min(0.5, Math.abs(wpDelta) * 1.5);
+    if (e.data.long) importance += 0.15;
+    if (lateGame && oneScore) importance += 0.15;
+    if (rivalry) importance += 0.1;
+    let pressure = e.type === "FOURTH_DOWN" ? 0.65 : e.type === "THIRD_DOWN" ? 0.35 : e.type === "RED_ZONE" ? 0.4 : e.type === "TWO_MINUTE" ? 0.5 : 0;
+    if (pressure && game?.situation.redZone) pressure += 0.15;
+    if (pressure && lateGame && oneScore) pressure += 0.2;
+    const drive = st?.drives?.[0];
+    return { importance: Math.round(Math.min(1.5, importance) * 100) / 100, pressure: Math.round(Math.min(1, pressure) * 100) / 100, wpDelta, wp, lateGame, oneScore, rivalry, primaryGame, drive };
+  }
+
   /** Manual button: fires now, no delay, and the timeline says a person did it. */
   manual(type: SportsEvent["type"], side?: "home" | "away", gameId?: string): SportsEvent {
     const game = this.games.get(gameId ?? this.room.watchedGameIds[0] ?? "");
     const ev = this.engine.manual(game, type, side);
     ev.state = "released"; ev.releaseAt = ev.ts;
+    ev.context = this.contextFor(ev, game);
     this.remember(ev);
     this.emit("event", ev);
     this.log({ kind: "manual", text: ev.text, detail: { eventId: ev.id } });

@@ -21,12 +21,12 @@ export function categoryOf(command: DeviceCommand, device?: RoomDevice): FxCateg
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
 /** Returns the command to send, scaled, or null when the Experience settings drop it. */
-export function applyExperience(settings: ExperienceSettings | undefined, command: DeviceCommand, device?: RoomDevice): { command: DeviceCommand | null; category?: FxCategory; reason?: string } {
+export function applyExperience(settings: ExperienceSettings | undefined, command: DeviceCommand, device?: RoomDevice, importance?: number): { command: DeviceCommand | null; category?: FxCategory; reason?: string } {
   const s = settings ?? DEFAULT_EXPERIENCE;
   const category = categoryOf(command, device);
   if (!category) return { command };
   if (!s.master) return { command: null, category, reason: "effects off" };
-  const k = fxScale(s, category);
+  const k = fxScale(s, category, importance);
   if (k === 0) return { command: null, category, reason: `${category} off` };
   switch (command.type) {
     case "set_brightness": return { command: { ...command, brightness: clamp(command.brightness * k) }, category };

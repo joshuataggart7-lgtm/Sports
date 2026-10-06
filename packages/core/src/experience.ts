@@ -23,7 +23,8 @@ export const INTENSITY_MODE_SCALE: Record<IntensityMode, Record<FxCategory, numb
   NORMAL:   { lighting: 1,    dmx: 1,    tactile: 1,    audio: 1,    display: 1, effects: 1 },
   BIG_GAME: { lighting: 1.15, dmx: 1.15, tactile: 1.2,  audio: 1.1,  display: 1, effects: 1 },
   INSANE:   { lighting: 1.3,  dmx: 1.3,  tactile: 1.35, audio: 1.2,  display: 1, effects: 1 },
-  QUIET:    { lighting: 0.8,  dmx: 0.6,  tactile: 0.3,  audio: 0.35, display: 1, effects: 0 },
+  // Quiet swaps modality: the screens and slow light carry the moment; horn, fog, hard hits and loud clips do not.
+  QUIET:    { lighting: 0.35, dmx: 0.15, tactile: 0.15, audio: 0,    display: 1, effects: 0 },
 };
 
 export interface FxCategorySettings { enabled: boolean; intensity: number; }
@@ -48,12 +49,25 @@ export const DEFAULT_EXPERIENCE: ExperienceSettings = {
   },
 };
 
-/** Effective 0..1 multiplier for a category, given the dial and the intensity mode. */
-export function fxScale(settings: ExperienceSettings, category: FxCategory): number {
+/**
+ * Effective 0..1.35 multiplier for a category, given the dial, the intensity mode and, when a
+ * sports event carries one, its importance (0.7 is an ordinary score and scales 1.0; a
+ * game-swinging play scales up to 1.3, a routine moment down to 0.7). Display FX never scale.
+ */
+export function fxScale(settings: ExperienceSettings, category: FxCategory, importance?: number): number {
   const c = settings.categories[category];
   if (!settings.master || !c?.enabled) return 0;
-  return Math.max(0, Math.min(1.35, (c.intensity / 100) * INTENSITY_MODE_SCALE[settings.mode][category]));
+  const byImportance = importance === undefined || category === "display" ? 1 : Math.max(0.7, Math.min(1.3, 1 + (importance - 0.7) * 0.6));
+  return Math.max(0, Math.min(1.35, (c.intensity / 100) * INTENSITY_MODE_SCALE[settings.mode][category] * byImportance));
 }
+
+/** Base importance per event type before win probability, clutch and rivalry are added. */
+export const EVENT_BASE_IMPORTANCE: Record<string, number> = {
+  PICK_SIX: 1.0, WIN: 1.0, TOUCHDOWN: 0.7, BLOCKED_KICK: 0.7, FOURTH_DOWN_STOP: 0.6, INTERCEPTION: 0.6, TURNOVER: 0.6, SAFETY: 0.6,
+  HOME_RUN: 0.6, LEAD_CHANGE: 0.5, FIELD_GOAL: 0.4, BIG_PLAY: 0.4, MISSED_FIELD_GOAL: 0.4, SACK: 0.3, OVERTIME: 0.6,
+  RED_ZONE: 0.25, FOURTH_DOWN: 0.2, THIRD_DOWN: 0.1, FIRST_DOWN: 0.05, GAME_START: 0.4, HALFTIME: 0.2, TWO_MINUTE: 0.3,
+  CELEBRATION: 0.7, DEFENSE: 0.5, LOSS: 0.3, GAME_END: 0.3,
+};
 
 // ------------------------------------------------------------------ tactile
 

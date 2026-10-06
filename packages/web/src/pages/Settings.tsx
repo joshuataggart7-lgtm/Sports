@@ -20,6 +20,7 @@ export function Settings() {
           <option value="">Auto (best game for my teams)</option>
           {s.games.map((g) => <option key={g.id} value={g.id}>{g.away.abbreviation} @ {g.home.abbreviation} · {g.leagueId.toUpperCase()} · {g.status}</option>)}
         </select></label>
+        <label className="mt-3 block text-sm">Rivals (abbreviations; a game against one runs hotter)<input className="mt-1 w-full rounded-lg border border-line bg-panel2 p-2" defaultValue={(s.room.rivals ?? []).join(", ")} onBlur={(e) => api("/api/room", { rivals: e.target.value.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean) })} /></label>
         <label className="mt-3 block text-sm">Favorite teams (abbreviations, comma separated)<input className="mt-1 w-full rounded-lg border border-line bg-panel2 p-2" defaultValue={s.room.favoriteTeams.join(", ")} onBlur={(e) => api("/api/room", { favoriteTeams: e.target.value.split(",").map((t) => t.trim().toUpperCase()).filter(Boolean) })} /></label>
         {s.suggestions.length > 0 && <div className="mt-3 text-xs text-mute">Suggested: {s.suggestions.slice(0, 3).map((x) => { const g = s.games.find((y) => y.id === x.gameId); return g ? `${g.away.abbreviation}@${g.home.abbreviation} (${x.reasons.join(", ")})` : x.gameId; }).join(" · ")}</div>}
       </Card>

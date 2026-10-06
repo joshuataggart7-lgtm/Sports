@@ -58,6 +58,10 @@ export class Agent extends EventEmitter {
     };
     add(data.scenes, seed.scenes, "scene");
     add(data.automations, seed.automations, "automation");
+    for (const w of seed.scenes) {
+      const i = data.scenes.findIndex((h) => h.id === w.id);
+      if (i >= 0 && (w.version ?? 0) > (data.scenes[i].version ?? 0)) { data.scenes[i] = w; console.log(`[store] upgraded scene ${w.id} to v${w.version}`); }
+    }
     // A seed automation with a higher version replaces the stored one (its enabled flag survives).
     for (const w of seed.automations) {
       const i = data.automations.findIndex((h) => h.id === w.id);
@@ -66,6 +70,7 @@ export class Agent extends EventEmitter {
     add(data.devices, seed.devices, "device");
     data.room.experience = normalizeExperience(data.room.experience);
     if (!data.room.teams) data.room.teams = seed.room.teams;
+    if (!data.room.rivals) data.room.rivals = seed.room.rivals;
     return data;
   }
 
@@ -131,6 +136,7 @@ export class Agent extends EventEmitter {
   updateRoom(patch: Record<string, unknown>): void {
     if (Array.isArray(patch.watchedGameIds)) this.watcher.setWatched(patch.watchedGameIds.map(String));
     if (Array.isArray(patch.favoriteTeams)) { this.room.favoriteTeams = patch.favoriteTeams.map(String); this.watcher.engine.setFavorites(this.room.favoriteTeams); }
+    if (Array.isArray(patch.rivals)) this.room.rivals = patch.rivals.map((t) => String(t).toUpperCase());
     if (typeof patch.activeDelayProfileId === "string") this.room.activeDelayProfileId = patch.activeDelayProfileId;
     if (typeof patch.name === "string") this.room.name = patch.name;
     if (patch.automationsPausedUntil !== undefined) { this.room.automationsPausedUntil = patch.automationsPausedUntil ? Number(patch.automationsPausedUntil) : undefined; this.log({ kind: "manual", text: this.room.automationsPausedUntil ? "Automations paused" : "Automations resumed" }); }

@@ -24,6 +24,8 @@ export function experienceDevices(ROOM: string, dev: (id: string, type: RoomDevi
     dev("fx_shaker", "tactile", "Couch Shaker (BST-1)", ["power", "tactile"], { driver: "tactile", driverConfig: { host: "", output: "", intendedDriver: "tactile" }, groups: ["fx", "tactile"], position: { x: 0.5, y: 0.78, w: 0.2, h: 0.05 } }),
     // Effect light on DMX. Profile named here; the DMX driver maps semantic ops to channels.
     dev("fx_kinta", "dmx_fixture", "Effect Light (Mini Kinta)", ["power", "color", "brightness", "dmx"], { driver: "dmx", driverConfig: { host: "", universe: 1, address: 1, profile: "mini_kinta_ils", intendedDriver: "dmx" }, groups: ["fx", "dmx"], position: { x: 0.5, y: 0.02, w: 0.05, h: 0.03 } }),
+    // Govee Lyra floor lamp beside the main TV: on Govee's LAN list; part of the accent group so it chases with the strips.
+    dev("lyra", "light", "Floor Lamp (Govee Lyra)", ["power", "brightness", "color", "effect"], { driver: "govee", driverConfig: { host: "", intendedDriver: "govee" }, groups: ["accent", "floor_lamp"], position: { x: 0.68, y: 0.5, w: 0.03, h: 0.12 } }),
     // Stadium horn on a smart plug: 12 V horn + adapter, two seconds on a score. Driver kasa (Kasa/Tapo)
     // or wiz (WiZ plug) depending on what the store had; set it in Settings with the plug's IP.
     dev("fx_horn", "smart_plug", "Stadium Horn (smart plug)", ["power", "momentary"], { driver: "wiz", driverConfig: { host: "", intendedDriver: "wiz" }, groups: ["fx", "horn"], position: { x: 0.92, y: 0.6, w: 0.04, h: 0.03 } }),
@@ -139,22 +141,88 @@ export function experienceScenes(ROOM: string): Scene[] {
       at(0, cmd(g("tactile"), { type: "tactile", pattern: "heartbeat", intensity: 35, durationMs: 20000 })),
       at(0, cmd(g("dmx"), { type: "fixture", op: "set_color", color: "#ff3b30", intensity: 40 })),
     ], { forEvents: ["RED_ZONE"] }),
+    // The shockwave: one impact that travels outward from the TV (couch → TV backlight → lamps →
+    // floor lamp → beams → props), then the three auxiliary screens form one composition
+    // (TOUCH / team name / DOWN), then the drive summary explains what just happened.
     fx("fx_touchdown", "Touchdown", [
       at(0, overlay(all, { kind: "celebration", text: "TOUCHDOWN", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 8000 }), "Screens"),
-      at(0, cmd(g("accent"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 900 }), "White flash"),
       at(0, cmd(g("tactile"), { type: "tactile", pattern: "impact", intensity: 85, durationMs: 400 }), "Couch hit"),
-      at(150, cmd(g("dmx"), { type: "fixture", op: "beam_burst", color: "{{team.primary}}", intensity: 90, durationMs: 8000 }), "Beams"),
+      at(80, cmd(g("tv_bias"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 900 }), "TV backlight"),
+      at(160, cmd(g("lamps"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 900 }), "Corner lamps"),
+      at(160, cmd(g("room_leds"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 900 })),
+      at(240, cmd(g("floor_lamp"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 900 }), "Floor lamp"),
+      at(300, cmd(g("dmx"), { type: "fixture", op: "beam_burst", color: "{{team.primary}}", intensity: 90, durationMs: 8000 }), "Beams"),
       at(350, cmd(d("fx_speaker"), { type: "play_audio", clip: "touchdown", volume: 90 }), "Horn"),
       at(350, cmd(g("horn"), { type: "pulse", durationMs: 2000 })),
       at(400, cmd(g("goal_light"), { type: "pulse", durationMs: 8000 })),
+      at(400, overlay({ display: "disp_left" }, { kind: "celebration", text: "TOUCH", color: "{{team.primary}}", color2: "{{team.secondary}}", durationMs: 7600 }), "Left screen"),
+      at(400, overlay({ display: "disp_right" }, { kind: "celebration", text: "DOWN", color: "{{team.primary}}", color2: "{{team.secondary}}", durationMs: 7600 }), "Right screen"),
+      at(450, overlay({ displayRole: "PROJECTED_TICKER" }, { kind: "banner", text: "{{team.name}}", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 7500 }), "Ribbon fascia"),
       at(700, cmd(g("tactile"), { type: "tactile", pattern: "doubleImpact", intensity: 80, durationMs: 700 })),
       at(800, cmd(g("fog"), { type: "pulse", durationMs: 1500 })),
       at(1000, cmd(g("accent"), { type: "effect", effect: "chase", colors: [...TEAM, "#ffffff"], durationMs: 7000 }), "Team chase"),
+      at(1000, cmd(g("lamps"), { type: "set_color", color: "{{team.primary}}", transitionMs: 500 })),
       at(1500, cmd(g("tactile"), { type: "tactile", pattern: "rumble", intensity: 55, durationMs: 3500 })),
       at(2600, cmd(d("fx_speaker"), { type: "play_audio", clip: "{{team.audio}}", volume: 85 }), "Fight song"),
+      at(8200, overlay({ displayRole: "PROJECTED_TICKER" }, { kind: "banner", text: "{{drive.summary}}", subtext: "{{team.name}} · {{event.score}}", color: "{{team.primary}}", durationMs: 9000 }), "Drive afterglow"),
+      at(8200, overlay({ display: "disp_left" }, { kind: "banner", text: "{{drive.summary}}", color: "{{team.primary}}", durationMs: 9000 })),
       at(8500, cmd(g("accent"), { type: "set_color", color: "{{team.primary}}", transitionMs: 2500 }), "Back to game mode"),
+      at(8500, cmd(g("lamps"), { type: "set_brightness", brightness: 25 })),
       at(8500, cmd(g("dmx"), { type: "fixture", op: "set_color", color: "{{team.primary}}", intensity: 40 })),
-    ], { forEvents: ["TOUCHDOWN"] }),
+    ], { forEvents: ["TOUCHDOWN"], version: 2 }),
+    // Pressure: before the play, the room tightens. Ribbon shows the down, light pulls in to one color, couch gets a heartbeat.
+    fx("fx_pressure", "Pressure", [
+      at(0, overlay({ displayRole: "PROJECTED_TICKER" }, { kind: "banner", text: "{{down.text}}", subtext: "{{team.abbr}} · {{event.text}}", color: "{{team.primary}}", durationMs: 12000 })),
+      at(0, cmd(g("ambient"), { type: "set_brightness", brightness: 10 })),
+      at(0, cmd(g("accent"), { type: "effect", effect: "off" })),
+      at(100, cmd(g("accent"), { type: "set_color", color: "{{team.primary}}", transitionMs: 1500 })),
+      at(100, cmd(g("accent"), { type: "set_brightness", brightness: 60 })),
+      at(0, cmd(g("tactile"), { type: "tactile", pattern: "heartbeat", intensity: 40, durationMs: 12000 })),
+      at(0, cmd(g("dmx"), { type: "fixture", op: "set_color", color: "{{team.primary}}", intensity: 25 })),
+    ], { forEvents: ["PRESSURE"] }),
+    // Fingerprints: sharper versions of takeaway / big play for moments the feed text makes unmistakable.
+    fx("fx_pick_six", "Pick Six", [
+      at(0, overlay(all, { kind: "celebration", text: "PICK SIX", subtext: "{{event.text}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 9000 })),
+      at(0, cmd(g("tactile"), { type: "tactile", pattern: "explosion", intensity: 100, durationMs: 1200 })),
+      at(80, cmd(g("accent"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 1500 })),
+      at(160, cmd(g("lamps"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 1500 })),
+      at(300, cmd(g("dmx"), { type: "fixture", op: "strobe", color: "{{team.primary}}", intensity: 100, durationMs: 2000 })),
+      at(350, cmd(d("fx_speaker"), { type: "play_audio", clip: "crowd_roar", volume: 95 })),
+      at(350, cmd(g("horn"), { type: "pulse", durationMs: 3000 })),
+      at(400, cmd(g("goal_light"), { type: "pulse", durationMs: 9000 })),
+      at(800, cmd(g("fog"), { type: "pulse", durationMs: 2000 })),
+      at(1600, cmd(g("accent"), { type: "effect", effect: "chase", colors: [...TEAM, "#ffffff"], durationMs: 7000 })),
+      at(2000, cmd(g("tactile"), { type: "tactile", pattern: "victoryPulse", intensity: 80, durationMs: 6000 })),
+      at(2800, cmd(d("fx_speaker"), { type: "play_audio", clip: "{{team.audio}}", volume: 90 })),
+      at(9000, cmd(g("accent"), { type: "set_color", color: "{{team.primary}}", transitionMs: 2500 })),
+    ], { forEvents: ["PICK_SIX"] }),
+    fx("fx_fourth_down_stop", "Fourth-Down Stop", [
+      at(0, overlay(all, { kind: "celebration", text: "STOPPED", subtext: "{{event.text}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 5000 })),
+      at(0, cmd(g("tactile"), { type: "tactile", pattern: "impact", intensity: 90, durationMs: 500 })),
+      at(80, cmd(g("accent"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 2000 })),
+      at(200, cmd(d("fx_speaker"), { type: "play_audio", clip: "crowd_roar", volume: 80 })),
+      at(300, cmd(g("dmx"), { type: "fixture", op: "beam_burst", color: "{{team.primary}}", intensity: 80, durationMs: 4000 })),
+    ], { forEvents: ["FOURTH_DOWN_STOP"] }),
+    fx("fx_missed_field_goal", "Missed Field Goal", [
+      at(0, overlay({ displayRole: "PROJECTED_TICKER" }, { kind: "banner", text: "NO GOOD", subtext: "{{event.text}}", color: "{{team.primary}}", durationMs: 5000 })),
+      at(0, cmd(g("tactile"), { type: "tactile", pattern: "doubleImpact", intensity: 60, durationMs: 700 })),
+      at(100, cmd(g("tv_bias"), { type: "effect", effect: "pulse", colors: TEAM, durationMs: 3000 })),
+      at(200, cmd(d("fx_speaker"), { type: "play_audio", clip: "crowd_roar", volume: 65 })),
+    ], { forEvents: ["MISSED_FIELD_GOAL"] }),
+    fx("fx_blocked_kick", "Blocked Kick", [
+      at(0, overlay(all, { kind: "celebration", text: "BLOCKED", subtext: "{{event.text}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 6000 })),
+      at(0, cmd(g("tactile"), { type: "tactile", pattern: "explosion", intensity: 90, durationMs: 1000 })),
+      at(80, cmd(g("accent"), { type: "effect", effect: "flash", colors: ["#ffffff", "{{team.primary}}"], durationMs: 2500 })),
+      at(300, cmd(g("dmx"), { type: "fixture", op: "strobe", color: "{{team.primary}}", intensity: 90, durationMs: 1500 })),
+      at(350, cmd(d("fx_speaker"), { type: "play_audio", clip: "boom", volume: 90 })),
+      at(600, cmd(d("fx_speaker"), { type: "play_audio", clip: "crowd_roar", volume: 85 })),
+    ], { forEvents: ["BLOCKED_KICK"] }),
+    // A favorite scoring in a game that is not the primary one: screens only, never the horn.
+    fx("fx_secondary_score", "Other Game Score", [
+      at(0, overlay({ displayRole: "PROJECTED_TICKER" }, { kind: "banner", text: "{{event.text}}", subtext: "{{game.away}} {{game.awayScore}} · {{game.home}} {{game.homeScore}}", color: "{{team.primary}}", durationMs: 7000 })),
+      at(0, overlay({ display: "disp_right" }, { kind: "banner", text: "{{team.abbr}} SCORES", subtext: "{{event.score}}", color: "{{team.primary}}", durationMs: 7000 })),
+      at(0, cmd(g("tv_bias"), { type: "effect", effect: "pulse", colors: TEAM, durationMs: 2500 })),
+    ], { forEvents: ["SECONDARY_SCORE"] }),
     fx("fx_field_goal", "Field Goal", [
       at(0, overlay(all, { kind: "celebration", text: "FIELD GOAL", subtext: "{{team.name}}  ·  {{event.score}}", color: "{{team.primary}}", color2: "{{team.secondary}}", logoUrl: "{{team.logo}}", durationMs: 5000 })),
       at(0, cmd(g("tactile"), { type: "tactile", pattern: "impact", intensity: 60, durationMs: 400 })),
@@ -295,8 +363,18 @@ export function experienceAutomations(ROOM: string): Automation[] {
     wire("auto_fx_game_start", "Game start", "fx_game_start", ["GAME_START"], { cooldownMs: 60_000 }),
     wire("auto_fx_kickoff", "Kickoff", "fx_kickoff", ["KICKOFF"], { cooldownMs: 30_000 }),
     wire("auto_fx_big_play", "Big play", "fx_big_play", ["BIG_PLAY"], { teams: ["@favorites"], cooldownMs: 20_000 }),
-    wire("auto_fx_third_down", "Third down pulse", "fx_third_down", ["THIRD_DOWN"], { teams: ["@favorites"], cooldownMs: 15_000 }),
-    wire("auto_fx_fourth_down", "Fourth down", "fx_fourth_down", ["FOURTH_DOWN"], { teams: ["@favorites"], cooldownMs: 15_000 }),
+    // Pressure: a high-leverage down (red zone, clutch) gets the tightening scene; an ordinary one gets the subtle pulse.
+    { id: "auto_fx_third_down", version: 2, roomId: ROOM, name: "Third down", enabled: true, cooldownMs: 15_000, trigger: { eventTypes: ["THIRD_DOWN"], teams: ["@favorites"], watchedGamesOnly: true, manual: true },
+      steps: [{ kind: "wait", ms: "broadcast_delay" }, { kind: "if", condition: { minPressure: 0.6 }, then: [{ kind: "scene", sceneId: "fx_pressure" }], else: [{ kind: "scene", sceneId: "fx_third_down" }] }] },
+    { id: "auto_fx_fourth_down", version: 2, roomId: ROOM, name: "Fourth down", enabled: true, cooldownMs: 15_000, trigger: { eventTypes: ["FOURTH_DOWN"], teams: ["@favorites"], watchedGamesOnly: true, manual: true },
+      steps: [{ kind: "wait", ms: "broadcast_delay" }, { kind: "if", condition: { minPressure: 0.6 }, then: [{ kind: "scene", sceneId: "fx_pressure" }], else: [{ kind: "scene", sceneId: "fx_fourth_down" }] }] },
+    wire("auto_fx_pick_six", "Pick six", "fx_pick_six", ["PICK_SIX"], { teams: ["@favorites"], cooldownMs: 20_000 }),
+    wire("auto_fx_fourth_down_stop", "Fourth-down stop", "fx_fourth_down_stop", ["FOURTH_DOWN_STOP"], { teams: ["@favorites"], cooldownMs: 20_000 }),
+    wire("auto_fx_missed_fg", "Opponent misses a field goal", "fx_missed_field_goal", ["MISSED_FIELD_GOAL"], { teams: ["@opponents"], cooldownMs: 20_000 }),
+    wire("auto_fx_blocked_kick", "Blocked kick", "fx_blocked_kick", ["BLOCKED_KICK"], { teams: ["@favorites"], cooldownMs: 20_000 }),
+    // Multi-game arbiter: a favorite scoring in a secondary watched game gets the screens, not the room.
+    { id: "auto_fx_secondary_score", roomId: ROOM, name: "Other game: favorite scores", enabled: true, cooldownMs: 8_000, trigger: { eventTypes: ["TOUCHDOWN", "FIELD_GOAL", "HOME_RUN", "WIN", "LEAD_CHANGE"], teams: ["@favorites"], watchedGamesOnly: true, manual: false, games: "secondary" },
+      steps: [{ kind: "wait", ms: "broadcast_delay" }, { kind: "scene", sceneId: "fx_secondary_score" }] },
     wire("auto_fx_sack", "Sack", "fx_sack", ["SACK"], { teams: ["@favorites"], cooldownMs: 15_000 }),
     wire("auto_fx_halftime", "Halftime", "fx_halftime", ["HALFTIME"], { cooldownMs: 120_000 }),
     wire("auto_fx_overtime", "Overtime", "fx_overtime", ["OVERTIME"], { cooldownMs: 60_000 }),
@@ -306,6 +384,9 @@ export function experienceAutomations(ROOM: string): Automation[] {
     wire("auto_fx_first_down", "First down blink", "fx_first_down", ["FIRST_DOWN"], { teams: ["@favorites"], cooldownMs: 8_000, enabled: false }),
   ];
 }
+
+/** Rival abbreviations per favorite: a game against one of these runs hotter. */
+export const DEFAULT_RIVALS = ["LSU", "MSST", "ALA", "ATL", "TB", "LAD"];
 
 export const DEFAULT_TEAMS: TeamExperience[] = [
   { abbr: "MISS", name: "Ole Miss", audio: { score: "miss_celebration", bigPlay: "big_play", win: "miss_celebration" } },

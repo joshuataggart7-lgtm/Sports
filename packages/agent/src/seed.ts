@@ -5,7 +5,7 @@
  */
 import { DEFAULT_TICKER, pairingCode, type Automation, type BroadcastDelayProfile, type DisplayDevice, type DisplayPreset, type Room, type RoomDevice, type Scene } from "@room/core";
 import type { RoomData } from "./store";
-import { DEFAULT_TEAMS, experienceAutomations, experienceDevices, experienceScenes, modeScenes } from "./experiences";
+import { DEFAULT_RIVALS, DEFAULT_TEAMS, experienceAutomations, experienceDevices, experienceScenes, modeScenes } from "./experiences";
 
 const ROOM = "room_main";
 
@@ -246,7 +246,7 @@ export function seedRoom(): RoomData {
     { id: "delay_espn_app", roomId: ROOM, name: "ESPN app", source: "ESPN", app: "ESPN", deviceId: "appletv", delayMs: 31_000 },
   ];
 
-  const room: Room = { id: ROOM, name: "Game Room", timezone: "America/Chicago", mode: null, watchedGameIds: [], favoriteTeams: ["MISS", "SD", "NO"], activeDelayProfileId: "delay_yttv_appletv", teams: DEFAULT_TEAMS };
+  const room: Room = { id: ROOM, name: "Game Room", timezone: "America/Chicago", mode: null, watchedGameIds: [], favoriteTeams: ["MISS", "SD", "NO"], rivals: DEFAULT_RIVALS, activeDelayProfileId: "delay_yttv_appletv", teams: DEFAULT_TEAMS };
 
   return { room, devices, displays, presets, scenes: [...scenes, ...modeScenes(ROOM), ...experienceScenes(ROOM)], automations, delayProfiles, timeline: [], runs: [] };
 }

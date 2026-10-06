@@ -12,7 +12,7 @@ export interface EngineOptions {
   now?: () => number;
 }
 
-const DEFAULT_COOLDOWNS: Partial<Record<SportsEventType, number>> = { BIG_PLAY: 30_000, RED_ZONE: 45_000, LEAD_CHANGE: 10_000, THIRD_DOWN: 20_000, FOURTH_DOWN: 20_000, SACK: 20_000 };
+const DEFAULT_COOLDOWNS: Partial<Record<SportsEventType, number>> = { BIG_PLAY: 30_000, RED_ZONE: 45_000, LEAD_CHANGE: 10_000, THIRD_DOWN: 20_000, FOURTH_DOWN: 20_000, SACK: 20_000, FOURTH_DOWN_STOP: 20_000, MISSED_FIELD_GOAL: 20_000, BLOCKED_KICK: 20_000 };
 const REGULATION: Record<string, number> = { football: 4, basketball: 4, hockey: 3, soccer: 2, baseball: 9 };
 
 export class EventEngine {
@@ -112,6 +112,19 @@ export class EventEngine {
       out.push(mk(type, s.possession, { down: s.down, distance: s.distance, text: s.yardLineText }, `${next[s.possession].abbreviation} ${s.down === 3 ? "3rd" : "4th"} & ${s.distance ?? "?"}${s.yardLineText ? ` at ${s.yardLineText}` : ""}`, [next.period, prev.seq, s.down, s.yardLine, s.distance], 0.8));
     }
     for (const p of plays) if (p.type === "sack" && p.team) out.push(mk("SACK", p.team === "home" ? "away" : "home", { text: p.text }, `Sack: ${p.text}`, [p.id, "sack"], 0.8));
+    // Play fingerprints: a few high-confidence phrases the feed's play types do not separate.
+    // Each one is a sharper version of a moment the room already handles.
+    for (const p of plays) {
+      if (p.reversed || !p.team) continue;
+      const text = p.text.toLowerCase();
+      const other = p.team === "home" ? "away" : "home";
+      if (p.scoring && (p.type === "interception" || /intercept/.test(text)) && /touchdown/.test(text)) out.push(mk("PICK_SIX", p.team, { text: p.text, yards: p.yards, long: (p.yards ?? 0) >= 50 }, `Pick six: ${p.text}`, [p.id, "pick6"], 0.9));
+      if (!p.scoring && /field goal/.test(text) && /(no good|missed|wide (left|right)|short)/.test(text)) out.push(mk("MISSED_FIELD_GOAL", p.team, { text: p.text }, `Missed field goal: ${p.text}`, [p.id, "mfg"], 0.85));
+      if (/\bblocked\b/.test(text) && /(punt|field goal|kick|pat|extra point)/.test(text)) out.push(mk("BLOCKED_KICK", other, { text: p.text, blockedBy: next[other].abbreviation }, `Blocked kick: ${p.text}`, [p.id, "block"], 0.85));
+      if (/turnover on downs/.test(text) || (/4th/.test(text) && /(incomplete|no gain|short of|stopped)/.test(text) && !/punt/.test(text))) out.push(mk("FOURTH_DOWN_STOP", other, { text: p.text }, `Fourth-down stop by ${next[other].abbreviation}`, [p.id, "4ds"], 0.8));
+    }
+    // Long touchdowns carry a flag so the celebration can run hotter without a separate event type.
+    for (const e of out) if (e.type === "TOUCHDOWN") { const sp = plays.find((p) => p.scoring && p.team === e.side && !p.reversed); if (sp) { e.data.yards = sp.yards; e.data.long = (sp.yards ?? 0) >= 50; e.data.playText = sp.text; } }
     // Halftime and the two-minute warning are moments, not plays.
     if (next.status === "halftime" && prev.status !== "halftime") out.push(mk("HALFTIME", undefined, { period: prev.period }, `Halftime: ${next.away.abbreviation} ${next.awayScore} ${next.home.abbreviation} ${next.homeScore}`, ["half"], 1));
     if (next.sport === "football" && next.status === "live" && (next.period === 2 || next.period === 4) && (next.clockSeconds ?? 9999) <= 120 && ((prev.clockSeconds ?? 9999) > 120 || prev.period !== next.period)) out.push(mk("TWO_MINUTE", undefined, { period: next.period }, `Two-minute warning, ${next.periodLabel}`, ["2min", next.period], 1));

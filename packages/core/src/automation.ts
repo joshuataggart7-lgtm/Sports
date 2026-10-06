@@ -37,6 +37,11 @@ export type AutomationCondition =
   | { minPoints: number }                    // event data.points >= n
   | { scoreDiffAtMost: number }              // close game
   | { period: number[] }                     // event data.period in (halftime = PERIOD_END with period 2)
+  | { minImportance: number }                // event.context.importance >= n
+  | { minPressure: number }                  // event.context.pressure >= n
+  | { primaryGame: boolean }                 // event is (not) from the primary watched game
+  | { rivalry: boolean }
+  | { flag: string }                         // event.data[flag] is truthy
   | { not: AutomationCondition };
 
 export interface AutomationTrigger {
@@ -50,6 +55,12 @@ export interface AutomationTrigger {
   watchedGamesOnly?: boolean;
   /** Also fire for manual events. Default true. */
   manual?: boolean;
+  /**
+   * Which watched games can fire this. "primary" (default): only the first watched game, which
+   * owns the physical room. "secondary": only the other watched games, for display-only notices.
+   * "any": both.
+   */
+  games?: "primary" | "secondary" | "any";
 }
 
 export interface Automation {

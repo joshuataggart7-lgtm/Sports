@@ -23,6 +23,8 @@ export interface Room {
   /** Game ids currently watched; the first is primary. */
   watchedGameIds: string[];
   favoriteTeams: string[];   // abbreviations
+  /** Rival abbreviations; a game against one of these runs hotter (longer afterglow, more intensity). */
+  rivals?: string[];
   activeDelayProfileId?: string;
   /** Manual override: automations are paused until this time. */
   automationsPausedUntil?: number;

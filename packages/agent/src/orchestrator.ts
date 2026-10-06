@@ -73,7 +73,7 @@ export class Orchestrator extends EventEmitter {
         const targets = ra.displayId ? [this.displays.get(ra.displayId)] : this.displays.displays.filter((d) => d.kind === ra.displayKind);
         for (const d of targets) if (d) this.displays.setRole(d.id, ra.role, ra.roleOptions, `scene ${scene.name}`);
       } else if ("overlay" in action) this.showOverlay(action, !!scene.fx);
-      else await this.runDeviceAction(action, origin === "manual" ? "scene" : origin, { fx: !!scene.fx, runId });
+      else await this.runDeviceAction(action, origin === "manual" ? "scene" : origin, { fx: !!scene.fx, runId, importance: event?.context?.importance });
     }));
     this.emit("change");
     this.emit("scene", scene);
@@ -83,6 +83,8 @@ export class Orchestrator extends EventEmitter {
   private showOverlay(action: DisplayAction, fx: boolean): void {
     const e = this.room.experience;
     if (fx && e && (!e.master || !e.categories.display?.enabled)) return;
+    // A banner whose text rendered empty (no drive summary yet, no player) is skipped, not shown blank.
+    if (action.overlay.kind !== "clear" && !(action.overlay.text ?? "").trim()) return;
     this.displays.overlay(action.target, action.overlay);
   }
 
@@ -90,7 +92,7 @@ export class Orchestrator extends EventEmitter {
    * Resolve the target, pass each command through the Experience gate when it is an effect,
    * and fire every device concurrently so one slow or dead device never holds the rest.
    */
-  private async runDeviceAction(action: DeviceAction, origin: Origin, opts: { fx: boolean; runId?: string }): Promise<void> {
+  private async runDeviceAction(action: DeviceAction, origin: Origin, opts: { fx: boolean; runId?: string; importance?: number }): Promise<void> {
     const t = action.target;
     let targets: string[] = [];
     if ("device" in t) targets = [t.device];
@@ -101,7 +103,7 @@ export class Orchestrator extends EventEmitter {
     await Promise.all(targets.map((id) => {
       const device = this.devices.get(id);
       if (!opts.fx) return this.devices.execute(id, action.command as DeviceCommand, origin, { runId: opts.runId });
-      const gated = applyExperience(this.room.experience, action.command as DeviceCommand, device);
+      const gated = applyExperience(this.room.experience, action.command as DeviceCommand, device, opts.importance);
       if (!gated.command) { this.devices.metrics.record({ ts: Date.now(), deviceId: id, deviceName: device?.name ?? id, driver: device?.driver ?? "?", status: device?.status ?? "OFFLINE", command: (action.command as DeviceCommand).type, origin, category: gated.category, runId: opts.runId, durationMs: 0, ok: false, reason: gated.reason }); return undefined; }
       return this.devices.execute(id, gated.command, origin, { runId: opts.runId, category: gated.category });
     }));
@@ -140,6 +142,11 @@ export class Orchestrator extends EventEmitter {
       if (event.source !== "manual" && (tr.watchedGamesOnly ?? true) && !watched.has(event.gameId)) continue;
       if (tr.teams?.length && event.teamAbbr && !this.teamMatches(tr.teams, event.teamAbbr)) continue;
       if (tr.teams?.length && !event.teamAbbr && event.source !== "manual") continue;
+      // Multi-game arbiter: only the primary watched game gets the physical room; others get display-only automations.
+      const games = tr.games ?? "primary";
+      const primary = event.context?.primaryGame ?? true;
+      if (games === "primary" && !primary) { this.recordRun(auto, event, "suppressed", "secondary game"); continue; }
+      if (games === "secondary" && primary) continue;
       const suppressed = this.isSuppressed();
       if (suppressed) { this.recordRun(auto, event, "suppressed", suppressed); continue; }
       if (auto.allowedModes?.length && (!this.room.mode || !auto.allowedModes.includes(this.room.mode))) { this.recordRun(auto, event, "suppressed", `not allowed in ${this.room.mode}`); continue; }
@@ -167,7 +174,8 @@ export class Orchestrator extends EventEmitter {
     const snapshot = this.snapshotLights();
     this.devices.metrics.startRun(run.id);
     const say = (text: string) => { run.log.push({ ts: Date.now(), text }); this.emit("change"); };
-    this.log({ kind: "automation", text: `${auto.name} started${event ? ` for ${event.text}` : ""}`, detail: { automationId: auto.id, runId: run.id, eventId: event?.id } });
+    const c = event?.context;
+    this.log({ kind: "automation", text: `${auto.name} started${event ? ` for ${event.text}` : ""}${c ? ` (importance ${c.importance}${c.wpDelta !== undefined ? `, WP ${c.wpDelta > 0 ? "+" : ""}${Math.round(c.wpDelta * 100)}%` : ""}${c.pressure ? `, pressure ${c.pressure}` : ""}${c.rivalry ? ", rivalry" : ""}${c.lateGame && c.oneScore ? ", clutch" : ""})` : ""}`, detail: { automationId: auto.id, runId: run.id, eventId: event?.id, context: c } });
     try {
       await this.runSteps(auto.steps, ctx, event, flag, say, snapshot, run.id);
       run.status = flag.cancelled ? "cancelled" : "done";
@@ -200,7 +208,7 @@ export class Orchestrator extends EventEmitter {
           if (wait > 0) await sleep(wait);
           if (flag.cancelled) return;
           if ("overlay" in a) this.showOverlay(a as DisplayAction, true);
-          else await this.runDeviceAction(a as DeviceAction, "automation", { fx: true, runId });
+          else await this.runDeviceAction(a as DeviceAction, "automation", { fx: true, runId, importance: event?.context?.importance });
         }));
       } else if (step.kind === "if") {
         const ok = this.evaluate(step.condition, event);
@@ -223,6 +231,11 @@ export class Orchestrator extends EventEmitter {
     if ("minPoints" in c) return Number(event?.data.points ?? 0) >= c.minPoints;
     if ("scoreDiffAtMost" in c) return Math.abs(Number(event?.data.homeScore ?? 0) - Number(event?.data.awayScore ?? 0)) <= c.scoreDiffAtMost;
     if ("period" in c) return c.period.includes(Number(event?.data.period ?? -1));
+    if ("minImportance" in c) return (event?.context?.importance ?? 0) >= c.minImportance;
+    if ("minPressure" in c) return (event?.context?.pressure ?? 0) >= c.minPressure;
+    if ("primaryGame" in c) return (event?.context?.primaryGame ?? true) === c.primaryGame;
+    if ("rivalry" in c) return (event?.context?.rivalry ?? false) === c.rivalry;
+    if ("flag" in c) return !!event?.data[c.flag];
     return false;
   }
 
@@ -240,6 +253,32 @@ export class Orchestrator extends EventEmitter {
     if (n) { this.displays.overlay({ all: true }, { kind: "clear", durationMs: 0 }); void this.restore("lights", this.snapshotLights()); this.emit("change"); }
     return n;
   }
+
+  // ------------------------------------------------------------------ demo
+
+  private demo: { cancelled: boolean } | null = null;
+
+  /**
+   * SHOW ME ROOM OS: a 75-second guided tour through the real scenes, for a guest when no game
+   * is on. Runs as an fx sequence with the favorite team's colors; any new demo or a Reset stops it.
+   */
+  async runDemo(): Promise<void> {
+    this.stopDemo();
+    const flag = { cancelled: false };
+    this.demo = flag;
+    const steps: Array<[string, number]> = [["fx_game_start", 7000], ["fx_pressure", 6000], ["fx_big_play", 6000], ["fx_touchdown", 12000], ["fx_turnover", 7000], ["fx_game_win", 14000], ["fx_reset_room", 0]];
+    this.log({ kind: "manual", text: "Demo: SHOW ME ROOM OS" });
+    for (const [id, wait] of steps) {
+      if (flag.cancelled) return;
+      const scene = this.scenes.find((x) => x.id === id);
+      if (scene) void this.runScene(scene, "manual");
+      const end = Date.now() + wait;
+      while (Date.now() < end) { if (flag.cancelled) return; await sleep(Math.min(250, end - Date.now())); }
+    }
+    if (this.demo === flag) this.demo = null;
+  }
+
+  stopDemo(): boolean { const was = !!this.demo; if (this.demo) { this.demo.cancelled = true; this.demo = null; } return was; }
 
   // ------------------------------------------------------------------ restore
 
