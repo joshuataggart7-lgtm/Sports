@@ -391,7 +391,7 @@ export function modeScenes(ROOM: string): Scene[] {
       at(1000, cmd(d("projector_ribbon"), { type: "power_off" })),
     ] },
     // Concert / music video: warm venue look, team logic off, towers and halo carry the energy. Audio-reactive layer lands with the shakers.
-    { id: "scene_concert", version: 2, roomId: ROOM, name: "Concert", mode: "MUSIC_VIDEO", suppressSportsAutomations: true, actions: [
+    { id: "scene_concert", version: 3, roomId: ROOM, name: "Concert", mode: "MUSIC_VIDEO", suppressSportsAutomations: true, actions: [
       at(0, cmd(d("tv_sony"), { type: "power_on" })),
       at(300, cmd(d("tv_sony"), { type: "set_input", input: "appletv" })),
       at(0, cmd(d("avr"), { type: "power_on" })),
@@ -413,9 +413,9 @@ export function modeScenes(ROOM: string): Scene[] {
       // Side screens and the ribbon stay on with the ambient art look until Now Playing screens exist.
       at(1000, cmd(g("aux"), { type: "power_on" })),
       at(1000, cmd(d("projector_ribbon"), { type: "power_on" })),
-      at(1200, { roleAssignment: { displayId: "disp_left", role: "AMBIENT" } } as SceneAction["action"]),
-      at(1200, { roleAssignment: { displayId: "disp_right", role: "AMBIENT" } } as SceneAction["action"]),
-      at(1200, { roleAssignment: { displayId: "disp_projector", role: "AMBIENT" } } as SceneAction["action"]),
+      at(1200, { roleAssignment: { displayId: "disp_left", role: "AMBIENT", roleOptions: { theme: "concert" } } } as SceneAction["action"]),
+      at(1200, { roleAssignment: { displayId: "disp_right", role: "AMBIENT", roleOptions: { theme: "concert" } } } as SceneAction["action"]),
+      at(1200, { roleAssignment: { displayId: "disp_projector", role: "AMBIENT", roleOptions: { theme: "concert" } } } as SceneAction["action"]),
     ] },
     { id: "scene_gaming", roomId: ROOM, name: "Gaming", mode: "GAMING", actions: [
       at(0, cmd(d("tv_sony"), { type: "power_on" })),

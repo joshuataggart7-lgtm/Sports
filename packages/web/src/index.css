@@ -52,6 +52,7 @@ body { background: var(--color-ink); color: var(--color-fog); font-family: var(-
 @keyframes bcWipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .bc-wipe { animation: bcWipe .5s cubic-bezier(.2,.8,.2,1) both; }
 
+@keyframes beamSweep { from { transform: rotate(-22deg); opacity: .35; } 50% { opacity: .75; } to { transform: rotate(22deg); opacity: .4; } }
 @keyframes stripes { from { transform: translateX(0); } to { transform: translateX(16vw); } }
 @keyframes bcPop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 .bc-pop { animation: bcPop .55s cubic-bezier(.2,.9,.2,1.2) both; }

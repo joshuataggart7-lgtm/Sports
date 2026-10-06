@@ -151,6 +151,21 @@ export function Ambient({ s }: { s: RoomSnapshot }) {
   );
 }
 
+/** Concert ambient: warm stage haze with slow sweeping beams, no team anything. Audio-reactive version lands with the shakers. */
+export function ConcertAmbient() {
+  const beams = [0, 1, 2, 3, 4].map((i) => ({ left: `${8 + i * 20}%`, delay: `${i * 1.7}s`, dur: `${9 + i * 1.3}s`, hue: i % 2 ? "#ff9f43" : "#ffd9a0" }));
+  return (
+    <div className="relative h-full w-full overflow-hidden" style={{ background: "radial-gradient(ellipse at 50% 110%, #5a2a0a 0%, #1a0d05 45%, #000 80%)" }}>
+      {beams.map((b, i) => (
+        <div key={i} className="absolute bottom-[-10%] h-[150%] w-[6%] origin-bottom opacity-60" style={{ left: b.left, background: `linear-gradient(180deg, transparent 0%, ${b.hue}66 40%, ${b.hue}22 100%)`, filter: "blur(10px)", animation: `beamSweep ${b.dur} ease-in-out ${b.delay} infinite alternate` }} />
+      ))}
+      <div className="absolute inset-x-0 bottom-0 h-[30%]" style={{ background: "linear-gradient(0deg, #ff9f4333, transparent)" }} />
+      <div className="absolute inset-0" style={{ background: "repeating-linear-gradient(0deg, transparent 0 3px, rgba(0,0,0,.12) 3px 4px)" }} />
+      <div className="bc absolute bottom-[6%] left-1/2 -translate-x-1/2 text-[calc(1.6*var(--u))] uppercase tracking-[0.5em] text-white/25">Live</div>
+    </div>
+  );
+}
+
 export function MovieInfo({ s }: { s: RoomSnapshot }) {
   return <div className="flex h-full flex-col items-center justify-center text-mute"><div className="bc text-[calc(3*var(--u))] uppercase tracking-[0.4em]">Movie</div><div className="mt-[calc(1*var(--v))] text-[calc(1.6*var(--u))]">{s.room.mode === "MOVIE" ? "Sports alerts are muted" : "Not in movie mode"}</div></div>;
 }

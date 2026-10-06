@@ -4,6 +4,7 @@
  * itself with the room, then renders whatever role the room assigns it. Changing the
  * role from the app changes this screen live.
  */
+import { ConcertAmbient } from "./roles";
 import { setLogicalSize } from "./viewport";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
@@ -76,7 +77,7 @@ export function DisplayPage() {
       case "LEAGUE_SCORES": return <LeagueScores s={s} />;
       case "ROOM_STATUS": return <RoomStatus s={s} connected={connected} />;
       case "PROJECTED_TICKER": return <ProjectedTicker s={s} display={display} overlay={overlay} />;
-      case "AMBIENT": return <Ambient s={s} />;
+      case "AMBIENT": return display.roleOptions?.theme === "concert" ? <ConcertAmbient /> : <Ambient s={s} />;
       case "MOVIE_INFO": return <MovieInfo s={s} />;
       case "CUSTOM": return <CustomUrl url={String(display.roleOptions?.url ?? "")} />;
       case "OFF": return <div className="h-full w-full bg-black" />;
