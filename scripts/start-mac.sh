@@ -13,6 +13,8 @@ if ! command -v adb >/dev/null 2>&1; then
   echo "adb (for the XGIMI projectors and Fire Stick) is not installed; installing with Homebrew..."
   command -v brew >/dev/null 2>&1 && brew install --quiet android-platform-tools || echo "skipped adb install"
 fi
+# A stale adb helper answers "No route to host" for every stick even when they ping; a fresh one each launch avoids it.
+if command -v adb >/dev/null 2>&1; then adb kill-server >/dev/null 2>&1; adb start-server >/dev/null 2>&1; fi
 if ! command -v kasa >/dev/null 2>&1 && [ ! -x "$HOME/.local/bin/kasa" ]; then
   echo "python-kasa (for TP-Link Kasa/Tapo plugs) is not installed; installing with pipx..."
   command -v brew >/dev/null 2>&1 && { brew install --quiet pipx && pipx install python-kasa; } || echo "skipped python-kasa install"
