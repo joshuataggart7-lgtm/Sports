@@ -1,0 +1,74 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Wall with five WiZ strips</title>
+<style>
+body{margin:0;background:#0b0d12;font-family:-apple-system,Inter,Helvetica,Arial,sans-serif;color:#e8eaf0}
+svg{display:block}
+.lbl{font-size:22px;font-weight:700;fill:#fff}
+.sub{font-size:16px;fill:#9aa3b2}
+.k{font-size:18px;fill:#e8eaf0}
+</style></head><body>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+ <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="18"/></filter>
+ <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+ <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1d26"/><stop offset="1" stop-color="#0e1016"/></linearGradient>
+ <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#1c140d"/></linearGradient>
+</defs>
+<!-- room -->
+<rect width="1920" height="1080" fill="url(#wall)"/>
+<rect y="880" width="1920" height="200" fill="url(#floor)"/>
+<!-- curtain rod and curtains -->
+<rect x="330" y="150" width="1260" height="8" fill="#cfd3dc"/>
+<g fill="#e9e6df" opacity=".9"><rect x="330" y="158" width="150" height="300" rx="8"/><rect x="560" y="158" width="150" height="300" rx="8"/><rect x="1040" y="158" width="150" height="300" rx="8"/><rect x="1440" y="158" width="150" height="300" rx="8"/></g>
+<!-- strip 5: wall wash along the top of the screen housing, glow up onto curtains -->
+<rect x="400" y="300" width="1120" height="90" fill="#CE1126" opacity=".55" filter="url(#glow2)"/>
+<!-- screen housing + pull-down screen -->
+<rect x="390" y="390" width="1140" height="26" rx="8" fill="#d8dbe2"/>
+<rect x="420" y="416" width="1080" height="250" fill="#f3f3f1" stroke="#111" stroke-width="10"/>
+<!-- ribbon on screen -->
+<rect x="470" y="440" width="980" height="70" rx="6" fill="#161a22"/><text x="500" y="488" class="lbl" fill="#fff">NFL  ATL 24  ·  NO 7   4TH & 16  09:42</text>
+<rect x="470" y="560" width="980" height="60" rx="6" fill="#0f1218"/><text x="500" y="601" class="sub" fill="#cfd3dc">SCORES   GB 17 · TB 14 FINAL     TEN 18 · BAL 24 FINAL     PHI 20 · LAR 24</text>
+<!-- strip 1: behind the Sony, bias glow -->
+<rect x="560" y="640" width="800" height="330" fill="#CE1126" opacity=".9" filter="url(#glow2)"/>
+<!-- Sony -->
+<rect x="600" y="650" width="720" height="400" rx="6" fill="#06080c" stroke="#222" stroke-width="6"/>
+<rect x="612" y="662" width="696" height="376" fill="#0b2a12"/>
+<text x="960" y="870" text-anchor="middle" class="lbl" font-size="30" fill="#9fe3b0">GAME</text>
+<!-- console -->
+<rect x="520" y="1050" width="880" height="30" fill="#8a5a2b"/>
+<!-- strip 4: under the console lip, glow down onto the shelf (drawn as floor glow since console sits at the frame edge) -->
+<rect x="560" y="1060" width="800" height="20" fill="#f5b400" opacity=".9" filter="url(#glow)"/>
+<!-- vertical TVs -->
+<g><rect x="200" y="620" width="300" height="420" fill="#CE1126" opacity=".9" filter="url(#glow2)"/>
+<rect x="240" y="640" width="230" height="400" rx="6" fill="#06080c" stroke="#222" stroke-width="6"/>
+<rect x="250" y="650" width="210" height="380" fill="#121622"/><text x="355" y="850" text-anchor="middle" class="sub">PLAYER STATS</text>
+<rect x="350" y="1040" width="10" height="40" fill="#333"/></g>
+<g><rect x="1420" y="620" width="300" height="420" fill="#CE1126" opacity=".9" filter="url(#glow2)"/>
+<rect x="1450" y="640" width="230" height="400" rx="6" fill="#06080c" stroke="#222" stroke-width="6"/>
+<rect x="1460" y="650" width="210" height="380" fill="#121622"/><text x="1565" y="850" text-anchor="middle" class="sub">LEAGUE SCORES</text>
+<rect x="1560" y="1040" width="10" height="40" fill="#333"/></g>
+<!-- corner lamps -->
+<g><circle cx="110" cy="560" r="70" fill="#f5b400" opacity=".55" filter="url(#glow2)"/><path d="M80 560 h60 l-10 -30 h-40 z" fill="#ddd"/><rect x="108" y="560" width="4" height="500" fill="#ccc"/></g>
+<g><circle cx="1810" cy="560" r="70" fill="#f5b400" opacity=".55" filter="url(#glow2)"/><path d="M1780 560 h60 l-10 -30 h-40 z" fill="#ddd"/><rect x="1808" y="560" width="4" height="500" fill="#ccc"/></g>
+<!-- fan -->
+<g><circle cx="960" cy="60" r="60" fill="#f5b400" opacity=".35" filter="url(#glow2)"/><rect x="880" y="55" width="160" height="10" fill="#777"/><rect x="955" y="20" width="10" height="45" fill="#777"/></g>
+<!-- callouts -->
+<g font-family="inherit">
+ <circle cx="960" cy="330" r="22" fill="#CE1126"/><text x="960" y="338" text-anchor="middle" class="lbl">5</text>
+ <text x="995" y="338" class="k">Screen housing · wall wash up the curtains · group room_leds</text>
+ <circle cx="420" cy="705" r="22" fill="#CE1126"/><text x="420" y="713" text-anchor="middle" class="lbl">1</text>
+ <text x="455" y="713" class="k">Behind the Sony · group tv_bias</text>
+ <circle cx="330" cy="600" r="22" fill="#CE1126"/><text x="330" y="608" text-anchor="middle" class="lbl">2</text>
+ <text x="100" y="608" class="k">Behind left TV</text>
+ <circle cx="1590" cy="600" r="22" fill="#CE1126"/><text x="1590" y="608" text-anchor="middle" class="lbl">3</text>
+ <text x="1625" y="608" class="k">Behind right TV</text>
+ <circle cx="520" cy="1020" r="22" fill="#f5b400"/><text x="520" y="1028" text-anchor="middle" class="lbl" fill="#111">4</text>
+ <text x="555" y="1028" class="k">Under the console lip, facing down · group console_glow</text>
+</g>
+<!-- legend -->
+<g transform="translate(40,40)"><rect width="520" height="140" rx="12" fill="#000" opacity=".55"/>
+<text x="20" y="36" class="lbl">Five WiZ strips, each on its own plug</text>
+<text x="20" y="68" class="sub">1 Sony bias · 2, 3 side TV bias · 4 console glow · 5 wall wash</text>
+<text x="20" y="96" class="sub">Touchdown: 1, 2, 3, 5 flash white then team chase · 4 stays gold</text>
+<text x="20" y="124" class="sub">Movie: 1 dim warm · 2, 3, 5 off · 4 at 10%</text></g>
+</svg>
+</body></html>
