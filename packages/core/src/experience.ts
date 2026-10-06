@@ -34,11 +34,50 @@ export interface ExperienceSettings {
   master: boolean;
   mode: IntensityMode;
   categories: Record<FxCategory, FxCategorySettings>;
+  /** Hard limits that no scene, mode or dial can exceed. */
+  limits?: ExperienceLimits;
+}
+
+/**
+ * Sanity rules applied at dispatch, after every dial. Props (fog, horn, beacon) are capped and
+ * rate-limited by device group; tactile is capped; quiet hours force QUIET whatever the mode says.
+ */
+export interface ExperienceLimits {
+  /** Longest single fog burst, ms. */
+  maxFogBurstMs: number;
+  /** Minimum gap between fog bursts, ms. */
+  fogCooldownMs: number;
+  /** Longest horn blast, ms. */
+  hornMaxMs: number;
+  hornCooldownMs: number;
+  /** Longest beacon run, ms. */
+  beaconMaxMs: number;
+  /** Tactile intensity ceiling, 0-100. */
+  maxTactileIntensity: number;
+  /** Local times "HH:MM"; inside this window the room behaves as QUIET. Empty strings disable. */
+  quietHoursStart: string;
+  quietHoursEnd: string;
+}
+
+export const DEFAULT_LIMITS: ExperienceLimits = {
+  maxFogBurstMs: 1500, fogCooldownMs: 45_000, hornMaxMs: 3000, hornCooldownMs: 15_000, beaconMaxMs: 15_000,
+  maxTactileIntensity: 100, quietHoursStart: "23:00", quietHoursEnd: "07:00",
+};
+
+/** The intensity mode in force right now: the chosen one, or QUIET inside quiet hours. */
+export function effectiveMode(settings: ExperienceSettings, now = new Date()): IntensityMode {
+  const l = settings.limits;
+  if (!l?.quietHoursStart || !l.quietHoursEnd) return settings.mode;
+  const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+  const cur = now.getHours() * 60 + now.getMinutes(), a = toMin(l.quietHoursStart), b = toMin(l.quietHoursEnd);
+  const inside = a <= b ? cur >= a && cur < b : cur >= a || cur < b;
+  return inside ? "QUIET" : settings.mode;
 }
 
 export const DEFAULT_EXPERIENCE: ExperienceSettings = {
   master: true,
   mode: "NORMAL",
+  limits: DEFAULT_LIMITS,
   categories: {
     lighting: { enabled: true, intensity: 100 },
     dmx: { enabled: true, intensity: 100 },
@@ -58,7 +97,7 @@ export function fxScale(settings: ExperienceSettings, category: FxCategory, impo
   const c = settings.categories[category];
   if (!settings.master || !c?.enabled) return 0;
   const byImportance = importance === undefined || category === "display" ? 1 : Math.max(0.7, Math.min(1.3, 1 + (importance - 0.7) * 0.6));
-  return Math.max(0, Math.min(1.35, (c.intensity / 100) * INTENSITY_MODE_SCALE[settings.mode][category] * byImportance));
+  return Math.max(0, Math.min(1.35, (c.intensity / 100) * INTENSITY_MODE_SCALE[effectiveMode(settings)][category] * byImportance));
 }
 
 /** Base importance per event type before win probability, clutch and rivalry are added. */

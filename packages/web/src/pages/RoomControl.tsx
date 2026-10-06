@@ -11,6 +11,10 @@ const MODES: Array<{ mode: RoomMode; hint: string; glyph: string }> = [
   { mode: "MULTIVIEW", hint: "Three games, scores on the ribbon", glyph: "▦" },
   { mode: "WORK", hint: "Desk on, wall off, neutral light", glyph: "💻" },
   { mode: "PARTY", hint: "Music, color, no desk", glyph: "🎉" },
+  { mode: "MUSIC_VIDEO", hint: "Concert look, warm venue wash", glyph: "🎸" },
+  { mode: "TALK_SHOW", hint: "Podcasts and talk, calm light", glyph: "🎙" },
+  { mode: "GAMING", hint: "Receiver on Game, cool glow", glyph: "🎮" },
+  { mode: "CHILL", hint: "Music low, warm light, art on the wall", glyph: "🌙" },
   { mode: "AMBIENT", hint: "Projected art, low light", glyph: "✦" },
 ];
 

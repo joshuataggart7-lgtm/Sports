@@ -15,6 +15,9 @@ export function EffectsPanel({ s }: { s: RoomSnapshot }) {
   const fav = favoriteSide(s, game);
   const team = game ? game[fav ?? "home"] : undefined;
   const buttons = s.scenes.filter((x) => x.button?.group === "celebrate");
+  // Mode-specific rows: Talk Show and Concert get their own buttons when that mode is on.
+  const extraGroup = s.room.mode === "TALK_SHOW" ? "talk" : s.room.mode === "MUSIC_VIDEO" ? "concert" : undefined;
+  const extra = extraGroup ? s.scenes.filter((x) => x.button?.group === extraGroup) : [];
   const [advanced, setAdvanced] = useState(false);
   const [firing, setFiring] = useState<string | null>(null);
   const put = (patch: Partial<ExperienceSettings> | { categories: Partial<Record<FxCategory, Partial<ExperienceSettings["categories"][FxCategory]>>> }) => api("/api/experience", patch, "PUT");
@@ -47,6 +50,12 @@ export function EffectsPanel({ s }: { s: RoomSnapshot }) {
         })}
       </div>
 
+      {extra.length > 0 && (
+        <div className={`mt-3 ${off ? "opacity-40" : ""}`}>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-mute">{extraGroup === "talk" ? "Talk show" : "Concert"}</div>
+          <div className="flex flex-wrap gap-2">{extra.map((sc) => <Button key={sc.id} disabled={off} onClick={() => fire(sc)} className={firing === sc.id ? "ring-2 ring-fog" : ""}>{sc.button!.label}</Button>)}</div>
+        </div>
+      )}
       <button type="button" onClick={() => setAdvanced((v) => !v)} className="mt-4 text-xs font-semibold uppercase tracking-wider text-mute hover:text-fog">{advanced ? "▾ Advanced" : "▸ Advanced"}</button>
       {advanced && (
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

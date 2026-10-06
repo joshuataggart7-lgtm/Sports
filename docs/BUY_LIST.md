@@ -39,10 +39,12 @@ is a driver away once the box arrives. Prices are typical Amazon / Parts Express
 
 | Item | ~Price | Notes |
 |---|---|---|
-| Dayton Audio BST-1 bass shaker (50 W, 4 Ω) | $55 | Bolts to the couch frame. One is plenty for a two-seat section |
-| Fosi Audio M03 mono subwoofer amp (or Dayton DTA-120) | $60–75 | Powers the shaker. Confirm it is the mono version with a low-pass knob |
-| Passive 2-into-1 RCA mixer (or a second amp input) | $10 | The shaker needs two feeds: Onkyo sub pre-out for movies and games, the Mac for Room OS effects. One amp input cannot take both |
-| 3.5 mm to RCA cable, 10 ft | $8 | Mac headphone jack (or a $10 USB sound dongle) into the mixer |
+| Dayton Audio BST-1 bass shaker (50 W, 4 Ω), **two** | $55 each | One under each loveseat seat, bolted to the wooden frame, never to upholstery panels. Two seats let effects travel left to right |
+| Dayton DTA-120 two-channel amp (60 W per channel into 4 Ω) | $60 | One shaker per channel. A mono amp would lose left/right |
+| USB stereo audio adapter for the Mac | $10 | Room OS's own left/right tactile output, separate from the Mac's sound effects |
+| Passive 2-into-1 RCA mixer, stereo | $12 | Onkyo sub pre-out (movies, games) and the Mac tactile output both feed the amp |
+| 3.5 mm to RCA cable, 10 ft | $8 | USB adapter into the mixer |
+| 16 gauge speaker wire, 50 ft | $12 | Both seats back to the amp with slack |
 | Chauvet DJ Mini Kinta ILS | $110–120 | RGBW moving beams, standard DMX. The seeded `fx_kinta` fixture profile targets it |
 | Art-Net / sACN to DMX node | $45–70 | Pure UDP on your Wi-Fi, no drivers on the Mac. Not ENTTEC Open DMX USB: that one has no hardware timing and needs a flaky FTDI driver on macOS |
 | 3-pin DMX cable, 10 ft | $12 | Node to the Kinta |
@@ -110,7 +112,7 @@ The Sony stays on its console, the two 43s sit on side tables, both ribbons are 
 |---|---|---|
 | 1. This week | $70 | $140 |
 | 2. Celebration kit | $150 | $230 |
-| 2b. Immersion kit | $300 | $330 |
+| 2b. Immersion kit | $350 | $390 |
 | 3. Lights | $120 | $180 |
 | 4. Remount | $130 | $260 |
 | 5. Screen control | $20 | $130 |

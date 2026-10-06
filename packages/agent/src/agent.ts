@@ -1,6 +1,6 @@
 import os from "node:os";
 import { EventEmitter } from "node:events";
-import { DEFAULT_EXPERIENCE, FX_CATEGORIES, INTENSITY_MODES, uid, type AgentStatus, type ExperienceSettings, type FxCategory, type GameStats, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
+import { DEFAULT_EXPERIENCE, DEFAULT_LIMITS, FX_CATEGORIES, INTENSITY_MODES, uid, type AgentStatus, type ExperienceSettings, type FxCategory, type GameStats, type BroadcastDelayProfile, type DisplayOverlay, type Game, type IntegrationStatus, type League, type RoomSnapshot, type SportsEvent, type SportsProvider, type Team, type TimelineEntry } from "@room/core";
 import { SimulatedProvider } from "@room/sports";
 import { DeviceManager } from "./devices";
 import { DisplayManager } from "./displays";
@@ -10,8 +10,11 @@ import type { RoomData, RoomStore } from "./store";
 
 export const VERSION = "0.1.0";
 
+/** Seed devices replaced by the five WiZ strips. */
+const RETIRED_DEVICE_IDS = ["bias_lights", "room_leds"];
+
 function normalizeExperience(e: ExperienceSettings | undefined): ExperienceSettings {
-  const out: ExperienceSettings = { master: e?.master ?? DEFAULT_EXPERIENCE.master, mode: e?.mode ?? DEFAULT_EXPERIENCE.mode, categories: { ...DEFAULT_EXPERIENCE.categories } };
+  const out: ExperienceSettings = { master: e?.master ?? DEFAULT_EXPERIENCE.master, mode: e?.mode ?? DEFAULT_EXPERIENCE.mode, categories: { ...DEFAULT_EXPERIENCE.categories }, limits: { ...DEFAULT_LIMITS, ...(e?.limits ?? {}) } };
   for (const c of FX_CATEGORIES) out.categories[c] = { ...DEFAULT_EXPERIENCE.categories[c], ...(e?.categories?.[c] ?? {}) };
   return out;
 }
@@ -68,6 +71,8 @@ export class Agent extends EventEmitter {
       if (i >= 0 && (w.version ?? 0) > (data.automations[i].version ?? 0)) { data.automations[i] = { ...w, enabled: data.automations[i].enabled }; console.log(`[store] upgraded automation ${w.id} to v${w.version}`); }
     }
     add(data.devices, seed.devices, "device");
+    // Devices the seed no longer ships and the person never configured (still mock) are dropped.
+    for (const id of RETIRED_DEVICE_IDS) { const i = data.devices.findIndex((d) => d.id === id && d.driver === "mock"); if (i >= 0) { data.devices.splice(i, 1); console.log(`[store] retired device ${id}`); } }
     data.room.experience = normalizeExperience(data.room.experience);
     if (!data.room.teams) data.room.teams = seed.room.teams;
     if (!data.room.rivals) data.room.rivals = seed.room.rivals;
@@ -80,6 +85,11 @@ export class Agent extends EventEmitter {
     const e = this.experience;
     if (typeof patch.master === "boolean") e.master = patch.master;
     if (typeof patch.mode === "string" && (INTENSITY_MODES as readonly string[]).includes(patch.mode)) e.mode = patch.mode as ExperienceSettings["mode"];
+    if (patch.limits && typeof patch.limits === "object") {
+      const l = { ...DEFAULT_LIMITS, ...(e.limits ?? {}) } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(patch.limits as Record<string, unknown>)) if (k in DEFAULT_LIMITS && (typeof v === "number" || typeof v === "string")) l[k] = v;
+      e.limits = l as unknown as ExperienceSettings["limits"];
+    }
     if (patch.categories && typeof patch.categories === "object") {
       for (const [k, v] of Object.entries(patch.categories as Record<string, { enabled?: unknown; intensity?: unknown }>)) {
         if (!(FX_CATEGORIES as readonly string[]).includes(k) || !v) continue;

@@ -118,3 +118,43 @@ the Guest page (`/guest`), next to Watch Live, Celebrate, Team Colors, Movie, Qu
 The Guest page has no horn, fog or blackout.
 
 **Quiet** now swaps modality: lighting 35%, DMX 15%, tactile 15%, audio off, props off, screens 100%.
+
+
+## Physical layout: five WiZ strips, one device each
+
+| Device | Groups | Where | Game Day rest | Movie | Touchdown |
+|---|---|---|---|---|---|
+| wiz_sony_bias | tv_bias, room_leds, accent | Behind the Sony, 2–3 in inside the edge, start lower right | primary 22% | neutral white 8% | +80 ms |
+| wiz_tower_left | accent, accent_left, towers | Behind the left 43, remainder down the stand column | secondary 12% | off | +130 ms |
+| wiz_tower_right | accent, accent_right, towers | Mirror of the left | secondary 12% | off | +190 ms |
+| wiz_console | room_leds, room_leds_low | Under the console lip, LEDs facing the floor | primary 9% | warm 4% | +220 ms |
+| wiz_stadium_upper | room_leds, stadium_upper | Along the fixed screen housing, aimed up the wall | 5% | off | +260 ms |
+
+The touchdown wave: couch 0, Sony 80, left tower 130, lamps 160, right tower 190, console 220,
+floor lamp 240, halo 260, beams 300, horn/beacon/fog 350, side screens 400, ribbon 450, drive
+summary 8.2 s, Game Day rest restored at 8.5 s. Strips are peel-and-stick; cut only at marked
+cut points, and never coil powered strip behind a curtain.
+
+## Limits and quiet hours
+
+`room.experience.limits` (set with `PUT /api/experience { limits: {...} }`):
+
+| Key | Default | Enforced where |
+|---|---|---|
+| maxFogBurstMs / fogCooldownMs | 1500 / 45000 | any `pulse` on a device in group `fog` |
+| hornMaxMs / hornCooldownMs | 3000 / 15000 | group `horn` |
+| beaconMaxMs | 15000 | group `goal_light` |
+| maxTactileIntensity | 100 | every tactile command |
+| quietHoursStart / End | 23:00 / 07:00 | the room behaves as QUIET inside the window whatever mode is chosen |
+
+A dropped command shows its reason in the Simulator debug view ("fog cooldown", "audio off").
+Props never fire from audio analysis; only from a sports event, a scene or a button.
+
+## Modes beyond sports
+
+TALK_SHOW: Sony bias neutral 12%, towers cool blue 8%, console warm 5%, halo off, beams off,
+tactile stopped, celebrations suppressed. Live page buttons: STUDIO LIGHTS, BIG LAUGH, APPLAUSE, CHAOS.
+
+MUSIC_VIDEO (Concert): warm amber base, towers breathing, halo as venue wash, team logic off.
+Buttons: DROP, ENCORE. Audio-reactive behavior (bass, beat, energy) arrives with the tactile
+milestone: it needs a loopback audio device on the Mac so Room OS can hear what is playing.

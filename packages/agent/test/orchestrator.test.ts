@@ -12,6 +12,8 @@ class MemStore implements RoomStore { kind = "LOCAL_JSON" as const; async load()
 async function boot() {
   const provider = new SimulatedProvider({ seed: 11, overturnRate: 0 });
   const data = seedRoom();
+  // The seed carries the real room's addresses; tests run every device on the mock driver.
+  for (const d of data.devices) if (d.driver !== "localaudio") d.driver = "mock";
   const agent = new Agent(data, provider, new MemStore(), "NONE");
   agent.devices.register(new MockDriver());
   await agent.devices.connectAll();
@@ -30,7 +32,7 @@ test("Game Day mode runs the scene: screen up, TV on, projector on ribbon, light
   assert.equal(d("projector_ribbon").power, "on");
   assert.equal(d("projector_ribbon").input, "ribbon");
   assert.equal(d("projector").power, "off", "movie projector stays off in Game Day");
-  assert.equal(d("bias_lights").color, "#CE1126", "Ole Miss red on the bias lights");
+  assert.equal(d("wiz_sony_bias").color, "#CE1126", "Ole Miss red on the bias lights");
   assert.equal(agent.displays.get("disp_projector")!.role, "PROJECTED_TICKER");
 });
 
@@ -54,22 +56,22 @@ test("manual touchdown runs the choreographed celebration and restores the light
   const scene = data.scenes.find((x) => x.id === "fx_touchdown")!;
   scene.actions = scene.actions.map((a) => ({ ...a, delayMs: Math.round(a.delayMs / 20) }));
   await agent.orchestrator.setMode("SPORTS");
-  await agent.devices.execute("bias_lights", { type: "set_color", color: "#123456" }, "scene");
+  await agent.devices.execute("wiz_sony_bias", { type: "set_color", color: "#123456" }, "scene");
   agent.watcher.manual("TOUCHDOWN", "home");
   await new Promise((r) => setTimeout(r, 4000)); // the choreography staggers sound and effects over ~3 s
   const run = data.runs.find((r) => r.automationName === "Touchdown celebration")!;
   assert.equal(run.status, "done");
-  assert.equal(agent.devices.get("bias_lights")!.state.color, "#123456", "restored after the celebration");
-  assert.ok(data.timeline.some((t) => t.text.includes("Bias Lights (WLED): flash")));
+  assert.equal(agent.devices.get("wiz_sony_bias")!.state.color, "#123456", "restored after the celebration");
+  assert.ok(data.timeline.some((t) => t.text.includes("Sony bias (WiZ): flash")));
 });
 
 test("a manual device change holds off automations on that device", async () => {
   const { agent } = await boot();
-  await agent.devices.execute("room_leds", { type: "set_color", color: "#ffffff" }, "manual");
-  const r = await agent.devices.execute("room_leds", { type: "set_color", color: "#000000" }, "automation");
+  await agent.devices.execute("wiz_stadium_upper", { type: "set_color", color: "#ffffff" }, "manual");
+  const r = await agent.devices.execute("wiz_stadium_upper", { type: "set_color", color: "#000000" }, "automation");
   assert.equal(r.ok, false);
   assert.equal(r.reason, "manual hold");
-  assert.equal(agent.devices.get("room_leds")!.state.color, "#ffffff");
+  assert.equal(agent.devices.get("wiz_stadium_upper")!.state.color, "#ffffff");
 });
 
 test("provider events wait for the broadcast delay and SYNC re-times them", async () => {
