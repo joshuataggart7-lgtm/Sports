@@ -36,7 +36,7 @@ export class DeviceManager extends EventEmitter {
   driverIds(): string[] { return [...this.drivers.keys()]; }
 
   /** Re-point a device at real hardware: driver + config. Status is re-probed afterwards. */
-  async update(id: string, patch: Partial<Pick<RoomDevice, "name" | "driver" | "driverConfig" | "inputs" | "groups" | "position">>): Promise<RoomDevice | undefined> {
+  async update(id: string, patch: Partial<Pick<RoomDevice, "name" | "driver" | "driverConfig" | "inputs" | "groups" | "position" | "capabilities" | "type">>): Promise<RoomDevice | undefined> {
     const d = this.get(id);
     if (!d) return undefined;
     if (patch.driver && !this.drivers.has(patch.driver)) throw new Error(`unknown driver ${patch.driver}`);
