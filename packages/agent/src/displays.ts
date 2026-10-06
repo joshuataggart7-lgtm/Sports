@@ -28,7 +28,7 @@ export class DisplayManager extends EventEmitter {
     return d;
   }
 
-  update(id: string, patch: Partial<Pick<DisplayDevice, "name" | "position" | "kind" | "roleOptions" | "rotation">>): DisplayDevice | undefined {
+  update(id: string, patch: Partial<Pick<DisplayDevice, "name" | "position" | "kind" | "roleOptions" | "rotation" | "safeArea">>): DisplayDevice | undefined {
     const d = this.get(id);
     if (!d) return undefined;
     Object.assign(d, patch);

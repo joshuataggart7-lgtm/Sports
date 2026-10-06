@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const base = process.env.BASE ?? "http://localhost:8790"; const out = process.argv[2];
+const post = (p, b, m = "POST") => fetch(base + p, { method: m, headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+await post("/api/room", { watchedGameIds: ["sim:ncaaf:LSU@MISS"] });
+await post("/api/displays/disp_left/role", { role: "PLAYER_STATS" });
+await post("/api/displays/disp_left", { rotation: 270, safeArea: 3 }, "PUT");
+const snap = await (await fetch(base + "/api/snapshot")).json();
+const code = snap.displays.find((d) => d.id === "disp_left").pairingCode;
+const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, proxy: process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY, bypass: "localhost,127.0.0.1" } : undefined, args: ["--ignore-certificate-errors"] });
+const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
+await p.goto(`${base}/display/${code}`); await sleep(4000);
+await p.screenshot({ path: `${out}/portrait-header.png` });
+await b.close();

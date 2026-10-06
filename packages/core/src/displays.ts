@@ -68,6 +68,8 @@ export interface DisplayDevice {
   kind: "tv" | "monitor" | "projector" | "ultrawide";
   /** Physical rotation of the panel. 90 = portrait with the TV's top edge on the right, 270 = top edge on the left. */
   rotation?: 0 | 90 | 180 | 270;
+  /** Percent of the picture a TV's overscan hides at each edge; the page draws inside that margin. 0-10. */
+  safeArea?: number;
 }
 
 export interface DisplayPreset {

@@ -91,10 +91,13 @@ export function DisplayPage() {
   return (
     <>
       <div className="fixed inset-0 overflow-hidden bg-black text-fog">
-        <div className="relative overflow-hidden" style={{ width: W, height: H, transform, transformOrigin: rot === 180 ? "center" : "top left", containerType: "size", ["--u" as string]: swap ? `${(H / W).toFixed(4)}cqw` : "1cqw", ["--v" as string]: swap ? `${(W / H).toFixed(4)}cqh` : "1cqh" }}>
-          {body}
-          {role !== "PROJECTED_TICKER" && overlay && overlay.until > Date.now() && <OverlayLayer o={overlay} />}
-          {role !== "PROJECTED_TICKER" && <div className="absolute bottom-1.5 right-3 text-[10px] uppercase tracking-widest text-white/20">{display.name} · {role?.replace(/_/g, " ")}{!connected ? " · reconnecting" : ""}</div>}
+        <div className="relative overflow-hidden bg-black" style={{ width: W, height: H, transform, transformOrigin: rot === 180 ? "center" : "top left" }}>
+          {/* Safe area: TVs that overscan crop the edges; the page lives inside the margin so nothing is cut off. */}
+          <div className="absolute overflow-hidden" style={{ inset: `${Math.max(0, Math.min(10, display.safeArea ?? 0))}%`, containerType: "size", ["--u" as string]: swap ? `${(H / W).toFixed(4)}cqw` : "1cqw", ["--v" as string]: swap ? `${(W / H).toFixed(4)}cqh` : "1cqh" }}>
+            {body}
+            {role !== "PROJECTED_TICKER" && overlay && overlay.until > Date.now() && <OverlayLayer o={overlay} />}
+            {role !== "PROJECTED_TICKER" && <div className="absolute bottom-1.5 right-3 text-[10px] uppercase tracking-widest text-white/20">{display.name} · {role?.replace(/_/g, " ")}{!connected ? " · reconnecting" : ""}</div>}
+          </div>
         </div>
       </div>
       {/* Scroll room for TV browsers: Silk on Fire TV only hides its address bar once the page scrolls. */}

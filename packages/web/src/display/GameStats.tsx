@@ -17,17 +17,27 @@ export function GameStatsBoard({ s, gameId }: { s: RoomSnapshot; gameId?: string
   const portrait = isPortrait();
   return (
     <div className="bc relative h-full w-full overflow-hidden text-white" style={{ background: `radial-gradient(ellipse 50% 70% at 0% 30%, ${ac}44, transparent 60%), radial-gradient(ellipse 50% 70% at 100% 30%, ${hc}44, transparent 60%), linear-gradient(180deg, #0c0f15, #05060a)` }}>
-      {/* Header: logos, names, score bug */}
-      <div className="absolute inset-x-[calc(3*var(--u))] top-[calc(3*var(--v))] flex items-center justify-between">
-        <TeamHead g={g} side="away" fav={fav === "away"} />
-        <ScoreBug game={g} h={Math.round(vw() * 0.04)} fav={fav} />
-        <TeamHead g={g} side="home" fav={fav === "home"} right />
-      </div>
+      {/* Header: logos, names, score bug. Portrait stacks the bug under the names so nothing overlaps. */}
+      {portrait ? (
+        <div className="absolute inset-x-[4%] top-[1.5%] flex flex-col gap-[1.2%]">
+          <div className="flex items-center justify-between">
+            <TeamHead g={g} side="away" fav={fav === "away"} />
+            <TeamHead g={g} side="home" fav={fav === "home"} right />
+          </div>
+          <ScoreBug game={g} h={Math.round(vw() * 0.034)} fav={fav} width="100%" />
+        </div>
+      ) : (
+        <div className="absolute inset-x-[calc(3*var(--u))] top-[calc(3*var(--v))] flex items-center justify-between">
+          <TeamHead g={g} side="away" fav={fav === "away"} />
+          <ScoreBug game={g} h={Math.round(vw() * 0.04)} fav={fav} />
+          <TeamHead g={g} side="home" fav={fav === "home"} right />
+        </div>
+      )}
 
       {!st ? <div className="absolute inset-x-0 top-[45%] text-center text-[calc(2*var(--u))] uppercase tracking-[0.3em] text-white/40">Stats loading…</div> : (
         <>
           {/* Team comparison */}
-          <div className={portrait ? "absolute left-[4%] top-[11%] w-[92%]" : "absolute left-[calc(3*var(--u))] top-[calc(19*var(--v))] w-[calc(55*var(--u))]"}>
+          <div className={portrait ? "absolute left-[4%] top-[13%] w-[92%]" : "absolute left-[calc(3*var(--u))] top-[calc(19*var(--v))] w-[calc(55*var(--u))]"}>
             <SectionTitle>Team stats</SectionTitle>
             <div className="space-y-[calc(1.1*var(--v))]">
               {st.team.map((row) => (

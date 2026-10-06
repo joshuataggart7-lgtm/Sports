@@ -183,7 +183,8 @@ export class EspnProvider implements SportsProvider {
     }
     this.seqs.set(id, seq);
     const state = ev.status.type.state;
-    const status = state === "in" ? (ev.status.type.name === "STATUS_HALFTIME" ? "halftime" : "live") : state === "post" ? "final" : "scheduled";
+    // ESPN occasionally leaves STATUS_HALFTIME on a game already in the third quarter; trust the period.
+    const status = state === "in" ? (ev.status.type.name === "STATUS_HALFTIME" && (ev.status.period ?? 0) <= 2 ? "halftime" : "live") : state === "post" ? "final" : "scheduled";
     const sit = comp.situation;
     const possession = sit?.possession ? (sit.possession === home.team.id ? "home" : sit.possession === away.team.id ? "away" : undefined) : undefined;
     const detail = ev.status.type.shortDetail ?? "";
