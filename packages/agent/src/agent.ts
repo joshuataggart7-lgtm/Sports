@@ -191,13 +191,18 @@ export class Agent extends EventEmitter {
    * boxes) gets its own page pushed to it, unless that page already checked in during the last
    * minute. So Game Day puts the stats board on the left TV by itself.
    */
+  private lastPushed = new Map<string, number>();
+
   async openDisplayPages(): Promise<void> {
     const base = this.baseUrl();
     for (const disp of this.displays.displays) {
       if (!disp.deviceId || disp.role === "OFF") continue;
       const dev = this.devices.get(disp.deviceId);
       if (!dev || !dev.capabilities.includes("url") || dev.driver === "mock") continue;
-      if (disp.lastSeenAt && Date.now() - disp.lastSeenAt < 60_000) continue;
+      // A scene may have just sent the device home (input switch, power), so a recent check-in
+      // from the page proves nothing. Only a push we made ourselves in the last 15 s is skipped.
+      if (Date.now() - (this.lastPushed.get(disp.id) ?? 0) < 15_000) continue;
+      this.lastPushed.set(disp.id, Date.now());
       const url = disp.role === "PROJECTED_TICKER" ? `${base}/display/projector?mode=ticker` : `${base}/display/${disp.pairingCode}`;
       const r = await this.devices.execute(dev.id, { type: "open_url", url }, "scene");
       if (!r.ok) this.log({ kind: "device", text: `${dev.name}: could not open ${disp.name}'s page (${r.reason ?? "unknown"})`, detail: { deviceId: dev.id } });
